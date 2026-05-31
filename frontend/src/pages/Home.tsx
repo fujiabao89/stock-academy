@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import SearchBar from "../components/SearchBar";
 
 export default function Home() {
@@ -48,9 +49,9 @@ export default function Home() {
           { code: "600900", name: "长江电力" },
           { code: "002594", name: "比亚迪" },
         ].map((s) => (
-          <a
+          <Link
             key={s.code}
-            href={`/stock/${s.code}`}
+            to={`/stock/${s.code}`}
             style={{
               fontSize: 13,
               padding: "6px 14px",
@@ -70,7 +71,7 @@ export default function Home() {
             }}
           >
             {s.name} {s.code}
-          </a>
+          </Link>
         ))}
       </div>
     </div>
