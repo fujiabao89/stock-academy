@@ -1,1 +1,26 @@
-.claude/skills/gstack/
+# 环境变量（含敏感 token）
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node
+node_modules/
+
+# Docker
+.gbrain-source
+.sources/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
