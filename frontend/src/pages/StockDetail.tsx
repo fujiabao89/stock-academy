@@ -58,19 +58,28 @@ export default function StockDetail() {
     setLoading(true);
     setError(null);
 
-    Promise.all([
-      fetch(`/api/stocks/${code}/overview`).then((r) => r.json()),
-      fetch(`/api/stocks/${code}/kline?period=d&limit=180`).then((r) => r.json()),
-      fetch(`/api/stocks/${code}/signals`).then((r) => r.json()),
-    ])
-      .then(([ov, kl, sg]) => {
-        if (ov.detail) throw new Error(ov.detail);
-        setOverview(ov);
-        setKline(Array.isArray(kl) ? kl : []);
-        setSignals(Array.isArray(sg) ? sg : []);
-      })
-      .catch((e) => setError(e.message || "加载失败"))
-      .finally(() => setLoading(false));
+    const fetchJson = (url: string) =>
+      fetch(url).then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      });
+
+    Promise.allSettled([
+      fetchJson(`/api/stocks/${code}/overview`),
+      fetchJson(`/api/stocks/${code}/kline?period=d&limit=180`),
+      fetchJson(`/api/stocks/${code}/signals`),
+    ]).then(([ov, kl, sg]) => {
+      if (ov.status === "fulfilled") {
+        const data = ov.value;
+        if (data.detail) { setError(data.detail); return; }
+        setOverview(data);
+      } else {
+        setError("获取股票信息失败");
+        return;
+      }
+      setKline(kl.status === "fulfilled" && Array.isArray(kl.value) ? kl.value : []);
+      setSignals(sg.status === "fulfilled" && Array.isArray(sg.value) ? sg.value : []);
+    }).finally(() => setLoading(false));
   }, [code]);
 
   if (loading) {

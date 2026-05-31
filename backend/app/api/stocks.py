@@ -8,6 +8,7 @@ from ..database import get_db
 from ..engine import list_all
 from ..models.daily_bar import DailyBar
 from ..models.pattern_signal import PatternSignal
+from .patterns import _BACKTEST_DATA
 from ..schemas.pattern import BacktestWindow, PatternSignalOut
 from ..schemas.stock import KlineItem, StockOverview, StockSearchResult
 
@@ -214,6 +215,10 @@ async def get_stock_signals(code: str, db: AsyncSession = Depends(get_db)):
         backtest = None
         if bt.get("forward_20d"):
             backtest = BacktestWindow(**bt["forward_20d"])
+        elif s.pattern_id in _BACKTEST_DATA:
+            bt_data = _BACKTEST_DATA[s.pattern_id]
+            if bt_data.get("forward_20d", {}).get("win_rate") is not None:
+                backtest = BacktestWindow(**bt_data["forward_20d"])
 
         results.append(
             PatternSignalOut(
