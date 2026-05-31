@@ -50,11 +50,15 @@ export default function SearchBar() {
       setResults([]);
       return;
     }
-    if (e.key === "Enter" && results.length > 0) {
-      // 优先精确匹配代码
-      const q = query.trim().toUpperCase();
-      const exact = results.find((r) => r.code === q);
-      goToStock(exact ? exact.code : results[0].code);
+    if (e.key === "Enter") {
+      const q = query.trim();
+      if (q.length === 0) return;
+      if (results.length > 0) {
+        const exact = results.find((r) => r.code === q.toUpperCase());
+        goToStock(exact ? exact.code : results[0].code);
+      } else if (/^\d{6}$/.test(q)) {
+        goToStock(q);
+      }
     }
   };
 
