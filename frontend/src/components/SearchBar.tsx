@@ -40,7 +40,6 @@ export default function SearchBar() {
   }, []);
 
   const goToStock = (code: string) => {
-    console.log("[SearchBar] goToStock(%s)", code);
     setResults([]);
     setQuery("");
     navigate(`/stock/${code}`);
@@ -53,18 +52,13 @@ export default function SearchBar() {
     }
     if (e.key === "Enter") {
       const q = query.trim();
-      console.log("[SearchBar] Enter pressed, query=%s, results=%d", q, results.length);
       if (q.length === 0) return;
       if (results.length > 0) {
         const qUpper = q.toUpperCase();
         const exact = results.find((r) => r.code === qUpper);
-        console.log("[SearchBar] results mode, exact=%s, first=%s", exact?.code, results[0]?.code);
         goToStock(exact ? exact.code : results[0].code);
       } else if (/^\d{6}$/.test(q)) {
-        console.log("[SearchBar] regex fallback, navigating to %s", q);
         goToStock(q);
-      } else {
-        console.log("[SearchBar] Enter ignored, query=%s not 6-digit", q);
       }
     }
   };
