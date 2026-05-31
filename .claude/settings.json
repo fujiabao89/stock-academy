@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \".claude/hooks/remind-commit.sh\"",
+            "timeout": 10000
+          }
+        ]
+      }
+    ]
+  }
+}
