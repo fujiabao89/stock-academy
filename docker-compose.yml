@@ -37,7 +37,7 @@ services:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/stock_academy
       - DATABASE_URL_SYNC=postgresql+psycopg2://postgres:postgres@db:5432/stock_academy
       - REDIS_URL=redis://redis:6379/0
-      - TUSHARE_TOKEN=YOUR_TUSHARE_TOKEN_HERE
+      - TUSHARE_TOKEN=${TUSHARE_TOKEN}
     depends_on:
       db:
         condition: service_healthy
