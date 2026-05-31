@@ -10,36 +10,36 @@
 
 ```bash
 # 1. 克隆仓库
-git clone <repo-url> && cd stock-academy
+git clone git@github.com:fujiabao89/stock-academy.git && cd stock-academy
 
-# 2. 生成配置并构建
-make setup
+# 2. 复制环境变量配置
+cp .env.example .env
 
 # 3. 启动开发环境
-make dev
+docker compose up -d
 ```
 
 打开浏览器：
 - 前端：http://localhost:5173
-- API 文档：http://localhost:8000/docs
+- API 文档：http://localhost:8001/docs
 
 ---
 
 ## 架构
 
 ```
-浏览器 (React + ECharts)
+浏览器 (React + Vite)
     │
     ▼
-Nginx (:80)
-    ├── /          → Frontend (:5173)   Vite dev server
-    ├── /api/*     → Backend (:8000)    FastAPI + Uvicorn
-    └── /docs      → Backend (:8000)    Swagger UI
+Backend (:8001) — FastAPI + Uvicorn
+    ├── /api/stocks/*   → 股票搜索、K线、概览
+    ├── /api/patterns/* → 形态教学详情、触发股票
+    ├── /api/glossary/* → 术语词典搜索
+    └── /docs           → Swagger UI
     │
     ▼
-Backend (Python FastAPI)
-    ├── PostgreSQL (:5432)   历史日线数据 + 形态信号
-    └── Redis (:6379)        缓存（MVP 可选）
+├── PostgreSQL (:5433)   历史日线数据 + 形态信号 (71,777 条)
+└── Redis (:6380)        缓存（可选）
 ```
 
 ---
@@ -48,11 +48,11 @@ Backend (Python FastAPI)
 
 | 层 | 技术 | 说明 |
 |----|------|------|
-| 前端 | React 19 + TypeScript + ECharts 5 | K 线图渲染、形态标注展示 |
+| 前端 | React 19 + TypeScript + Vite | 形态展示、K线图、搜索（待开发） |
 | 后端 | Python FastAPI + Uvicorn | REST API、形态匹配引擎 |
 | 数据库 | PostgreSQL 16 | 日线数据 + 形态信号存储 |
 | 缓存 | Redis 7 | 形态匹配结果缓存（可选） |
-| 部署 | Docker Compose + Nginx | 一键启动全栈 |
+| 部署 | Docker Compose | 一键启动全栈 |
 
 ---
 
@@ -61,41 +61,46 @@ Backend (Python FastAPI)
 ### 常用命令
 
 ```bash
-make dev          # 启动全栈开发环境
-make test         # 运行后端测试
-make lint         # 代码检查（ruff + tsc）
-make migrate msg='描述'  # 生成并执行数据库迁移
-make rollback     # 回滚最近一次迁移
-make reset-db     # 重建数据库 + 种子数据
-make seed         # 填充种子数据
-make new-pattern id=my-pattern  # 生成新形态检测器骨架
-make clean        # 清理容器和卷
+# Docker Compose
+docker compose up -d          # 启动全栈开发环境
+docker compose exec backend python scripts/backtest.py --all          # 运行回测
+docker compose exec backend python scripts/run_pattern_match.py       # 盘后形态匹配
+docker compose exec backend python scripts/generate_synthetic_data.py # 生成合成数据
+docker compose down -v        # 清理容器和卷
+
+# 数据库迁移
+docker compose exec backend alembic upgrade head
+docker compose exec backend alembic revision --autogenerate -m "描述"
+
+# 代码检查
+docker compose exec backend ruff check app/ scripts/
 ```
 
 ### 添加新形态
 
-1. `make new-pattern id=volume-breakout`
-2. 编辑 `backend/app/engine/detectors/volume_breakout.py` — 实现 `match()` 方法
-3. 在 `backend/app/engine/registry.py` 或应用启动中注册
-4. 编写测试 `backend/tests/engine/test_volume_breakout.py`
-5. 运行回测验证 precision/recall
+1. 创建 `backend/app/engine/detectors/new_pattern.py` — 继承 `PatternDetector`，实现 `match()` 方法
+2. 在文件末尾调用 `register(NewPattern())` 注册
+3. 编写测试
+4. 运行回测验证胜率
 
 详见 `docs/pattern-development.md`。
 
 ---
 
-## 首批形态（MVP Phase 1）
+## 8 种形态（已实现 + 回测验证）
 
-| 形态 | 分类 | 方向 |
-|------|------|------|
-| 均线多头排列 | 均线 | 看涨 |
-| 均线空头排列 | 均线 | 看跌 |
-| 金叉 (MA5 上穿 MA20) | 均线 | 看涨 |
-| 死叉 (MA5 下穿 MA20) | 均线 | 看跌 |
-| 放量上涨 | 量价 | 看涨 |
-| 放量下跌 | 量价 | 看跌 |
-| 均线粘合向上发散 | 均线 | 看涨 |
-| 量价背离 | 量价 | 看跌 |
+| 形态 | 分类 | 方向 | 20日胜率 |
+|------|------|------|----------|
+| 均线多头排列 | 均线 | 看涨 | 73.4% |
+| 放量上涨 | 量价 | 看涨 | 71.6% |
+| 量价背离 | 量价 | 看跌 | 73.0% |
+| 均线粘合向上发散 | 均线 | 看涨 | 65.0% |
+| 金叉 (MA5 上穿 MA20) | 均线 | 看涨 | 67.3% |
+| 死叉 (MA5 下穿 MA20) | 均线 | 看跌 | — |
+| 均线空头排列 | 均线 | 看跌 | — |
+| 放量下跌 | 量价 | 看跌 | — |
+
+> 胜率数据基于 2016-2026 年 30 只沪深300 成分股真实数据回测，20 日前瞻窗口。
 
 ---
 
@@ -103,4 +108,4 @@ make clean        # 清理容器和卷
 
 - 不写"买入""卖出""推荐"字样 — 始终用概率语言
 - MVP 不做用户系统（无登录、无自选股、无推送）
-- 数据源：新浪/腾讯免费接口（Tushare 备选）
+- 数据源：Tushare Pro 历史数据 + 合成数据生成器
