@@ -1,54 +1,234 @@
 """股票相关 API 端点"""
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import select, func
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..database import get_db
+from ..engine import list_all
+from ..models.daily_bar import DailyBar
+from ..models.pattern_signal import PatternSignal
+from ..schemas.pattern import BacktestWindow, PatternSignalOut
 from ..schemas.stock import KlineItem, StockOverview, StockSearchResult
 
 router = APIRouter(prefix="/stocks", tags=["stocks"])
 
+# 沪深300 成分股名称映射（MVP 阶段维护常用名称）
+_STOCK_NAMES: dict[str, tuple[str, str]] = {
+    "000001": ("平安银行", "sz"),
+    "000002": ("万科A", "sz"),
+    "000333": ("美的集团", "sz"),
+    "000568": ("泸州老窖", "sz"),
+    "000651": ("格力电器", "sz"),
+    "000858": ("五粮液", "sz"),
+    "002142": ("宁波银行", "sz"),
+    "002415": ("海康威视", "sz"),
+    "002594": ("比亚迪", "sz"),
+    "300750": ("宁德时代", "sz"),
+    "600000": ("浦发银行", "sh"),
+    "600009": ("上海机场", "sh"),
+    "600028": ("中国石化", "sh"),
+    "600030": ("中信证券", "sh"),
+    "600036": ("招商银行", "sh"),
+    "600048": ("保利发展", "sh"),
+    "600276": ("恒瑞医药", "sh"),
+    "600309": ("万华化学", "sh"),
+    "600519": ("贵州茅台", "sh"),
+    "600585": ("海螺水泥", "sh"),
+    "600809": ("山西汾酒", "sh"),
+    "600887": ("伊利股份", "sh"),
+    "600900": ("长江电力", "sh"),
+    "601012": ("隆基绿能", "sh"),
+    "601088": ("中国神华", "sh"),
+    "601166": ("兴业银行", "sh"),
+    "601318": ("中国平安", "sh"),
+    "601398": ("工商银行", "sh"),
+    "601668": ("中国建筑", "sh"),
+    "601888": ("中国中免", "sh"),
+}
 
-# 股票名称-代码映射表（MVP 阶段手维护沪深300，后续扩展为数据库查询）
-_STOCK_MAP: dict[str, dict] = {}
 
-
-def load_stock_map():
-    """从数据库加载股票映射（应用启动时调用）"""
-    global _STOCK_MAP
-    # TODO: 从 PostgreSQL 加载
-    _STOCK_MAP = {}
+def _stock_info(code: str) -> tuple[str, str] | None:
+    return _STOCK_NAMES.get(code)
 
 
 @router.get("/search", response_model=list[StockSearchResult])
-async def search_stocks(q: str = Query(..., min_length=1, description="搜索关键词（代码/名称）")):
-    """搜索股票，支持代码和名称模糊匹配"""
+async def search_stocks(
+    q: str = Query(..., min_length=1, description="搜索关键词（代码/名称）"),
+    db: AsyncSession = Depends(get_db),
+):
+    """搜索股票，支持代码和名称模糊匹配（限定数据库中已有数据的股票）"""
     q_upper = q.upper().strip()
-    results = []
-    for code, info in _STOCK_MAP.items():
-        if q_upper in code or q_upper in info.get("name", "").upper():
-            results.append(
-                StockSearchResult(code=code, name=info["name"], market=info.get("market", "sz"))
-            )
-    if not results:
-        return []
-    return results[:20]
+
+    # 先在本地名称映射中匹配
+    matches = []
+    result = await db.execute(select(DailyBar.code).distinct())
+    db_codes = {row[0] for row in result.fetchall()}
+
+    for code in db_codes:
+        info = _stock_info(code)
+        if info is None:
+            continue
+        name, market = info
+        if q_upper in code or q_upper in name.upper():
+            matches.append(StockSearchResult(code=code, name=name, market=market))
+
+    return matches[:20]
 
 
 @router.get("/{code}/overview", response_model=StockOverview)
-async def get_stock_overview(code: str):
+async def get_stock_overview(code: str, db: AsyncSession = Depends(get_db)):
     """个股概览（最新价、涨跌幅、基本信息）"""
-    # TODO: 从 PostgreSQL 查询最新日线数据
-    raise HTTPException(status_code=501, detail="功能开发中")
+    bars = await db.execute(
+        select(DailyBar)
+        .where(DailyBar.code == code)
+        .order_by(DailyBar.date.desc())
+        .limit(2)
+    )
+    bars = list(bars.scalars().all())
+
+    if not bars:
+        raise HTTPException(status_code=404, detail=f"未找到股票 {code} 的数据")
+
+    today = bars[0]
+    info = _stock_info(code)
+    name, market = info if info else (code, "sz")
+
+    # 计算涨跌幅
+    if len(bars) >= 2:
+        prev = bars[1]
+        change_pct = round((today.close - prev.close) / prev.close * 100, 2)
+    else:
+        change_pct = 0.0
+
+    return StockOverview(
+        code=code,
+        name=name,
+        market=market,
+        latest_price=today.close,
+        change_pct=change_pct,
+        volume=today.volume,
+        amount=today.amount,
+        update_time=str(today.date),
+    )
 
 
 @router.get("/{code}/kline", response_model=list[KlineItem])
-async def get_stock_kline(code: str, period: str = Query("d", pattern="^(d|w|m)$")):
+async def get_stock_kline(
+    code: str,
+    period: str = Query("d", pattern="^(d|w|m)$"),
+    limit: int = Query(250, ge=1, le=500),
+    db: AsyncSession = Depends(get_db),
+):
     """K线数据（含均线），period: d=日K, w=周K, m=月K"""
-    # TODO: 从 PostgreSQL 查询
-    raise HTTPException(status_code=501, detail="功能开发中")
+    rows = await db.execute(
+        select(DailyBar)
+        .where(DailyBar.code == code)
+        .order_by(DailyBar.date.asc())
+    )
+    bars = list(rows.scalars().all())
+
+    if not bars:
+        raise HTTPException(status_code=404, detail=f"未找到股票 {code} 的数据")
+
+    if period == "d":
+        result = [
+            KlineItem(
+                date=b.date,
+                open=b.open,
+                high=b.high,
+                low=b.low,
+                close=b.close,
+                volume=b.volume,
+                ma5=b.ma5,
+                ma20=b.ma20,
+                ma60=b.ma60,
+                ma120=b.ma120,
+            )
+            for b in bars[-limit:]
+        ]
+        return result
+
+    # 聚合为周K/月K
+    if period == "w":
+        freq = "W"
+    else:
+        freq = "M"
+
+    df_data = [
+        {"date": b.date, "open": b.open, "high": b.high, "low": b.low, "close": b.close, "volume": b.volume}
+        for b in bars
+    ]
+
+    aggregated = _aggregate_bars(df_data, freq)
+    return [KlineItem(**item) for item in aggregated[-limit:]]
 
 
-@router.get("/{code}/signals")
-async def get_stock_signals(code: str):
-    """当前触发的所有形态信号列表"""
-    # TODO: 从 pattern_signals 表查询
-    raise HTTPException(status_code=501, detail="功能开发中")
+def _aggregate_bars(bars: list[dict], freq: str) -> list[dict]:
+    """将日线聚合为周K或月K"""
+    grouped: dict[str, list[dict]] = {}
+    for b in bars:
+        d = b["date"]
+        if freq == "W":
+            key = d.strftime("%Y-%W")
+        else:
+            key = d.strftime("%Y-%m")
+        grouped.setdefault(key, []).append(b)
+
+    result = []
+    for key in sorted(grouped.keys()):
+        group = grouped[key]
+        item = {
+            "date": group[-1]["date"],
+            "open": group[0]["open"],
+            "high": max(b["high"] for b in group),
+            "low": min(b["low"] for b in group),
+            "close": group[-1]["close"],
+            "volume": sum(b["volume"] for b in group),
+        }
+        result.append(item)
+    return result
+
+
+@router.get("/{code}/signals", response_model=list[PatternSignalOut])
+async def get_stock_signals(code: str, db: AsyncSession = Depends(get_db)):
+    """该股票最新日期的所有形态信号"""
+    # 找到该股票的最新信号日期
+    latest_date = await db.execute(
+        select(func.max(PatternSignal.date)).where(PatternSignal.code == code)
+    )
+    latest_date = latest_date.scalar()
+    if latest_date is None:
+        return []
+
+    signals = await db.execute(
+        select(PatternSignal)
+        .where(PatternSignal.code == code, PatternSignal.date == latest_date)
+        .order_by(PatternSignal.pattern_id)
+    )
+    signals = list(signals.scalars().all())
+
+    results = []
+    for s in signals:
+        bt = s.backtest or {}
+        backtest = None
+        if bt.get("forward_20d"):
+            backtest = BacktestWindow(**bt["forward_20d"])
+
+        results.append(
+            PatternSignalOut(
+                code=s.code,
+                date=str(s.date),
+                pattern_id=s.pattern_id,
+                pattern_name=s.pattern_name,
+                category=s.category,
+                direction=s.direction,
+                confidence=s.confidence,
+                description=s.description,
+                backtest=backtest,
+                limitations=s.limitations or [],
+                related_patterns=s.related_patterns or [],
+            )
+        )
+
+    return results

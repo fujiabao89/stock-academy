@@ -46,10 +46,10 @@ async def match_single_stock(db: AsyncSession, code: str, target_date: date):
     bars_result = await db.execute(
         select(DailyBar)
         .where(DailyBar.code == code, DailyBar.date <= target_date)
-        .order_by(DailyBar.date.asc())
+        .order_by(DailyBar.date.desc())
         .limit(200)
     )
-    bars = list(bars_result.scalars().all())
+    bars = list(reversed(bars_result.scalars().all()))
 
     if len(bars) < 121:
         logger.debug("insufficient_data", code=code, bars=len(bars))
