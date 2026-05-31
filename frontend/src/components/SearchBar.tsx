@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 interface SearchResult {
@@ -12,6 +12,7 @@ export default function SearchBar() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const abortRef = useRef<AbortController | null>(null);
 
   const handleSearch = useCallback(async (q: string) => {
     setQuery(q);
@@ -19,15 +20,20 @@ export default function SearchBar() {
       setResults([]);
       return;
     }
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
     setLoading(true);
     try {
-      const res = await fetch(`/api/stocks/search?q=${encodeURIComponent(q)}`);
+      const res = await fetch(`/api/stocks/search?q=${encodeURIComponent(q)}`, {
+        signal: controller.signal,
+      });
       if (res.ok) {
         const data = await res.json();
         setResults(data);
       }
-    } catch {
-      // ignore
+    } catch (e: any) {
+      if (e?.name === "AbortError") return;
     } finally {
       setLoading(false);
     }
