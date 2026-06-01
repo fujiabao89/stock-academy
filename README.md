@@ -1,8 +1,10 @@
 # 炒股学堂
 
-**不推荐股票，只教判断方法。** — A 股教学工具
+**不推荐股票，只教判断方法。** — A 股技术形态教学工具
 
 搜一只股票 → 看到该股票当前触发了哪些技术形态 → 每个形态旁边有白话解释和历史回测数据 → 基于概率自己判断。
+
+在线体验：https://stock-academy.onrender.com
 
 ---
 
@@ -28,19 +30,47 @@ docker compose up -d
 ## 架构
 
 ```
-浏览器 (React + Vite)
+浏览器 (React + Vite + ECharts)
     │
     ▼
 Backend (:8001) — FastAPI + Uvicorn
-    ├── /api/stocks/*   → 股票搜索、K线、概览
-    ├── /api/patterns/* → 形态教学详情、触发股票
+    ├── /api/stocks/*   → 股票搜索、K线（含均线）、概览、形态信号
+    ├── /api/patterns/* → 形态教学详情、触发股票列表
     ├── /api/glossary/* → 术语词典搜索
     └── /docs           → Swagger UI
     │
     ▼
-├── PostgreSQL (:5433)   历史日线数据 + 形态信号 (71,777 条)
-└── Redis (:6380)        缓存（可选）
+PostgreSQL (:5433) — 日线数据 + 形态信号（30 只沪深300 × 2500 天）
 ```
+
+### 部署架构
+
+```
+Render (Docker)
+    ├── Nginx → dist/ 静态资源
+    ├── FastAPI → PostgreSQL (Render Managed)
+    └── start.sh → 自动建表 + 种子数据
+```
+
+---
+
+## 功能
+
+### K 线图
+- ECharts 蜡烛图 + 成交量柱状图 + MACD 面板
+- MA5/MA20/MA60/MA120 均线叠加（可切换）
+- BOLL 布林带（上轨/中轨/下轨，可切换）
+- 十字光标联动，点击 K 线固定数据窗口（显示完整 OHLC + 技术指标）
+- 鼠标滚轮缩放 + 拖拽平移
+
+### 形态信号
+- 8 种技术形态实时检测：金叉/死叉、多头/空头排列、放量涨/跌、量价背离、均线粘合突破
+- 每个形态包含：白话解释、20 日历史回测胜率、局限性说明、关联形态
+- 搜索支持代码和中文名称模糊匹配
+
+### 响应式适配
+- 桌面端 / 移动端自适应布局
+- K 线图高度、间距随屏幕尺寸自动调整
 
 ---
 
@@ -48,49 +78,18 @@ Backend (:8001) — FastAPI + Uvicorn
 
 | 层 | 技术 | 说明 |
 |----|------|------|
-| 前端 | React 19 + TypeScript + Vite | 形态展示、K线图、搜索（待开发） |
-| 后端 | Python FastAPI + Uvicorn | REST API、形态匹配引擎 |
-| 数据库 | PostgreSQL 16 | 日线数据 + 形态信号存储 |
-| 缓存 | Redis 7 | 形态匹配结果缓存（可选） |
-| 部署 | Docker Compose | 一键启动全栈 |
-
----
-
-## 开发指南
-
-### 常用命令
-
-```bash
-# Docker Compose
-docker compose up -d          # 启动全栈开发环境
-docker compose exec backend python scripts/backtest.py --all          # 运行回测
-docker compose exec backend python scripts/run_pattern_match.py       # 盘后形态匹配
-docker compose exec backend python scripts/generate_synthetic_data.py # 生成合成数据
-docker compose down -v        # 清理容器和卷
-
-# 数据库迁移
-docker compose exec backend alembic upgrade head
-docker compose exec backend alembic revision --autogenerate -m "描述"
-
-# 代码检查
-docker compose exec backend ruff check app/ scripts/
-```
-
-### 添加新形态
-
-1. 创建 `backend/app/engine/detectors/new_pattern.py` — 继承 `PatternDetector`，实现 `match()` 方法
-2. 在文件末尾调用 `register(NewPattern())` 注册
-3. 编写测试
-4. 运行回测验证胜率
-
-详见 `docs/pattern-development.md`。
+| 前端 | React 19 + TypeScript + Vite | ECharts K 线图、形态卡片、搜索 |
+| 后端 | Python FastAPI + Uvicorn | REST API、形态检测引擎 |
+| 数据库 | PostgreSQL 16 | 日线数据 + 形态信号 |
+| 部署 | Render + Docker | 多阶段构建（Node → Python），自动部署 |
+| 开发 | Docker Compose | 一键启动全栈 |
 
 ---
 
 ## 8 种形态（已实现 + 回测验证）
 
-| 形态 | 分类 | 方向 | 20日胜率 |
-|------|------|------|----------|
+| 形态 | 分类 | 方向 | 20 日胜率 |
+|------|------|------|-----------|
 | 均线多头排列 | 均线 | 看涨 | 73.4% |
 | 放量上涨 | 量价 | 看涨 | 71.6% |
 | 量价背离 | 量价 | 看跌 | 73.0% |
@@ -100,7 +99,61 @@ docker compose exec backend ruff check app/ scripts/
 | 均线空头排列 | 均线 | 看跌 | — |
 | 放量下跌 | 量价 | 看跌 | — |
 
-> 胜率数据基于 2016-2026 年 30 只沪深300 成分股真实数据回测，20 日前瞻窗口。
+> 胜率数据基于 2016-2026 年 30 只沪深300 成分股合成数据回测，20 日前瞻窗口。
+
+---
+
+## 开发指南
+
+### 常用命令
+
+```bash
+# Docker Compose
+docker compose up -d                         # 启动全栈开发环境
+docker compose exec backend python scripts/generate_synthetic_data.py  # 重新生成合成数据
+docker compose down -v                       # 清理容器和卷
+
+# 代码检查
+docker compose exec backend ruff check app/ scripts/
+```
+
+### 添加新形态
+
+1. 创建 `backend/app/engine/detectors/new_pattern.py` — 继承 `PatternDetector`，实现 `match()` 方法
+2. 在文件末尾调用 `register(NewPattern())` 注册
+3. 在 `backend/scripts/generate_synthetic_data.py` 的 `_BACKTEST_DATA`、`_DETERMINATIONS`、`_RELATED` 中添加对应条目
+4. 在 `backend/app/api/patterns.py` 的 `_BACKTEST_DATA` 中补充回测数据
+5. 运行回测验证胜率
+
+### 项目结构
+
+```
+├── frontend/src/
+│   ├── components/
+│   │   ├── KlineChart.tsx      # K 线图（ECharts，含 MACD/BOLL）
+│   │   ├── PatternCard.tsx     # 形态卡片
+│   │   ├── PatternSignalList.tsx
+│   │   ├── SearchBar.tsx
+│   │   ├── StockOverview.tsx
+│   │   └── Layout.tsx
+│   ├── pages/
+│   │   ├── Home.tsx            # 首页（搜索 + 热门股票）
+│   │   └── StockDetail.tsx     # 个股详情（概览 + K 线 / 信号 Tab）
+│   └── index.css               # 设计系统（CSS 变量 + 响应式断点）
+├── backend/
+│   ├── app/
+│   │   ├── api/                # REST API 路由
+│   │   ├── engine/             # 形态检测引擎
+│   │   │   └── detectors/      # 8 个形态检测器
+│   │   ├── models/             # SQLAlchemy 模型
+│   │   └── schemas/            # Pydantic 响应模型
+│   └── scripts/
+│       └── generate_synthetic_data.py  # 合成数据生成器
+├── docker-compose.yml
+├── Dockerfile.prod             # 生产环境多阶段构建
+├── render.yaml                 # Render Blueprint 部署配置
+└── start.sh                    # 启动脚本（建表 + 种子数据）
+```
 
 ---
 
@@ -108,4 +161,4 @@ docker compose exec backend ruff check app/ scripts/
 
 - 不写"买入""卖出""推荐"字样 — 始终用概率语言
 - MVP 不做用户系统（无登录、无自选股、无推送）
-- 数据源：Tushare Pro 历史数据 + 合成数据生成器
+- 数据源：合成数据生成器（仿真 30 只沪深300 成分股 10 年历史）
