@@ -6,6 +6,7 @@ python -c "
 import asyncio, sys
 sys.path.insert(0, '.')
 from app.database import Base, engine, async_session
+from app.models import DailyBar, PatternSignal  # 触发模型注册
 from sqlalchemy import text
 
 async def check():
