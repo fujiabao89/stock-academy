@@ -1,9 +1,11 @@
 """FastAPI 应用入口"""
 
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from .api import glossary_router, patterns_router, register_error_handlers, stocks_router
 from .config import settings
@@ -47,6 +49,12 @@ app.include_router(patterns_router, prefix="/api")
 app.include_router(glossary_router, prefix="/api")
 
 
-@app.get("/")
+@app.get("/api/health")
 async def health():
     return {"status": "ok", "service": settings.app_name}
+
+
+# 生产模式：托管前端静态文件（SPA）
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+if os.path.isdir(STATIC_DIR):
+    app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="frontend")
