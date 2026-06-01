@@ -1,6 +1,16 @@
 """应用配置管理 — Pydantic Settings + .env"""
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _fix_render_db_url(v: str) -> str:
+    """Render 提供的 DATABASE_URL 使用 postgres:// 前缀，转为 asyncpg 格式"""
+    if v.startswith("postgres://"):
+        return v.replace("postgres://", "postgresql+asyncpg://", 1)
+    if v.startswith("postgresql://"):
+        return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+    return v
 
 
 class Settings(BaseSettings):
@@ -18,6 +28,9 @@ class Settings(BaseSettings):
     # PostgreSQL
     database_url: str = "postgresql+asyncpg://postgres:postgres@db:5432/stock_academy"
     database_url_sync: str = "postgresql+psycopg2://postgres:postgres@db:5432/stock_academy"
+
+    # 自动转换 Render/其他平台的数据库 URL 格式
+    _fix_db_url = field_validator("database_url", mode="before")(_fix_render_db_url)
 
     # Redis (MVP 可选)
     redis_url: str = "redis://redis:6379/0"
