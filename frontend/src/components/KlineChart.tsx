@@ -308,16 +308,21 @@ export default function KlineChart({ data }: { data: KlineItem[] }) {
       },
       {
         type: "bar",
-        name: "MACD柱",
-        data: macd.histogram.map((v, i) => {
-          if (v == null) return null;
-          if (v >= 0) {
-            return { value: [i, 0, v], itemStyle: { color: C.bullish } };
-          }
-          return { value: [i, v, 0], itemStyle: { color: C.bearish } };
-        }),
+        name: "MACD+",
+        data: macd.histogram.map((v) => (v != null && v >= 0 ? v : null)),
         xAxisIndex: 2,
         yAxisIndex: 2,
+        itemStyle: { color: C.bullish },
+        barWidth: "60%",
+      },
+      {
+        type: "bar",
+        name: "MACD-",
+        data: macd.histogram.map((v) => (v != null && v < 0 ? v : null)),
+        xAxisIndex: 2,
+        yAxisIndex: 2,
+        itemStyle: { color: C.bearish },
+        barWidth: "60%",
       },
     );
 
