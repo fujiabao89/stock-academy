@@ -7,8 +7,8 @@ export default function Layout() {
         style={{
           borderBottom: "1px solid var(--color-border)",
           background: "var(--color-surface)",
-          padding: "0 var(--space-6)",
-          height: 56,
+          padding: "0 var(--main-padding-x)",
+          height: "var(--header-height)",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -24,6 +24,9 @@ export default function Layout() {
             fontWeight: 700,
             color: "var(--color-text)",
             letterSpacing: "-0.5px",
+            display: "flex",
+            alignItems: "center",
+            minHeight: 44,
           }}
         >
           <span style={{ color: "var(--color-primary)" }}>炒股</span>
@@ -36,13 +39,17 @@ export default function Layout() {
               color: "var(--color-text-secondary)",
               fontWeight: 500,
               transition: "color 0.15s",
+              display: "flex",
+              alignItems: "center",
+              minHeight: 44,
+              padding: "0 4px",
             }}
           >
             首页
           </Link>
         </nav>
       </header>
-      <main style={{ flex: 1, padding: "var(--space-6)", maxWidth: 1200, margin: "0 auto", width: "100%" }}>
+      <main style={{ flex: 1, padding: "var(--main-padding-y) var(--main-padding-x)", maxWidth: 1200, margin: "0 auto", width: "100%" }}>
         <Outlet />
       </main>
     </div>

@@ -94,7 +94,7 @@ export default function StockDetail() {
     return (
       <div style={{ textAlign: "center", padding: "var(--space-12)" }}>
         <p style={{ color: "var(--color-bearish)", marginBottom: "var(--space-4)" }}>{error}</p>
-        <Link to="/" style={{ color: "var(--color-primary)", fontSize: 14 }}>
+        <Link to="/" style={{ color: "var(--color-primary)", fontSize: 14, display: "inline-flex", alignItems: "center", minHeight: 44, padding: "4px 0" }}>
           ← 返回首页
         </Link>
       </div>
@@ -105,7 +105,7 @@ export default function StockDetail() {
     <div>
       {/* Breadcrumb */}
       <div style={{ marginBottom: "var(--space-5)", fontSize: 14, color: "var(--color-text-secondary)" }}>
-        <Link to="/" style={{ color: "var(--color-text-secondary)" }}>
+        <Link to="/" style={{ color: "var(--color-text-secondary)", display: "inline-flex", alignItems: "center", minHeight: 44 }}>
           首页
         </Link>
         <span style={{ margin: "0 var(--space-2)" }}>/</span>
@@ -136,8 +136,9 @@ export default function StockDetail() {
             key={key}
             onClick={() => setTab(key)}
             style={{
-              padding: "10px 20px",
+              padding: "12px 20px",
               fontSize: 14,
+              minHeight: 44,
               fontWeight: 500,
               color: tab === key ? "var(--color-primary)" : "var(--color-text-secondary)",
               borderBottom: tab === key ? "2px solid var(--color-primary)" : "2px solid transparent",

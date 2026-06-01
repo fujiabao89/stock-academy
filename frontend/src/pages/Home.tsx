@@ -8,12 +8,12 @@ export default function Home() {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        paddingTop: 80,
+        paddingTop: "clamp(32px, 10vw, 80px)",
       }}
     >
       <h1
         style={{
-          fontSize: 32,
+          fontSize: "clamp(24px, 8vw, 32px)",
           fontWeight: 700,
           letterSpacing: "-1px",
           marginBottom: "var(--space-2)",
@@ -54,7 +54,9 @@ export default function Home() {
             to={`/stock/${s.code}`}
             style={{
               fontSize: 13,
-              padding: "6px 14px",
+              padding: "12px 16px",
+              display: "inline-flex",
+              alignItems: "center",
               background: "var(--color-surface)",
               border: "1px solid var(--color-border)",
               borderRadius: "var(--radius-sm)",

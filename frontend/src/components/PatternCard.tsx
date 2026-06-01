@@ -20,8 +20,10 @@ export default function PatternCard({ signal }: { signal: PatternSignal }) {
       <div
         style={{
           display: "flex",
+          flexWrap: "wrap",
           alignItems: "center",
           justifyContent: "space-between",
+          gap: "var(--space-2)",
           marginBottom: "var(--space-3)",
         }}
       >
@@ -71,6 +73,7 @@ export default function PatternCard({ signal }: { signal: PatternSignal }) {
         <div
           style={{
             display: "flex",
+            flexWrap: "wrap",
             alignItems: "center",
             gap: "var(--space-3)",
             marginBottom: "var(--space-3)",

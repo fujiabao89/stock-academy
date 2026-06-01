@@ -184,7 +184,7 @@ export default function KlineChart({ data }: { data: KlineItem[] }) {
       ref={chartRef}
       style={{
         width: "100%",
-        height: 500,
+        height: "var(--chart-height)",
         background: "var(--color-surface)",
         borderRadius: "var(--radius-md)",
         border: "1px solid var(--color-border)",

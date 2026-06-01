@@ -120,3 +120,21 @@ input {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* === 响应式断点 === */
+
+:root {
+  --header-height: 56px;
+  --main-padding-x: var(--space-6);
+  --main-padding-y: var(--space-6);
+  --chart-height: 500px;
+}
+
+@media (max-width: 640px) {
+  :root {
+    --header-height: 48px;
+    --main-padding-x: var(--space-3);
+    --main-padding-y: var(--space-4);
+    --chart-height: 320px;
+  }
+}
