@@ -76,6 +76,28 @@ export default function KlineChart({ data }: { data: KlineItem[] }) {
           splitLine: { show: false },
         },
       ],
+      dataZoom: [
+        {
+          type: "inside",
+          xAxisIndex: [0, 1],
+          zoomOnMouseWheel: true,
+          moveOnMouseWheel: false,
+          moveOnMouseMove: true,
+        },
+        {
+          type: "slider",
+          xAxisIndex: [0, 1],
+          bottom: 5,
+          height: 24,
+          borderColor: "#334155",
+          backgroundColor: "#0F172A",
+          fillerColor: "rgba(59, 130, 246, 0.15)",
+          handleStyle: { color: "#3B82F6" },
+          textStyle: { color: "#64748B" },
+          start: 0,
+          end: 100,
+        },
+      ],
       series: [
         {
           name: "K线",
@@ -119,6 +141,16 @@ export default function KlineChart({ data }: { data: KlineItem[] }) {
           smooth: true,
           showSymbol: false,
           lineStyle: { width: 1, color: "#06B6D4" },
+        },
+        {
+          name: "MA120",
+          type: "line",
+          data: data.map((d) => d.ma120),
+          xAxisIndex: 0,
+          yAxisIndex: 0,
+          smooth: true,
+          showSymbol: false,
+          lineStyle: { width: 1, color: "#94A3B8" },
         },
         {
           name: "成交量",
