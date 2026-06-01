@@ -41,7 +41,7 @@ export default function PatternCard({ signal }: { signal: PatternSignal }) {
               fontSize: 12,
               padding: "2px 6px",
               borderRadius: "var(--radius-sm)",
-              background: isBullish ? "rgba(34,197,94,0.15)" : "rgba(239,68,68,0.15)",
+              background: isBullish ? "var(--color-bullish-bg)" : "var(--color-bearish-bg)",
               color: isBullish ? "var(--color-bullish)" : "var(--color-bearish)",
             }}
           >
@@ -52,7 +52,7 @@ export default function PatternCard({ signal }: { signal: PatternSignal }) {
           style={{
             fontSize: 12,
             color: "var(--color-text-secondary)",
-            background: "rgba(139,92,246,0.1)",
+            background: "var(--color-accent-bg)",
             padding: "2px 8px",
             borderRadius: "var(--radius-sm)",
           }}
@@ -75,7 +75,7 @@ export default function PatternCard({ signal }: { signal: PatternSignal }) {
             gap: "var(--space-3)",
             marginBottom: "var(--space-3)",
             padding: "var(--space-3)",
-            background: "rgba(245,158,11,0.08)",
+            background: "var(--color-primary-bg)",
             borderRadius: "var(--radius-sm)",
           }}
         >

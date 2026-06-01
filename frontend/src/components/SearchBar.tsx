@@ -136,7 +136,7 @@ export default function SearchBar() {
                   fontSize: 12,
                   padding: "2px 8px",
                   borderRadius: "var(--radius-sm)",
-                  background: r.market === "sh" ? "var(--color-accent)" : "#06B6D4",
+                  background: r.market === "sh" ? "var(--color-accent)" : "var(--color-primary)",
                   color: "#fff",
                   opacity: 0.8,
                 }}
