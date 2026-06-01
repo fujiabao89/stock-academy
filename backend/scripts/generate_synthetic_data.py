@@ -21,6 +21,7 @@ from app.database import async_session
 from app.engine import list_all
 from app.engine.detectors import golden_cross, ma_alignment, volume_price  # noqa: F401 — 触发注册
 from app.models.daily_bar import DailyBar
+from app.models.pattern_signal import PatternSignal
 
 HS300_SAMPLE = [
     ("000001", "平安银行"), ("000002", "万科A"), ("000333", "美的集团"),
@@ -142,8 +143,44 @@ def compute_mas(closes: list[float]) -> tuple[list, list, list, list]:
 
 async def clear_existing(db: AsyncSession):
     """清空已有数据"""
+    await db.execute(text("DELETE FROM pattern_signals"))
     await db.execute(text("DELETE FROM daily_bars"))
     await db.commit()
+
+
+# 回测数据（与 patterns.py _BACKTEST_DATA 保持一致）
+_BACKTEST_DATA: dict[str, dict] = {
+    "ma-bullish-alignment": {"forward_20d": {"win_rate": 0.734, "avg_return": 0.056, "occurrences": 1288}},
+    "volume-up-price-up": {"forward_20d": {"win_rate": 0.716, "avg_return": 0.051, "occurrences": 1956}},
+    "volume-price-divergence": {"forward_20d": {"win_rate": 0.730, "avg_return": 0.048, "occurrences": 734}},
+    "ma-convergence-breakout": {"forward_20d": {"win_rate": 0.650, "avg_return": 0.043, "occurrences": 478}},
+    "golden-cross": {"forward_20d": {"win_rate": 0.673, "avg_return": 0.044, "occurrences": 1034}},
+    "death-cross": {"forward_20d": {"win_rate": None, "avg_return": None, "occurrences": 0}},
+    "ma-bearish-alignment": {"forward_20d": {"win_rate": None, "avg_return": None, "occurrences": 0}},
+    "volume-up-price-down": {"forward_20d": {"win_rate": None, "avg_return": None, "occurrences": 0}},
+}
+
+_DETERMINATIONS: dict[str, str] = {
+    "ma-bullish-alignment": "MA5 > MA20 > MA60 > MA120，且四条均线均在昨日基础上继续向上倾斜，表明股价处于强势上升趋势中，多条均线形成多层支撑。",
+    "ma-bearish-alignment": "MA5 < MA20 < MA60 < MA120，且四条均线均在昨日基础上继续向下倾斜，表明股价处于弱势下跌趋势中，多条均线形成层层压力。",
+    "golden-cross": "短期均线 MA5 从下方上穿长期均线 MA20，形成金叉。通常被视为短期趋势转强的买入参考信号，但在震荡市中可能出现虚假信号。",
+    "death-cross": "短期均线 MA5 从上方下穿长期均线 MA20，形成死叉。通常被视为短期趋势转弱的卖出参考信号，需结合成交量和其他指标综合判断。",
+    "volume-up-price-up": "当日涨幅超过1%，同时成交量放大至20日均量的1.5倍以上。量价配合良好，表明上涨有资金推动，持续性相对较强。",
+    "volume-up-price-down": "当日跌幅超过1%，同时成交量放大至20日均量的1.5倍以上。放量下跌表明抛压较重，需警惕进一步下行风险。",
+    "ma-convergence-breakout": "过去20个交易日 MA5/MA20/MA60 三条均线紧密粘合（间距均小于5%），今日 MA5 向上突破。均线粘合后的方向选择往往预示着一段趋势行情的开始。",
+    "volume-price-divergence": "股价创20日新高，但成交量反而萎缩至20日均量的80%以下。量价背离表明上涨动力不足，新高可能难以持续，需警惕回调风险。",
+}
+
+_RELATED: dict[str, list[str]] = {
+    "ma-bullish-alignment": ["ma-bearish-alignment", "golden-cross", "ma-convergence-breakout"],
+    "ma-bearish-alignment": ["ma-bullish-alignment", "death-cross"],
+    "golden-cross": ["death-cross", "ma-bullish-alignment"],
+    "death-cross": ["golden-cross", "ma-bearish-alignment"],
+    "volume-up-price-up": ["volume-up-price-down", "volume-price-divergence"],
+    "volume-up-price-down": ["volume-up-price-up", "volume-price-divergence"],
+    "ma-convergence-breakout": ["ma-bullish-alignment", "golden-cross"],
+    "volume-price-divergence": ["volume-up-price-up", "volume-up-price-down"],
+}
 
 
 async def main():
@@ -160,6 +197,7 @@ async def main():
         await clear_existing(db)
 
         total = 0
+        total_signals = 0
         for code, name in HS300_SAMPLE:
             # 各股票赋予不同的初始价格和基础成交量
             initial_price = rng.uniform(5.0, 50.0)
@@ -200,38 +238,60 @@ async def main():
                 await db.commit()
                 total += len(batch)
 
-            # 计算形态触发概况
-            signals = {}
+            # 构建完整 bar 列表（用于形态检测）
+            all_bars = []
+            for i in range(N_DAYS):
+                all_bars.append(DailyBar(
+                    code=code,
+                    date=START_DATE + timedelta(days=i),
+                    open=round(opens[i], 3),
+                    high=round(highs[i], 3),
+                    low=round(lows[i], 3),
+                    close=round(closes[i], 3),
+                    volume=volumes[i],
+                    amount=round(closes[i] * volumes[i], 2),
+                    ma5=ma5[i],
+                    ma20=ma20[i],
+                    ma60=ma60[i],
+                    ma120=ma120[i],
+                ))
+
+            # 运行形态检测并保存信号
+            signal_counts: dict[str, int] = {}
+            signals_to_insert: list[PatternSignal] = []
             for pid, detector in list_all().items():
                 count = 0
-                # 滑动窗口检测
-                all_bars = []
-                for i in range(N_DAYS):
-                    all_bars.append(DailyBar(
-                        code=code,
-                        date=START_DATE + timedelta(days=i),
-                        open=round(opens[i], 3),
-                        high=round(highs[i], 3),
-                        low=round(lows[i], 3),
-                        close=round(closes[i], 3),
-                        volume=volumes[i],
-                        amount=round(closes[i] * volumes[i], 2),
-                        ma5=ma5[i],
-                        ma20=ma20[i],
-                        ma60=ma60[i],
-                        ma120=ma120[i],
-                    ))
-                # 在完整 bar 列表上滑动
                 for i in range(120, len(all_bars)):
                     if detector.match(all_bars[:i + 1]):
                         count += 1
-                signals[pid] = count
+                        bt = _BACKTEST_DATA.get(pid, {})
+                        signals_to_insert.append(PatternSignal(
+                            code=code,
+                            date=all_bars[i].date,
+                            pattern_id=pid,
+                            pattern_name=detector.pattern_name,
+                            category=detector.category,
+                            direction=detector.direction,
+                            confidence=1.0,
+                            description=_DETERMINATIONS.get(pid, detector.describe()),
+                            backtest=bt.get("forward_20d", {}),
+                            limitations=detector.limitations(),
+                            related_patterns=_RELATED.get(pid, []),
+                        ))
+                signal_counts[pid] = count
 
-            signal_summary = ", ".join(f"{k}={v}" for k, v in signals.items() if v > 0)
+            # 批量插入信号
+            if signals_to_insert:
+                for j in range(0, len(signals_to_insert), 500):
+                    db.add_all(signals_to_insert[j:j + 500])
+                    await db.commit()
+                total_signals += len(signals_to_insert)
+
+            signal_summary = ", ".join(f"{k}={v}" for k, v in signal_counts.items() if v > 0)
             print(f"  {code} {name}: 插入{N_DAYS}条 | 起始价{closes[0]:.2f} 最新价{closes[-1]:.2f} | 信号: {signal_summary}")
 
-    print(f"\n[2] 总计插入 {total} 条日线数据")
-    print("完成！可以运行回测：docker compose exec backend python scripts/backtest.py --all")
+    print(f"\n[2] 总计插入 {total} 条日线数据, {total_signals} 条形态信号")
+    print("完成！")
 
 
 if __name__ == "__main__":
