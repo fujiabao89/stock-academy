@@ -127,7 +127,7 @@ input {
   --header-height: 56px;
   --main-padding-x: var(--space-6);
   --main-padding-y: var(--space-6);
-  --chart-height: 500px;
+  --chart-height: 550px;
 }
 
 @media (max-width: 640px) {
@@ -135,6 +135,6 @@ input {
     --header-height: 48px;
     --main-padding-x: var(--space-3);
     --main-padding-y: var(--space-4);
-    --chart-height: 320px;
+    --chart-height: 400px;
   }
 }
