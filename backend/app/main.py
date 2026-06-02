@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from .api import glossary_router, patterns_router, register_error_handlers, stocks_router
+from .api import glossary_router, patterns_router, register_error_handlers, signals_router, stocks_router
 from .config import settings
 from .logging import correlation_middleware, get_logger, setup_logging
 
@@ -46,6 +46,7 @@ register_error_handlers(app)
 # 路由
 app.include_router(stocks_router, prefix="/api")
 app.include_router(patterns_router, prefix="/api")
+app.include_router(signals_router, prefix="/api")
 app.include_router(glossary_router, prefix="/api")
 
 
