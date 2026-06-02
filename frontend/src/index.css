@@ -11,13 +11,13 @@
   --color-text-secondary: #94A3B8;
   --color-primary: #F59E0B;
   --color-accent: #8B5CF6;
-  --color-bullish: #22C55E;
-  --color-bearish: #EF4444;
+  --color-bullish: #EF4444;
+  --color-bearish: #22C55E;
   --color-destructive: #EF4444;
 
   /* 半透明叠加（用于标签/徽章背景） */
-  --color-bullish-bg: rgba(34, 197, 94, 0.15);
-  --color-bearish-bg: rgba(239, 68, 68, 0.15);
+  --color-bullish-bg: rgba(239, 68, 68, 0.15);
+  --color-bearish-bg: rgba(34, 197, 94, 0.15);
   --color-accent-bg: rgba(139, 92, 246, 0.1);
   --color-primary-bg: rgba(245, 158, 11, 0.08);
 

@@ -92,8 +92,8 @@ const C = {
   text2: "#94A3B8",
   primary: "#F59E0B",
   accent: "#8B5CF6",
-  bullish: "#22C55E",
-  bearish: "#EF4444",
+  bullish: "#EF4444",
+  bearish: "#22C55E",
 } as const;
 
 /* ========== 数据窗口组件 ========== */
