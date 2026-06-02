@@ -151,7 +151,7 @@ export default function StockDetail() {
       </div>
 
       {/* Tab Content */}
-      {tab === "kline" && <KlineChart data={kline} signals={signals} />}
+      {tab === "kline" && <KlineChart data={kline} />}
       {tab === "signals" && <PatternSignalList signals={signals} />}
     </div>
   );

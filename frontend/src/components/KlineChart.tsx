@@ -16,10 +16,17 @@ interface KlineItem {
 }
 
 interface SignalInfo {
+  code: string;
   date: string;
   pattern_id: string;
   pattern_name: string;
+  category: string;
   direction: string;
+  confidence: number;
+  description: string;
+  backtest: { win_rate: number; avg_return: number; occurrences: number } | null;
+  limitations: string[];
+  related_patterns: string[];
 }
 
 /* ========== 技术指标计算 ========== */
@@ -220,32 +227,12 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
         result.push({
           name: s.pattern_name,
           coord: [date, isBull ? bar.high : bar.low],
-          value: `${s.pattern_name} · ${isBull ? "看涨" : "看跌"}`,
+          value: s.pattern_name,
           symbol: "arrow",
           symbolRotate: isBull ? 0 : 180,
-          symbolSize: 16,
+          symbolSize: 14,
           symbolOffset: offset,
-          itemStyle: {
-            color,
-            borderColor: "#F1F5F9",
-            borderWidth: 1.5,
-            shadowBlur: 4,
-            shadowColor: "rgba(0,0,0,0.5)",
-          },
-          label: {
-            show: true,
-            position: isBull ? "top" : "bottom",
-            distance: 6,
-            formatter: s.pattern_name,
-            fontSize: 11,
-            fontWeight: 500,
-            color,
-            backgroundColor: "rgba(15, 23, 42, 0.85)",
-            borderColor: color,
-            borderWidth: 1,
-            borderRadius: 4,
-            padding: [2, 6],
-          },
+          itemStyle: { color, borderColor: "#F1F5F9", borderWidth: 1, shadowBlur: 3, shadowColor: "rgba(0,0,0,0.4)" },
           _pid: s.pattern_id,
         });
       }
@@ -282,11 +269,11 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
       candlestick.markPoint = {
         data: markPoints,
         symbol: "arrow",
-        symbolSize: 16,
+        symbolSize: 14,
         animation: false,
         tooltip: {
           trigger: "item",
-          formatter: (p: any) => `${p.data.value}<br/>点击查看教学`,
+          formatter: (p: any) => `${p.data.value}`,
         },
       };
     }
@@ -463,7 +450,7 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
     };
 
     instanceRef.current.setOption(option, true);
-  }, [data, showMA, showBOLL, boll, macd, signals]);
+  }, [data, showMA, showBOLL, boll, macd, markPoints]);
 
   // 十字光标 + 数据窗口事件
   useEffect(() => {

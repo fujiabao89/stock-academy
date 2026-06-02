@@ -1,7 +1,21 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import PatternCard from "../components/PatternCard";
+import KlineChart from "../components/KlineChart";
 import type { PatternSignal } from "./StockDetail";
+
+interface KlineItem {
+  date: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+  ma5: number | null;
+  ma20: number | null;
+  ma60: number | null;
+  ma120: number | null;
+}
 
 interface BacktestWindow {
   win_rate: number | null;
@@ -56,6 +70,8 @@ export default function PatternDetailPage() {
   const [detail, setDetail] = useState<PatternDetail | null>(null);
   const [stocks, setStocks] = useState<PatternSignal[]>([]);
   const [patternNames, setPatternNames] = useState<Map<string, string>>(new Map());
+  const [exampleCode, setExampleCode] = useState<string | null>(null);
+  const [exampleKline, setExampleKline] = useState<KlineItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -71,7 +87,7 @@ export default function PatternDetailPage() {
         return r.json();
       }),
       fetch(`/api/patterns/${patternId}/stocks`).then((r) => (r.ok ? r.json() : [])),
-    ]).then(([all, detailRes, stocksRes]) => {
+    ]).then(async ([all, detailRes, stocksRes]) => {
       if (detailRes.status === "rejected") {
         setError(detailRes.reason?.message ?? "加载失败");
         return;
@@ -84,7 +100,19 @@ export default function PatternDetailPage() {
         }
         setPatternNames(map);
       }
-      setStocks(stocksRes.status === "fulfilled" && Array.isArray(stocksRes.value) ? stocksRes.value : []);
+      const stockList: PatternSignal[] = stocksRes.status === "fulfilled" && Array.isArray(stocksRes.value) ? stocksRes.value : [];
+      setStocks(stockList);
+
+      if (stockList.length > 0) {
+        const code = stockList[0].code;
+        setExampleCode(code);
+        try {
+          const kl = await fetch(`/api/stocks/${code}/kline?period=d&limit=120`).then((r) => (r.ok ? r.json() : []));
+          setExampleKline(Array.isArray(kl) ? kl : []);
+        } catch {
+          setExampleKline([]);
+        }
+      }
     }).catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [patternId]);
@@ -163,6 +191,30 @@ export default function PatternDetailPage() {
           {detail.determination}
         </div>
       </section>
+
+      {/* 形态示例 K 线图 */}
+      {exampleKline.length > 0 && (
+        <section style={{ marginBottom: "var(--space-6)" }}>
+          <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--color-text)", margin: "0 0 var(--space-3) 0" }}>
+            形态示例
+            {exampleCode && (
+              <Link
+                to={`/stock/${exampleCode}`}
+                style={{
+                  fontSize: 13, fontWeight: 400, color: "var(--color-primary)", marginLeft: "var(--space-2)",
+                  display: "inline-flex", alignItems: "center", minHeight: 32,
+                }}
+              >
+                ({exampleCode} K线图 →)
+              </Link>
+            )}
+          </h2>
+          <KlineChart
+            data={exampleKline}
+            signals={stocks.filter((s) => s.code === exampleCode)}
+          />
+        </section>
+      )}
 
       {/* 历史回测 */}
       <section style={{ marginBottom: "var(--space-6)" }}>
