@@ -210,19 +210,42 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
       let bullCount = 0, bearCount = 0;
       for (const s of sigs) {
         const isBull = s.direction === "bullish";
+        const step = isBull ? bullCount : bearCount;
+        const color = isBull ? C.bullish : C.bearish;
         const offset: [number, number] = isBull
-          ? [bullCount * 8, -(bullCount * 24 + 28)]
-          : [bearCount * 8, bearCount * 24 + 28];
+          ? [step * 6, -(step * 22 + 18)]
+          : [step * 6, step * 22 + 18];
         if (isBull) bullCount++;
         else bearCount++;
         result.push({
           name: s.pattern_name,
           coord: [date, isBull ? bar.high : bar.low],
-          value: isBull ? "看涨" : "看跌",
-          symbol: "pin",
-          symbolSize: 32,
+          value: `${s.pattern_name} · ${isBull ? "看涨" : "看跌"}`,
+          symbol: "arrow",
+          symbolRotate: isBull ? 0 : 180,
+          symbolSize: 16,
           symbolOffset: offset,
-          itemStyle: { color: isBull ? C.bullish : C.bearish },
+          itemStyle: {
+            color,
+            borderColor: "#F1F5F9",
+            borderWidth: 1.5,
+            shadowBlur: 4,
+            shadowColor: "rgba(0,0,0,0.5)",
+          },
+          label: {
+            show: true,
+            position: isBull ? "top" : "bottom",
+            distance: 6,
+            formatter: s.pattern_name,
+            fontSize: 11,
+            fontWeight: 500,
+            color,
+            backgroundColor: "rgba(15, 23, 42, 0.85)",
+            borderColor: color,
+            borderWidth: 1,
+            borderRadius: 4,
+            padding: [2, 6],
+          },
           _pid: s.pattern_id,
         });
       }
@@ -258,10 +281,13 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
     if (markPoints.length > 0) {
       candlestick.markPoint = {
         data: markPoints,
-        symbol: "pin",
-        symbolSize: 32,
+        symbol: "arrow",
+        symbolSize: 16,
         animation: false,
-        label: { show: false },
+        tooltip: {
+          trigger: "item",
+          formatter: (p: any) => `${p.data.value}<br/>点击查看教学`,
+        },
       };
     }
     series.push(candlestick);
