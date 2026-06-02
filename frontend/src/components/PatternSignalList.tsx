@@ -32,7 +32,7 @@ export default function PatternSignalList({ signals }: { signals: PatternSignal[
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
         {signals.map((s) => (
-          <PatternCard key={s.pattern_id} signal={s} />
+          <PatternCard key={`${s.date}-${s.pattern_id}`} signal={s} />
         ))}
       </div>
     </div>

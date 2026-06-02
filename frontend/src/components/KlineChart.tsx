@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import * as echarts from "echarts";
 
 interface KlineItem {
@@ -12,6 +13,13 @@ interface KlineItem {
   ma20: number | null;
   ma60: number | null;
   ma120: number | null;
+}
+
+interface SignalInfo {
+  date: string;
+  pattern_id: string;
+  pattern_name: string;
+  direction: string;
 }
 
 /* ========== 技术指标计算 ========== */
@@ -172,7 +180,7 @@ function DataWindow({
 
 /* ========== 主组件 ========== */
 
-export default function KlineChart({ data }: { data: KlineItem[] }) {
+export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; signals?: SignalInfo[] }) {
   const chartRef = useRef<HTMLDivElement>(null);
   const instanceRef = useRef<echarts.ECharts | null>(null);
 
@@ -184,6 +192,45 @@ export default function KlineChart({ data }: { data: KlineItem[] }) {
   const closes = useMemo(() => data.map((d) => d.close), [data]);
   const macd = useMemo(() => calcMACD(closes), [closes]);
   const boll = useMemo(() => calcBOLL(closes), [closes]);
+
+  const markPoints = useMemo(() => {
+    if (signals.length === 0) return [];
+    const dates = data.map((d) => d.date);
+    const byDate = new Map<string, SignalInfo[]>();
+    for (const s of signals) {
+      const arr = byDate.get(s.date) || [];
+      arr.push(s);
+      byDate.set(s.date, arr);
+    }
+    const result: any[] = [];
+    for (const [date, sigs] of byDate) {
+      const idx = dates.indexOf(date);
+      if (idx === -1) continue;
+      const bar = data[idx];
+      let bullCount = 0, bearCount = 0;
+      for (const s of sigs) {
+        const isBull = s.direction === "bullish";
+        const offset: [number, number] = isBull
+          ? [bullCount * 8, -(bullCount * 24 + 28)]
+          : [bearCount * 8, bearCount * 24 + 28];
+        if (isBull) bullCount++;
+        else bearCount++;
+        result.push({
+          name: s.pattern_name,
+          coord: [date, isBull ? bar.high : bar.low],
+          value: isBull ? "看涨" : "看跌",
+          symbol: "pin",
+          symbolSize: 32,
+          symbolOffset: offset,
+          itemStyle: { color: isBull ? C.bullish : C.bearish },
+          _pid: s.pattern_id,
+        });
+      }
+    }
+    return result;
+  }, [signals, data]);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!chartRef.current || data.length === 0) return;
@@ -200,14 +247,24 @@ export default function KlineChart({ data }: { data: KlineItem[] }) {
     const series: echarts.EChartsOption["series"] = [];
 
     // ---- Grid 0: K 线 ----
-    series.push({
+    const candlestick: any = {
       type: "candlestick",
       name: "K线",
       data: ohlc,
       xAxisIndex: 0,
       yAxisIndex: 0,
       itemStyle: { color: C.bullish, color0: C.bearish, borderColor: C.bullish, borderColor0: C.bearish },
-    });
+    };
+    if (markPoints.length > 0) {
+      candlestick.markPoint = {
+        data: markPoints,
+        symbol: "pin",
+        symbolSize: 32,
+        animation: false,
+        label: { show: false },
+      };
+    }
+    series.push(candlestick);
 
     // MA 均线
     if (showMA) {
@@ -380,7 +437,7 @@ export default function KlineChart({ data }: { data: KlineItem[] }) {
     };
 
     instanceRef.current.setOption(option, true);
-  }, [data, showMA, showBOLL, boll, macd]);
+  }, [data, showMA, showBOLL, boll, macd, signals]);
 
   // 十字光标 + 数据窗口事件
   useEffect(() => {
@@ -392,6 +449,11 @@ export default function KlineChart({ data }: { data: KlineItem[] }) {
     };
     const onMouseOut = () => setHoveredIndex(null);
     const onClick = (params: any) => {
+      if (params.componentType === "markPoint") {
+        const patternId = params.data?._pid;
+        if (patternId) navigate(`/learn/patterns/${patternId}`);
+        return;
+      }
       if (params.dataIndex != null) {
         setPinnedIndex((prev) => (prev === params.dataIndex ? null : params.dataIndex));
       }

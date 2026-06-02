@@ -193,19 +193,11 @@ def _aggregate_bars(bars: list[dict], freq: str) -> list[dict]:
 
 @router.get("/{code}/signals", response_model=list[PatternSignalOut])
 async def get_stock_signals(code: str, db: AsyncSession = Depends(get_db)):
-    """该股票最新日期的所有形态信号"""
-    # 找到该股票的最新信号日期
-    latest_date = await db.execute(
-        select(func.max(PatternSignal.date)).where(PatternSignal.code == code)
-    )
-    latest_date = latest_date.scalar()
-    if latest_date is None:
-        return []
-
+    """该股票的全部形态信号"""
     signals = await db.execute(
         select(PatternSignal)
-        .where(PatternSignal.code == code, PatternSignal.date == latest_date)
-        .order_by(PatternSignal.pattern_id)
+        .where(PatternSignal.code == code)
+        .order_by(PatternSignal.date.desc(), PatternSignal.pattern_id)
     )
     signals = list(signals.scalars().all())
 
