@@ -4,8 +4,8 @@ from pydantic import BaseModel, Field
 
 
 class BacktestWindow(BaseModel):
-    win_rate: float
-    avg_return: float
+    win_rate: float | None
+    avg_return: float | None
     occurrences: int
 
 
