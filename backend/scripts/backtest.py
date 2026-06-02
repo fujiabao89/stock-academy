@@ -111,8 +111,12 @@ async def backtest_pattern(
                         if not future_bars:
                             continue
 
-                        max_price = max(b.high for b in future_bars)
-                        ret = (max_price - today.close) / today.close
+                        if detector.direction == "bearish":
+                            min_price = min(b.low for b in future_bars)
+                            ret = (today.close - min_price) / today.close
+                        else:
+                            max_price = max(b.high for b in future_bars)
+                            ret = (max_price - today.close) / today.close
                         results[f"forward_{w}d"]["returns"].append(ret)
                         if ret >= 0.03:
                             results[f"forward_{w}d"]["wins"] += 1

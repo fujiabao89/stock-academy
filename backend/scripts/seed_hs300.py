@@ -46,14 +46,14 @@ HS300_SAMPLE = [
 ]
 
 _BACKTEST_DATA: dict[str, dict] = {
-    "ma-bullish-alignment": {"forward_20d": {"win_rate": 0.734, "avg_return": 0.056, "occurrences": 1288}},
-    "volume-up-price-up": {"forward_20d": {"win_rate": 0.716, "avg_return": 0.051, "occurrences": 1956}},
-    "volume-price-divergence": {"forward_20d": {"win_rate": 0.730, "avg_return": 0.048, "occurrences": 734}},
-    "ma-convergence-breakout": {"forward_20d": {"win_rate": 0.650, "avg_return": 0.043, "occurrences": 478}},
-    "golden-cross": {"forward_20d": {"win_rate": 0.673, "avg_return": 0.044, "occurrences": 1034}},
-    "death-cross": {"forward_20d": {"win_rate": None, "avg_return": None, "occurrences": 0}},
-    "ma-bearish-alignment": {"forward_20d": {"win_rate": None, "avg_return": None, "occurrences": 0}},
-    "volume-up-price-down": {"forward_20d": {"win_rate": None, "avg_return": None, "occurrences": 0}},
+    "ma-bullish-alignment": {"forward_20d": {"win_rate": 0.715, "avg_return": 0.0933, "occurrences": 4071}},
+    "volume-up-price-up": {"forward_20d": {"win_rate": 0.700, "avg_return": 0.0875, "occurrences": 2720}},
+    "volume-price-divergence": {"forward_20d": {"win_rate": 0.694, "avg_return": 0.0640, "occurrences": 307}},
+    "ma-convergence-breakout": {"forward_20d": {"win_rate": 0.621, "avg_return": 0.0638, "occurrences": 11394}},
+    "golden-cross": {"forward_20d": {"win_rate": 0.653, "avg_return": 0.0734, "occurrences": 1413}},
+    "death-cross": {"forward_20d": {"win_rate": 0.689, "avg_return": 0.0642, "occurrences": 1415}},
+    "ma-bearish-alignment": {"forward_20d": {"win_rate": 0.664, "avg_return": 0.0627, "occurrences": 5662}},
+    "volume-up-price-down": {"forward_20d": {"win_rate": 0.669, "avg_return": 0.0639, "occurrences": 1601}},
 }
 
 _DETERMINATIONS: dict[str, str] = {
