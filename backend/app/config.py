@@ -40,6 +40,10 @@ class Settings(BaseSettings):
     stock_api_base_url_sina: str = "https://hq.sinajs.cn"
     stock_api_base_url_tencent: str = "https://qt.gtimg.cn"
 
+    # Tushare 行情数据
+    tushare_token: str = ""
+    tushare_request_delay: float = 0.6
+
     # 形态匹配引擎
     pattern_match_batch_size: int = 100
     backtest_years: int = 10
