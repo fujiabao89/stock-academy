@@ -47,6 +47,20 @@ export default function Layout() {
           >
             首页
           </Link>
+          <Link
+            to="/learn"
+            style={{
+              color: "var(--color-text-secondary)",
+              fontWeight: 500,
+              transition: "color 0.15s",
+              display: "flex",
+              alignItems: "center",
+              minHeight: 44,
+              padding: "0 4px",
+            }}
+          >
+            学堂
+          </Link>
         </nav>
       </header>
       <main style={{ flex: 1, padding: "var(--main-padding-y) var(--main-padding-x)", maxWidth: 1200, margin: "0 auto", width: "100%" }}>

@@ -5,7 +5,7 @@ from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
-from ..engine import get
+from ..engine import get, list_all
 from ..models.pattern_signal import PatternSignal
 from ..schemas.pattern import (
     BacktestWindow,
@@ -14,8 +14,38 @@ from ..schemas.pattern import (
     PatternStats,
 )
 from ..schemas.stock import StockSearchResult
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/patterns", tags=["patterns"])
+
+
+class PatternSummary(BaseModel):
+    pattern_id: str
+    pattern_name: str
+    category: str
+    direction: str
+    description: str
+    win_rate_20d: float | None = None
+    related_count: int
+
+
+@router.get("", response_model=list[PatternSummary])
+async def list_patterns():
+    """列出全部已注册的形态"""
+    result = []
+    for d in list_all().values():
+        bt = _BACKTEST_DATA.get(d.pattern_id, {}).get("forward_20d", {})
+        wr = bt.get("win_rate") if bt else None
+        result.append(PatternSummary(
+            pattern_id=d.pattern_id,
+            pattern_name=d.pattern_name,
+            category=d.category,
+            direction=d.direction,
+            description=d.describe(),
+            win_rate_20d=wr,
+            related_count=len(_get_related(d.pattern_id)),
+        ))
+    return result
 
 # 回测数据（基于 2016-2026 年 30 只沪深300 成分股回测，20日前瞻窗口）
 _BACKTEST_DATA: dict[str, dict] = {
@@ -107,6 +137,7 @@ async def get_pattern_detail(pattern_id: str):
         pattern_id=detector.pattern_id,
         pattern_name=detector.pattern_name,
         category=detector.category,
+        direction=detector.direction,
         description=detector.describe(),
         determination=_get_determination(pattern_id),
         backtest=stats,

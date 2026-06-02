@@ -166,11 +166,11 @@ _GLOSSARY: dict[str, dict] = {
 
 
 @router.get("")
-async def search_glossary(q: str = Query(..., min_length=1, description="搜索关键词")):
-    """搜索术语"""
+async def search_glossary(q: str = Query("", description="搜索关键词，留空返回全部术语")):
+    """搜索术语，留空返回全部"""
     q_lower = q.lower().strip()
     results = []
     for term, info in _GLOSSARY.items():
-        if q_lower in term.lower() or q_lower in info.get("aliases", []):
+        if not q_lower or q_lower in term.lower() or any(q_lower in a for a in info.get("aliases", [])):
             results.append({"term": term, **info})
-    return results[:20]
+    return results[:50]

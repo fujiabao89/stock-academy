@@ -41,6 +41,7 @@ class PatternDetail(BaseModel):
     pattern_id: str
     pattern_name: str
     category: str
+    direction: str
     description: str
     determination: str = Field(description="判定逻辑白话解释")
     backtest: PatternStats
