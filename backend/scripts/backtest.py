@@ -290,7 +290,11 @@ async def main():
     parser.add_argument("--start", type=str, help="起始日期 YYYY-MM-DD")
     parser.add_argument("--end", type=str, help="结束日期 YYYY-MM-DD")
     parser.add_argument("--output-json", type=str, help="导出 JSON 文件路径")
+    parser.add_argument("--seed", type=int, default=None, help="随机种子（固定后随机基线可复现）")
     args = parser.parse_args()
+
+    if args.seed is not None:
+        random.seed(args.seed)
 
     start_date = date.fromisoformat(args.start) if args.start else None
     end_date = date.fromisoformat(args.end) if args.end else None

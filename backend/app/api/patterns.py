@@ -27,8 +27,13 @@ router = APIRouter(prefix="/patterns", tags=["patterns"])
 
 def _load_backtest_data() -> dict[str, dict]:
     json_path = Path(__file__).resolve().parent.parent / "data" / "backtest_data.json"
-    with open(json_path, "r", encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with open(json_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        import logging
+        logging.getLogger(__name__).warning("无法加载回测数据 %s: %s", json_path, e)
+        return {}
 
 
 _BACKTEST_DATA: dict[str, dict] = _load_backtest_data()
