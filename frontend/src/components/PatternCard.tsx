@@ -68,7 +68,7 @@ export default function PatternCard({ signal }: { signal: PatternSignal }) {
         {signal.description}
       </p>
 
-      {/* Win Rate */}
+      {/* Win Rate Summary */}
       {winRate != null && (
         <div
           style={{
@@ -87,7 +87,7 @@ export default function PatternCard({ signal }: { signal: PatternSignal }) {
             {(winRate * 100).toFixed(1)}%
           </span>
           <span style={{ fontSize: 12, color: "var(--color-muted)" }}>
-            ({signal.backtest?.occurrences ?? 0} 次历史样本)
+            (n={signal.backtest?.occurrences?.toLocaleString() ?? 0})
           </span>
         </div>
       )}

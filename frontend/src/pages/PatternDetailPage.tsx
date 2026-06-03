@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import PatternCard from "../components/PatternCard";
 import KlineChart from "../components/KlineChart";
+import ConfidenceBadge from "../components/ConfidenceBadge";
+import DistributionBar from "../components/DistributionBar";
 import type { PatternSignal } from "./StockDetail";
 
 interface KlineItem {
@@ -23,6 +25,20 @@ interface BacktestWindow {
   occurrences: number;
 }
 
+interface DistributionBin {
+  bin_start: number;
+  bin_end: number;
+  count: number;
+}
+
+interface RegimeSplit {
+  regime: string;
+  label: string;
+  win_rate: number | null;
+  avg_return: number | null;
+  occurrences: number;
+}
+
 interface PatternDetail {
   pattern_id: string;
   pattern_name: string;
@@ -37,6 +53,14 @@ interface PatternDetail {
     sample_period: string;
     max_return: number | null;
     max_loss: number | null;
+    distribution: DistributionBin[] | null;
+    regime_splits: RegimeSplit[] | null;
+    confidence_grade: string | null;
+    random_baseline: {
+      win_rate: number | null;
+      avg_return: number | null;
+      occurrences: number;
+    } | null;
   };
   limitations: string[];
   related_patterns: string[];
@@ -77,6 +101,7 @@ export default function PatternDetailPage() {
 
   useEffect(() => {
     if (!patternId) return;
+    let cancelled = false;
     setLoading(true);
     setError(null);
 
@@ -88,6 +113,7 @@ export default function PatternDetailPage() {
       }),
       fetch(`/api/patterns/${patternId}/stocks`).then((r) => (r.ok ? r.json() : [])),
     ]).then(async ([all, detailRes, stocksRes]) => {
+      if (cancelled) return;
       if (detailRes.status === "rejected") {
         setError(detailRes.reason?.message ?? "加载失败");
         return;
@@ -108,13 +134,15 @@ export default function PatternDetailPage() {
         setExampleCode(code);
         try {
           const kl = await fetch(`/api/stocks/${code}/kline?period=d&limit=120`).then((r) => (r.ok ? r.json() : []));
-          setExampleKline(Array.isArray(kl) ? kl : []);
+          if (!cancelled) setExampleKline(Array.isArray(kl) ? kl : []);
         } catch {
-          setExampleKline([]);
+          if (!cancelled) setExampleKline([]);
         }
       }
-    }).catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+    }).catch((e) => { if (!cancelled) setError(e.message); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
   }, [patternId]);
 
   if (loading) {
@@ -218,12 +246,73 @@ export default function PatternDetailPage() {
 
       {/* 历史回测 */}
       <section style={{ marginBottom: "var(--space-6)" }}>
-        <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--color-text)", margin: "0 0 var(--space-3) 0" }}>
+        <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--color-text)", margin: "0 0 var(--space-3) 0", display: "flex", alignItems: "center", gap: "var(--space-2)" }}>
           历史回测
-          <span style={{ fontSize: 12, fontWeight: 400, color: "var(--color-muted)", marginLeft: "var(--space-2)" }}>
+          <span style={{ fontSize: 12, fontWeight: 400, color: "var(--color-muted)" }}>
             ({detail.backtest.sample_period})
           </span>
+          <ConfidenceBadge grade={detail.backtest.confidence_grade} />
         </h2>
+
+        {/* 收益分布直方图 */}
+        {detail.backtest.distribution && detail.backtest.distribution.length > 0 && (
+          <div style={{
+            background: "var(--color-surface)", border: "1px solid var(--color-border)",
+            borderRadius: "var(--radius-md)", padding: "var(--space-5)", marginBottom: "var(--space-4)",
+          }}>
+            <DistributionBar
+              bins={detail.backtest.distribution}
+              randomBaseline={detail.backtest.random_baseline}
+            />
+          </div>
+        )}
+
+        {/* 牛熊市拆分 */}
+        {detail.backtest.regime_splits && detail.backtest.regime_splits.length > 0 && (
+          <div style={{
+            background: "var(--color-surface)", border: "1px solid var(--color-border)",
+            borderRadius: "var(--radius-md)", padding: "var(--space-5)", marginBottom: "var(--space-4)",
+          }}>
+            <div style={{ fontSize: 13, fontWeight: 500, color: "var(--color-text)", marginBottom: "var(--space-3)" }}>
+              不同市场环境下的表现（20日窗口）
+            </div>
+            <div style={{ display: "flex", gap: "var(--space-3)", flexWrap: "wrap" }}>
+              {detail.backtest.regime_splits.map((rs) => {
+                const isBull = rs.regime === "bull";
+                const isBear = rs.regime === "bear";
+                const regimeColor = isBull ? "var(--color-bullish)" : isBear ? "var(--color-bearish)" : "var(--color-shock)";
+                const regimeBg = isBull ? "var(--color-bullish-bg)" : isBear ? "var(--color-bearish-bg)" : "var(--color-shock-bg)";
+                return (
+                  <div
+                    key={rs.regime}
+                    style={{
+                      flex: "1 1 140px",
+                      padding: "var(--space-4)",
+                      background: regimeBg,
+                      borderRadius: "var(--radius-sm)",
+                      border: `1px solid ${regimeColor}20`,
+                    }}
+                  >
+                    <div style={{ fontSize: 12, fontWeight: 600, color: regimeColor, marginBottom: "var(--space-2)" }}>
+                      {rs.label}
+                    </div>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: "var(--color-text)", fontVariantNumeric: "tabular-nums" }}>
+                      {fmtWinRate(rs.win_rate)}
+                    </div>
+                    <div style={{ fontSize: 12, color: "var(--color-text-secondary)", marginTop: 2 }}>
+                      均收益 {fmtPct(rs.avg_return)}
+                    </div>
+                    <div style={{ fontSize: 11, color: "var(--color-muted)", marginTop: 2 }}>
+                      n={rs.occurrences.toLocaleString()}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* 多窗口统计表 */}
         <div style={{
           background: "var(--color-surface)", border: "1px solid var(--color-border)",
           borderRadius: "var(--radius-md)", overflow: "hidden",
@@ -286,6 +375,15 @@ export default function PatternDetailPage() {
               )}
             </div>
           )}
+        </div>
+
+        {/* 教育性声明 */}
+        <div style={{
+          marginTop: "var(--space-3)", paddingLeft: "var(--space-3)",
+          borderLeft: "2px solid var(--color-disclaimer-border)",
+          fontSize: 12, color: "var(--color-disclaimer)", fontStyle: "italic", lineHeight: 1.7,
+        }}>
+          历史统计数据仅为过去行情的概率总结，不代表对未来走势的预测。任何技术形态都可能失效，请结合市场环境、基本面等多维度信息综合判断。
         </div>
       </section>
 

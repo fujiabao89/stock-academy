@@ -1,5 +1,8 @@
 """形态相关 API 端点"""
 
+import json
+from pathlib import Path
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,14 +12,26 @@ from ..engine import get, list_all
 from ..models.pattern_signal import PatternSignal
 from ..schemas.pattern import (
     BacktestWindow,
+    DistributionBin,
     PatternDetail,
     PatternSignalOut,
     PatternStats,
+    RandomBaseline,
+    RegimeSplit,
 )
 from ..schemas.stock import StockSearchResult
 from pydantic import BaseModel
 
 router = APIRouter(prefix="/patterns", tags=["patterns"])
+
+
+def _load_backtest_data() -> dict[str, dict]:
+    json_path = Path(__file__).resolve().parent.parent / "data" / "backtest_data.json"
+    with open(json_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+_BACKTEST_DATA: dict[str, dict] = _load_backtest_data()
 
 
 class PatternSummary(BaseModel):
@@ -27,6 +42,7 @@ class PatternSummary(BaseModel):
     description: str
     win_rate_20d: float | None = None
     related_count: int
+    confidence_grade: str | None = None
 
 
 @router.get("", response_model=list[PatternSummary])
@@ -36,6 +52,7 @@ async def list_patterns():
     for d in list_all().values():
         bt = _BACKTEST_DATA.get(d.pattern_id, {}).get("forward_20d", {})
         wr = bt.get("win_rate") if bt else None
+        occ = bt.get("occurrences", 0) if bt else 0
         result.append(PatternSummary(
             pattern_id=d.pattern_id,
             pattern_name=d.pattern_name,
@@ -44,76 +61,10 @@ async def list_patterns():
             description=d.describe(),
             win_rate_20d=wr,
             related_count=len(_get_related(d.pattern_id)),
+            confidence_grade=_compute_confidence(wr, occ),
         ))
     return result
 
-# 回测数据（基于 2019-2026 年 30 只沪深300 成分股真实行情回测）
-_BACKTEST_DATA: dict[str, dict] = {
-    "ma-bullish-alignment": {
-        "forward_5d": {"win_rate": 0.501, "avg_return": 0.0432, "occurrences": 4082},
-        "forward_10d": {"win_rate": 0.624, "avg_return": 0.0640, "occurrences": 4082},
-        "forward_20d": {"win_rate": 0.715, "avg_return": 0.0933, "occurrences": 4071},
-        "sample_period": "2019-2026",
-        "max_return": 1.0583,
-        "max_loss": -0.0819,
-    },
-    "volume-up-price-up": {
-        "forward_5d": {"win_rate": 0.478, "avg_return": 0.0471, "occurrences": 2735},
-        "forward_10d": {"win_rate": 0.596, "avg_return": 0.0632, "occurrences": 2733},
-        "forward_20d": {"win_rate": 0.700, "avg_return": 0.0875, "occurrences": 2720},
-        "sample_period": "2019-2026",
-        "max_return": 0.7006,
-        "max_loss": -0.1000,
-    },
-    "volume-price-divergence": {
-        "forward_5d": {"win_rate": 0.420, "avg_return": 0.0333, "occurrences": 307},
-        "forward_10d": {"win_rate": 0.554, "avg_return": 0.0455, "occurrences": 307},
-        "forward_20d": {"win_rate": 0.694, "avg_return": 0.0640, "occurrences": 307},
-        "sample_period": "2019-2026",
-        "max_return": 0.3891,
-        "max_loss": -0.0214,
-    },
-    "ma-convergence-breakout": {
-        "forward_5d": {"win_rate": 0.350, "avg_return": 0.0293, "occurrences": 11454},
-        "forward_10d": {"win_rate": 0.497, "avg_return": 0.0431, "occurrences": 11445},
-        "forward_20d": {"win_rate": 0.621, "avg_return": 0.0638, "occurrences": 11394},
-        "sample_period": "2019-2026",
-        "max_return": 0.7384,
-        "max_loss": -0.1000,
-    },
-    "golden-cross": {
-        "forward_5d": {"win_rate": 0.392, "avg_return": 0.0338, "occurrences": 1415},
-        "forward_10d": {"win_rate": 0.543, "avg_return": 0.0494, "occurrences": 1415},
-        "forward_20d": {"win_rate": 0.653, "avg_return": 0.0734, "occurrences": 1413},
-        "sample_period": "2019-2026",
-        "max_return": 0.7202,
-        "max_loss": -0.1000,
-    },
-    "death-cross": {
-        "forward_5d": {"win_rate": 0.386, "avg_return": 0.0302, "occurrences": 1433},
-        "forward_10d": {"win_rate": 0.563, "avg_return": 0.0447, "occurrences": 1427},
-        "forward_20d": {"win_rate": 0.689, "avg_return": 0.0642, "occurrences": 1415},
-        "sample_period": "2019-2026",
-        "max_return": 0.3368,
-        "max_loss": -0.0340,
-    },
-    "ma-bearish-alignment": {
-        "forward_5d": {"win_rate": 0.409, "avg_return": 0.0313, "occurrences": 5827},
-        "forward_10d": {"win_rate": 0.544, "avg_return": 0.0445, "occurrences": 5753},
-        "forward_20d": {"win_rate": 0.664, "avg_return": 0.0627, "occurrences": 5662},
-        "sample_period": "2019-2026",
-        "max_return": 0.3062,
-        "max_loss": -0.0356,
-    },
-    "volume-up-price-down": {
-        "forward_5d": {"win_rate": 0.459, "avg_return": 0.0350, "occurrences": 1613},
-        "forward_10d": {"win_rate": 0.575, "avg_return": 0.0477, "occurrences": 1613},
-        "forward_20d": {"win_rate": 0.669, "avg_return": 0.0639, "occurrences": 1601},
-        "sample_period": "2019-2026",
-        "max_return": 0.6807,
-        "max_loss": -0.0500,
-    },
-}
 
 
 @router.get("/{pattern_id}", response_model=PatternDetail)
@@ -124,13 +75,21 @@ async def get_pattern_detail(pattern_id: str):
         raise HTTPException(status_code=404, detail=f"未知形态: {pattern_id}")
 
     bt_data = _BACKTEST_DATA.get(pattern_id, {})
+    f20 = bt_data.get("forward_20d", {})
     stats = PatternStats(
         forward_5d=BacktestWindow(**bt_data.get("forward_5d", {"win_rate": None, "avg_return": None, "occurrences": 0})),
         forward_10d=BacktestWindow(**bt_data.get("forward_10d", {"win_rate": None, "avg_return": None, "occurrences": 0})),
-        forward_20d=BacktestWindow(**bt_data.get("forward_20d", {"win_rate": None, "avg_return": None, "occurrences": 0})),
-        sample_period=bt_data.get("sample_period", "2016-2026"),
+        forward_20d=BacktestWindow(**f20),
+        win_rate_bull=bt_data.get("win_rate_bull"),
+        win_rate_bear=bt_data.get("win_rate_bear"),
+        win_rate_shock=bt_data.get("win_rate_shock"),
+        sample_period=bt_data.get("sample_period", "2019-2026"),
         max_return=bt_data.get("max_return"),
         max_loss=bt_data.get("max_loss"),
+        distribution=_build_distribution(bt_data.get("distribution")),
+        regime_splits=_build_regime_splits(bt_data.get("regime_splits")),
+        confidence_grade=_compute_confidence(f20.get("win_rate"), f20.get("occurrences", 0)),
+        random_baseline=_build_random_baseline(bt_data.get("random_baseline")),
     )
 
     return PatternDetail(
@@ -190,6 +149,61 @@ async def get_pattern_stocks(pattern_id: str, db: AsyncSession = Depends(get_db)
         )
 
     return results
+
+
+def _compute_confidence(win_rate: float | None, occurrences: int) -> str | None:
+    """基于胜率和样本量计算信心等级"""
+    if win_rate is None or occurrences < 100:
+        return None
+    if win_rate >= 0.65 and occurrences >= 500:
+        return "A"
+    elif win_rate >= 0.55 and occurrences >= 200:
+        return "B"
+    return "C"
+
+
+def _build_distribution(raw: dict | None) -> list[DistributionBin] | None:
+    """将回测输出的分布数据转为 DistributionBin 列表"""
+    if not raw or "bins" not in raw or "counts" not in raw:
+        return None
+    bins = raw["bins"]
+    counts = raw["counts"]
+    if len(bins) < 2 or len(counts) != len(bins) - 1:
+        return None
+    return [
+        DistributionBin(bin_start=bins[i], bin_end=bins[i + 1], count=counts[i])
+        for i in range(len(counts))
+    ]
+
+
+def _build_regime_splits(raw: dict | None) -> list[RegimeSplit] | None:
+    """将回测输出的牛熊拆分转为 RegimeSplit 列表"""
+    if not raw:
+        return None
+    labels = {"bull": "牛市", "bear": "熊市", "shock": "震荡市"}
+    result = []
+    for regime_key in ["bull", "shock", "bear"]:
+        data = raw.get(regime_key, {})
+        if data.get("occurrences", 0) > 0:
+            result.append(RegimeSplit(
+                regime=regime_key,
+                label=labels.get(regime_key, regime_key),
+                win_rate=data.get("win_rate"),
+                avg_return=data.get("avg_return"),
+                occurrences=data.get("occurrences", 0),
+            ))
+    return result if result else None
+
+
+def _build_random_baseline(raw: dict | None) -> RandomBaseline | None:
+    """将回测输出的随机基线数据转为 RandomBaseline"""
+    if not raw:
+        return None
+    return RandomBaseline(
+        win_rate=raw.get("win_rate"),
+        avg_return=raw.get("avg_return"),
+        occurrences=raw.get("occurrences", 0),
+    )
 
 
 def _get_determination(pattern_id: str) -> str:

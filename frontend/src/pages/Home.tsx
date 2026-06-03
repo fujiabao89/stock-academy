@@ -21,11 +21,13 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     fetch("/api/signals/latest")
       .then((r) => (r.ok ? r.json() : []))
-      .then(setSignals)
-      .catch(() => setSignals([]))
-      .finally(() => setLoading(false));
+      .then((data) => { if (!cancelled) setSignals(data); })
+      .catch(() => { if (!cancelled) setSignals([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   return (

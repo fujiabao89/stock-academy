@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import ConfidenceBadge from "../components/ConfidenceBadge";
 
 interface PatternSummary {
   pattern_id: string;
@@ -9,6 +10,7 @@ interface PatternSummary {
   description: string;
   win_rate_20d: number | null;
   related_count: number;
+  confidence_grade: string | null;
 }
 
 const DIRECTION_LABELS: Record<string, { text: string; color: string; bg: string }> = {
@@ -27,14 +29,16 @@ export default function Learn() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     fetch("/api/patterns")
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
       })
-      .then(setPatterns)
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false));
+      .then((data) => { if (!cancelled) setPatterns(data); })
+      .catch((e) => { if (!cancelled) setError(e.message); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   if (loading) {
@@ -141,21 +145,9 @@ export default function Learn() {
                           {dir.text}
                         </span>
                       )}
-                      {p.win_rate_20d != null && (
-                        <span
-                          style={{
-                            fontSize: 11,
-                            fontWeight: 500,
-                            color: "var(--color-bullish)",
-                            background: "var(--color-bullish-bg)",
-                            padding: "2px 8px",
-                            borderRadius: "var(--radius-sm)",
-                            marginLeft: "auto",
-                          }}
-                        >
-                          {(p.win_rate_20d * 100).toFixed(1)}%
-                        </span>
-                      )}
+                      <span style={{ marginLeft: "auto" }}>
+                        <ConfidenceBadge grade={p.confidence_grade} />
+                      </span>
                     </div>
                     <p style={{ fontSize: 13, color: "var(--color-text-secondary)", lineHeight: 1.6, margin: 0 }}>
                       {p.description.length > 80 ? p.description.slice(0, 80) + "..." : p.description}

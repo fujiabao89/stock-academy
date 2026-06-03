@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as echarts from "echarts";
 
@@ -29,7 +29,7 @@ interface SignalInfo {
   related_patterns: string[];
 }
 
-/* ========== 技术指标计算 ========== */
+/* ========== 技术指标 ========== */
 
 function ema(prices: number[], period: number): (number | null)[] {
   const k = 2 / (period + 1);
@@ -43,11 +43,7 @@ function ema(prices: number[], period: number): (number | null)[] {
   return out;
 }
 
-function calcMACD(closes: number[]): {
-  dif: (number | null)[];
-  dea: (number | null)[];
-  histogram: (number | null)[];
-} {
+function calcMACD(closes: number[]) {
   const ema12 = ema(closes, 12);
   const ema26 = ema(closes, 26);
   const n = closes.length;
@@ -55,7 +51,6 @@ function calcMACD(closes: number[]): {
   for (let i = 0; i < n; i++) {
     if (ema12[i] != null && ema26[i] != null) dif[i] = ema12[i]! - ema26[i]!;
   }
-
   const difClean = dif.filter((v): v is number => v != null);
   const deaRaw = ema(difClean, 9);
   const dea: (number | null)[] = new Array(n).fill(null);
@@ -65,22 +60,16 @@ function calcMACD(closes: number[]): {
     const di = i - offset;
     if (di >= 8) dea[i] = deaRaw[di];
   }
-
   const histogram: (number | null)[] = new Array(n).fill(null);
   for (let i = 0; i < n; i++) {
     if (dif[i] != null && dea[i] != null) {
       histogram[i] = +(2 * (dif[i]! - dea[i]!)).toFixed(4);
     }
   }
-
   return { dif, dea, histogram };
 }
 
-function calcBOLL(
-  closes: number[],
-  period = 20,
-  mult = 2,
-): { upper: (number | null)[]; middle: (number | null)[]; lower: (number | null)[] } {
+function calcBOLL(closes: number[], period = 20, mult = 2) {
   const n = closes.length;
   const upper: (number | null)[] = new Array(n).fill(null);
   const middle: (number | null)[] = new Array(n).fill(null);
@@ -96,91 +85,96 @@ function calcBOLL(
   return { upper, middle, lower };
 }
 
-/* ========== 颜色常量 ========== */
+/* ========== 配色 ========== */
 
 const C = {
   bg: "#0F172A",
   surface: "#1E293B",
   border: "#334155",
-  muted: "#64748B",
+  grid: "#1E293B",
+  muted: "#94A3B8",
   text: "#F1F5F9",
-  text2: "#94A3B8",
-  primary: "#F59E0B",
-  accent: "#8B5CF6",
+  text2: "#CBD5E1",
   bullish: "#EF4444",
   bearish: "#22C55E",
+  ma5: "#F59E0B",
+  ma20: "#EC4899",
+  ma60: "#8B5CF6",
+  ma120: "#06B6D4",
+  bollUpper: "#F87171",
+  bollMid: "#FBBF24",
+  bollLower: "#34D399",
+  dif: "#F59E0B",
+  dea: "#8B5CF6",
 } as const;
 
-/* ========== 数据窗口组件 ========== */
+/* ========== 数据窗 ========== */
 
 function DataWindow({
   item,
   prevClose,
-  macd,
-  boll,
-  idx,
 }: {
   item: KlineItem;
   prevClose: number | null;
-  macd: ReturnType<typeof calcMACD>;
-  boll: ReturnType<typeof calcBOLL>;
-  idx: number;
 }) {
   const chg = prevClose != null ? ((item.close - prevClose) / prevClose) * 100 : 0;
   const chgColor = chg >= 0 ? C.bullish : C.bearish;
-
-  const rows: [string, string, string?][] = [
-    ["日期", item.date],
-    ["开盘", item.open.toFixed(2)],
-    ["最高", item.high.toFixed(2)],
-    ["最低", item.low.toFixed(2)],
-    ["收盘", item.close.toFixed(2)],
-  ];
-
-  if (prevClose != null) {
-    rows.push(["涨幅", `${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%`, chgColor]);
-  }
-  rows.push(
-    ["成交量", item.volume > 1e6 ? `${(item.volume / 1e6).toFixed(1)}M` : `${(item.volume / 1e4).toFixed(0)}万`],
-    ["MA5", item.ma5?.toFixed(2) ?? "-"],
-    ["MA20", item.ma20?.toFixed(2) ?? "-"],
-    ["MA60", item.ma60?.toFixed(2) ?? "-"],
-    ["MA120", item.ma120?.toFixed(2) ?? "-"],
-    ["BOLL上轨", boll.upper[idx]?.toFixed(2) ?? "-"],
-    ["BOLL中轨", boll.middle[idx]?.toFixed(2) ?? "-"],
-    ["BOLL下轨", boll.lower[idx]?.toFixed(2) ?? "-"],
-    ["MACD DIF", macd.dif[idx]?.toFixed(4) ?? "-"],
-    ["MACD DEA", macd.dea[idx]?.toFixed(4) ?? "-"],
-    ["MACD 柱", macd.histogram[idx]?.toFixed(4) ?? "-"],
-  );
 
   return (
     <div
       style={{
         position: "absolute",
-        top: 8,
-        right: 8,
-        background: "rgba(15, 23, 42, 0.92)",
-        border: "1px solid var(--color-border)",
-        borderRadius: "var(--radius-sm)",
+        top: 10,
+        right: 10,
+        background: "rgba(15, 23, 42, 0.95)",
+        border: "1px solid #334155",
+        borderRadius: 6,
         padding: "10px 14px",
         fontSize: 12,
-        lineHeight: "1.8",
+        lineHeight: "1.9",
         zIndex: 10,
         pointerEvents: "none",
         fontVariantNumeric: "tabular-nums",
-        minWidth: 170,
-        backdropFilter: "blur(4px)",
+        minWidth: 175,
+        backdropFilter: "blur(6px)",
+        fontFamily: "var(--font-mono)",
       }}
     >
-      {rows.map(([label, value, color]) => (
-        <div key={label} style={{ display: "flex", justifyContent: "space-between", gap: 16 }}>
-          <span style={{ color: "var(--color-text-secondary)" }}>{label}</span>
-          <span style={{ color: color ?? "var(--color-text)", fontWeight: label === "日期" ? 600 : 400 }}>
-            {value}
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 14 }}>
+        <span style={{ color: C.muted }}>日期</span>
+        <span style={{ color: C.text, fontWeight: 600 }}>{item.date}</span>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 14 }}>
+        <span style={{ color: C.muted }}>开</span>
+        <span style={{ color: C.text }}>{item.open.toFixed(2)}</span>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 14 }}>
+        <span style={{ color: C.muted }}>高</span>
+        <span style={{ color: C.text }}>{item.high.toFixed(2)}</span>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 14 }}>
+        <span style={{ color: C.muted }}>低</span>
+        <span style={{ color: C.text }}>{item.low.toFixed(2)}</span>
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 14 }}>
+        <span style={{ color: C.muted }}>收</span>
+        <span style={{ color: C.text }}>{item.close.toFixed(2)}</span>
+      </div>
+      {prevClose != null && (
+        <div style={{ display: "flex", justifyContent: "space-between", gap: 14 }}>
+          <span style={{ color: C.muted }}>涨幅</span>
+          <span style={{ color: chgColor, fontWeight: 600 }}>
+            {chg >= 0 ? "+" : ""}{chg.toFixed(2)}%
           </span>
         </div>
-      ))}
+      )}
+      <div style={{ marginTop: 2, borderTop: "1px solid #1E293B" }} />
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 14 }}>
+        <span style={{ color: C.muted }}>量</span>
+        <span style={{ color: C.text }}>
+          {item.volume > 1e6 ? `${(item.volume / 1e6).toFixed(1)}M` : `${(item.volume / 1e4).toFixed(0)}万`}
+        </span>
+      </div>
     </div>
   );
 }
@@ -192,7 +186,7 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
   const instanceRef = useRef<echarts.ECharts | null>(null);
 
   const [showMA, setShowMA] = useState(true);
-  const [showBOLL, setShowBOLL] = useState(true);
+  const [showBOLL, setShowBOLL] = useState(false);
   const [pinnedIndex, setPinnedIndex] = useState<number | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
@@ -232,7 +226,13 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
           symbolRotate: isBull ? 0 : 180,
           symbolSize: 14,
           symbolOffset: offset,
-          itemStyle: { color, borderColor: "#F1F5F9", borderWidth: 1, shadowBlur: 3, shadowColor: "rgba(0,0,0,0.4)" },
+          itemStyle: {
+            color,
+            borderColor: "#F1F5F9",
+            borderWidth: 1.5,
+            shadowBlur: 4,
+            shadowColor: "rgba(0,0,0,0.5)",
+          },
           _pid: s.pattern_id,
         });
       }
@@ -242,13 +242,7 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!chartRef.current || data.length === 0) return;
-
-    if (!instanceRef.current) {
-      instanceRef.current = echarts.init(chartRef.current);
-    }
-
+  const buildOption = useCallback((): echarts.EChartsOption => {
     const dates = data.map((d) => d.date);
     const ohlc = data.map((d) => [d.open, d.close, d.low, d.high]);
     const volumes = data.map((d) => d.volume);
@@ -256,14 +250,21 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
 
     const series: echarts.EChartsOption["series"] = [];
 
-    // ---- Grid 0: K 线 ----
+    // K 线
     const candlestick: any = {
       type: "candlestick",
-      name: "K线",
+      name: "K",
       data: ohlc,
       xAxisIndex: 0,
       yAxisIndex: 0,
-      itemStyle: { color: C.bullish, color0: C.bearish, borderColor: C.bullish, borderColor0: C.bearish },
+      itemStyle: {
+        color: C.bullish,
+        color0: C.bearish,
+        borderColor: C.bullish,
+        borderColor0: C.bearish,
+      },
+      barWidth: "55%",
+      barMaxWidth: 20,
     };
     if (markPoints.length > 0) {
       candlestick.markPoint = {
@@ -273,19 +274,19 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
         animation: false,
         tooltip: {
           trigger: "item",
-          formatter: (p: any) => `${p.data.value}`,
+          formatter: (p: any) => p.data.value,
         },
       };
     }
     series.push(candlestick);
 
-    // MA 均线
+    // MA
     if (showMA) {
       const mas: [string, string, (number | null)[]][] = [
-        ["MA5", C.primary, data.map((d) => d.ma5)],
-        ["MA20", C.accent, data.map((d) => d.ma20)],
-        ["MA60", C.muted, data.map((d) => d.ma60)],
-        ["MA120", C.text2, data.map((d) => d.ma120)],
+        ["MA5", C.ma5, data.map((d) => d.ma5)],
+        ["MA20", C.ma20, data.map((d) => d.ma20)],
+        ["MA60", C.ma60, data.map((d) => d.ma60)],
+        ["MA120", C.ma120, data.map((d) => d.ma120)],
       ];
       for (const [name, color, values] of mas) {
         series.push({
@@ -297,162 +298,168 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
           smooth: true,
           showSymbol: false,
           lineStyle: { width: 1, color },
+          emphasis: { lineStyle: { width: 2 } },
         });
       }
     }
 
-    // BOLL 布林带
+    // BOLL
     if (showBOLL) {
       series.push(
         {
-          type: "line",
-          name: "BOLL上轨",
-          data: boll.upper,
-          xAxisIndex: 0,
-          yAxisIndex: 0,
-          smooth: true,
-          showSymbol: false,
-          lineStyle: { width: 1, color: "#F87171", type: "dashed" },
+          type: "line", name: "BOLL上轨", data: boll.upper,
+          xAxisIndex: 0, yAxisIndex: 0, smooth: true, showSymbol: false,
+          lineStyle: { width: 1, color: C.bollUpper, type: "dashed" },
         },
         {
-          type: "line",
-          name: "BOLL中轨",
-          data: boll.middle,
-          xAxisIndex: 0,
-          yAxisIndex: 0,
-          smooth: true,
-          showSymbol: false,
-          lineStyle: { width: 1, color: "#FBBF24", type: "dashed" },
+          type: "line", name: "BOLL中轨", data: boll.middle,
+          xAxisIndex: 0, yAxisIndex: 0, smooth: true, showSymbol: false,
+          lineStyle: { width: 1, color: C.bollMid, type: "dashed" },
         },
         {
-          type: "line",
-          name: "BOLL下轨",
-          data: boll.lower,
-          xAxisIndex: 0,
-          yAxisIndex: 0,
-          smooth: true,
-          showSymbol: false,
-          lineStyle: { width: 1, color: "#34D399", type: "dashed" },
+          type: "line", name: "BOLL下轨", data: boll.lower,
+          xAxisIndex: 0, yAxisIndex: 0, smooth: true, showSymbol: false,
+          lineStyle: { width: 1, color: C.bollLower, type: "dashed" },
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: "rgba(248, 113, 113, 0.06)" },
-              { offset: 1, color: "rgba(52, 211, 153, 0.06)" },
+              { offset: 0, color: "rgba(248, 113, 113, 0.04)" },
+              { offset: 1, color: "rgba(52, 211, 153, 0.04)" },
             ]),
           },
         },
       );
     }
 
-    // ---- Grid 1: 成交量 ----
+    // 成交量
     series.push({
       type: "bar",
-      name: "成交量",
+      name: "VOL",
       data: volumes.map((v, i) => {
-        if (i === 0) return { value: v, itemStyle: { color: C.border } };
-        const up = data[i].close >= data[i - 1].close;
-        return { value: v, itemStyle: { color: up ? C.bullish : C.bearish } };
+        const up = i === 0 || data[i].close >= data[i - 1].close;
+        return {
+          value: v,
+          itemStyle: {
+            color: up ? "rgba(239, 68, 68, 0.45)" : "rgba(34, 197, 94, 0.45)",
+          },
+        };
       }),
       xAxisIndex: 1,
       yAxisIndex: 1,
     });
 
-    // ---- Grid 2: MACD ----
+    // MACD
     series.push(
       {
-        type: "line",
-        name: "DIF",
-        data: macd.dif,
-        xAxisIndex: 2,
-        yAxisIndex: 2,
-        showSymbol: false,
-        lineStyle: { width: 1, color: "#F59E0B" },
+        type: "line", name: "DIF", data: macd.dif,
+        xAxisIndex: 2, yAxisIndex: 2, showSymbol: false,
+        lineStyle: { width: 1, color: C.dif },
       },
       {
-        type: "line",
-        name: "DEA",
-        data: macd.dea,
-        xAxisIndex: 2,
-        yAxisIndex: 2,
-        showSymbol: false,
-        lineStyle: { width: 1, color: "#8B5CF6" },
+        type: "line", name: "DEA", data: macd.dea,
+        xAxisIndex: 2, yAxisIndex: 2, showSymbol: false,
+        lineStyle: { width: 1, color: C.dea },
       },
       {
-        type: "bar",
-        name: "MACD+",
+        type: "bar", name: "MACD+",
         data: macd.histogram.map((v) => (v != null && v >= 0 ? v : null)),
-        xAxisIndex: 2,
-        yAxisIndex: 2,
-        itemStyle: { color: C.bullish },
-        barWidth: "60%",
+        xAxisIndex: 2, yAxisIndex: 2,
+        itemStyle: { color: "rgba(239, 68, 68, 0.55)" },
       },
       {
-        type: "bar",
-        name: "MACD-",
+        type: "bar", name: "MACD-",
         data: macd.histogram.map((v) => (v != null && v < 0 ? v : null)),
-        xAxisIndex: 2,
-        yAxisIndex: 2,
-        itemStyle: { color: C.bearish },
-        barWidth: "60%",
+        xAxisIndex: 2, yAxisIndex: 2,
+        itemStyle: { color: "rgba(34, 197, 94, 0.55)" },
       },
     );
 
-    const option: echarts.EChartsOption = {
+    return {
       backgroundColor: C.bg,
       animation: true,
       tooltip: {
         trigger: "axis",
-        axisPointer: { type: "cross", lineStyle: { type: "dashed", color: "#64748B", width: 1 } },
-        backgroundColor: C.surface,
+        axisPointer: {
+          type: "cross",
+          crossStyle: { color: "#64748B" },
+          lineStyle: { color: "#475569", type: "dashed", width: 1 },
+        },
+        backgroundColor: "rgba(15, 23, 42, 0.95)",
         borderColor: C.border,
         textStyle: { color: C.text, fontSize: 12 },
       },
-      axisPointer: {
-        link: [{ xAxisIndex: "all" }],
-      },
+      axisPointer: { link: [{ xAxisIndex: "all" }] },
       grid: [
-        { left: "8%", right: "3%", top: "5%", height: "42%" },
-        { left: "8%", right: "3%", top: "52%", height: "16%" },
-        { left: "8%", right: "3%", top: "73%", height: "12%" },
+        { left: "8%", right: "2%", top: "3%", height: "44%" },
+        { left: "8%", right: "2%", top: "53%", height: "15%" },
+        { left: "8%", right: "2%", top: "74%", height: "13%" },
       ],
       xAxis: [
-        { type: "category", data: dates, gridIndex: 0, axisLine: { lineStyle: { color: C.border } }, axisTick: { show: false }, axisLabel: { color: C.muted, fontSize: 11 } },
-        { type: "category", data: dates, gridIndex: 1, axisLine: { lineStyle: { color: C.border } }, axisTick: { show: false }, axisLabel: { show: false } },
-        { type: "category", data: dates, gridIndex: 2, axisLine: { lineStyle: { color: C.border } }, axisTick: { show: false }, axisLabel: { show: false } },
+        {
+          type: "category", data: dates, gridIndex: 0,
+          axisLine: { lineStyle: { color: C.border } },
+          axisTick: { show: false },
+          axisLabel: { color: C.muted, fontSize: 11 },
+        },
+        {
+          type: "category", data: dates, gridIndex: 1,
+          axisLine: { lineStyle: { color: C.border } },
+          axisTick: { show: false },
+          axisLabel: { show: false },
+        },
+        {
+          type: "category", data: dates, gridIndex: 2,
+          axisLine: { lineStyle: { color: C.border } },
+          axisTick: { show: false },
+          axisLabel: { show: false },
+        },
       ],
       yAxis: [
         {
           type: "value", gridIndex: 0, scale: true,
-          splitLine: { lineStyle: { color: C.surface } },
+          splitLine: { lineStyle: { color: C.grid, width: 0.5 } },
           axisLabel: { color: C.muted, fontSize: 11 },
+          nameTextStyle: { color: C.muted },
         },
         {
           type: "value", gridIndex: 1,
-          axisLabel: { color: C.muted, fontSize: 11, formatter: (v: number) => v > 1e6 ? `${(v / 1e6).toFixed(0)}M` : `${(v / 1e4).toFixed(0)}万` },
+          axisLabel: {
+            color: C.muted, fontSize: 10,
+            formatter: (v: number) => v > 1e6 ? `${(v / 1e6).toFixed(1)}M` : `${(v / 1e4).toFixed(0)}万`,
+          },
           splitLine: { show: false },
         },
         {
           type: "value", gridIndex: 2, scale: true,
-          splitLine: { lineStyle: { color: C.surface } },
+          splitLine: { lineStyle: { color: C.grid, width: 0.5 } },
           axisLabel: { color: C.muted, fontSize: 10 },
         },
       ],
       dataZoom: [
-        { type: "inside", xAxisIndex: [0, 1, 2], zoomOnMouseWheel: true, moveOnMouseWheel: false, moveOnMouseMove: true },
         {
-          type: "slider", xAxisIndex: [0, 1, 2], bottom: 2, height: 20,
-          borderColor: C.border, backgroundColor: C.bg,
-          fillerColor: "rgba(245, 158, 11, 0.15)", handleStyle: { color: C.primary },
+          type: "inside", xAxisIndex: [0, 1, 2],
+          zoomOnMouseWheel: true, moveOnMouseWheel: false, moveOnMouseMove: true,
+        },
+        {
+          type: "slider", xAxisIndex: [0, 1, 2], bottom: 2, height: 28,
+          borderColor: "transparent", backgroundColor: C.surface,
+          fillerColor: "rgba(59, 130, 246, 0.12)",
+          handleStyle: { color: "#3B82F6" },
           textStyle: { color: C.muted, fontSize: 10 },
           start: Math.max(0, 100 - (80 / n) * 100), end: 100,
         },
       ],
       series,
     };
-
-    instanceRef.current.setOption(option, true);
   }, [data, showMA, showBOLL, boll, macd, markPoints]);
 
-  // 十字光标 + 数据窗口事件
+  useEffect(() => {
+    if (!chartRef.current || data.length === 0) return;
+    if (!instanceRef.current) {
+      instanceRef.current = echarts.init(chartRef.current, null, { renderer: "svg" });
+    }
+    instanceRef.current.setOption(buildOption(), true);
+  }, [buildOption, data]);
+
   useEffect(() => {
     const inst = instanceRef.current;
     if (!inst) return;
@@ -480,15 +487,22 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
     inst.on("click", onClick);
     window.addEventListener("keydown", onKeyDown);
 
-    const handleResize = () => inst.resize();
-    window.addEventListener("resize", handleResize);
+    const onResize = () => inst.resize();
+    window.addEventListener("resize", onResize);
 
     return () => {
       inst.off("mouseover", onMouseOver);
       inst.off("mouseout", onMouseOut);
       inst.off("click", onClick);
       window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("resize", onResize);
+    };
+  }, [navigate]);
+
+  useEffect(() => {
+    return () => {
+      instanceRef.current?.dispose();
+      instanceRef.current = null;
     };
   }, []);
 
@@ -496,32 +510,32 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
 
   return (
     <div style={{ position: "relative" }}>
-      {/* 指标切换按钮 */}
-      <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
+      {/* 工具栏 */}
+      <div style={{ display: "flex", gap: 4, marginBottom: 8, alignItems: "center" }}>
         {([
-          ["MA", showMA, () => setShowMA((v) => !v)],
-          ["BOLL", showBOLL, () => setShowBOLL((v) => !v)],
-        ] as [string, boolean, () => void][]).map(([label, active, toggle]) => (
+          ["MA", showMA, () => setShowMA((v) => !v), C.ma5],
+          ["BOLL", showBOLL, () => setShowBOLL((v) => !v), C.bollMid],
+        ] as [string, boolean, () => void, string][]).map(([label, active, toggle, color]) => (
           <button
             key={label}
             onClick={toggle}
             style={{
-              padding: "3px 12px",
-              fontSize: 12,
+              padding: "3px 10px",
+              fontSize: 11,
               fontWeight: 500,
-              borderRadius: "var(--radius-sm)",
-              border: `1px solid ${active ? "var(--color-primary)" : "var(--color-border)"}`,
-              background: active ? "rgba(245, 158, 11, 0.1)" : "var(--color-surface)",
-              color: active ? "var(--color-primary)" : "var(--color-text-secondary)",
+              borderRadius: 4,
+              border: `1px solid ${active ? color : "transparent"}`,
+              background: active ? `${color}18` : "transparent",
+              color: active ? color : C.muted,
               cursor: "pointer",
-              transition: "all 0.15s",
+              transition: "all 0.2s",
             }}
           >
             {label}
           </button>
         ))}
-        <span style={{ fontSize: 11, color: "var(--color-muted)", marginLeft: "auto", alignSelf: "center" }}>
-          点击 K 线固定数据窗 · Esc 取消
+        <span style={{ fontSize: 10, color: C.muted, marginLeft: "auto", opacity: 0.6 }}>
+          滚轮缩放 · 拖拽平移 · 点击固定
         </span>
       </div>
 
@@ -532,18 +546,16 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
           style={{
             width: "100%",
             height: "var(--chart-height)",
-            background: "var(--color-surface)",
+            background: C.bg,
             borderRadius: "var(--radius-md)",
             border: "1px solid var(--color-border)",
+            overflow: "hidden",
           }}
         />
         {activeIndex != null && data[activeIndex] && (
           <DataWindow
             item={data[activeIndex]}
             prevClose={activeIndex > 0 ? data[activeIndex - 1].close : null}
-            macd={macd}
-            boll={boll}
-            idx={activeIndex}
           />
         )}
       </div>

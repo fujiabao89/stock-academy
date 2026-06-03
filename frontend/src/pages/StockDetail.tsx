@@ -55,6 +55,7 @@ export default function StockDetail() {
 
   useEffect(() => {
     if (!code) return;
+    let cancelled = false;
     setLoading(true);
     setError(null);
 
@@ -69,6 +70,7 @@ export default function StockDetail() {
       fetchJson(`/api/stocks/${code}/kline?period=d&limit=180`),
       fetchJson(`/api/stocks/${code}/signals`),
     ]).then(([ov, kl, sg]) => {
+      if (cancelled) return;
       if (ov.status === "fulfilled") {
         const data = ov.value;
         if (data.detail) { setError(data.detail); return; }
@@ -79,7 +81,9 @@ export default function StockDetail() {
       }
       setKline(kl.status === "fulfilled" && Array.isArray(kl.value) ? kl.value : []);
       setSignals(sg.status === "fulfilled" && Array.isArray(sg.value) ? sg.value : []);
-    }).finally(() => setLoading(false));
+    }).finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
   }, [code]);
 
   if (loading) {
