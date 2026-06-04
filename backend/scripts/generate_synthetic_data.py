@@ -103,16 +103,34 @@ def generate_stock_data(rng, initial_price: float, base_volume: int, n_days: int
         # 与隔夜涨跌同向概率 60%
         if rng.random() < 0.6:
             if c >= opens[i]:
-                highs.append(c * (1 + amplitude * 0.3))
-                lows.append(opens[i] * (1 - amplitude * 1.3))
+                high = c * (1 + amplitude * 0.3)
+                low = opens[i] * (1 - amplitude * 1.3)
             else:
-                highs.append(opens[i] * (1 + amplitude * 0.3))
-                lows.append(c * (1 - amplitude * 1.3))
+                high = opens[i] * (1 + amplitude * 0.3)
+                low = c * (1 - amplitude * 1.3)
         else:
             high = max(c, opens[i]) * (1 + amplitude * 0.5)
             low = min(c, opens[i]) * (1 - amplitude * 0.5)
-            highs.append(high)
-            lows.append(low)
+
+        # ~5% 概率生成极端不对称影线，以便触发 K 线形态检测
+        body = abs(c - opens[i])
+        asym_roll = rng.random()
+        if body > 0 and asym_roll < 0.05:
+            if asym_roll < 0.02:
+                # 长下影线 (锤子线类型): lower_shadow >= body*2, upper_shadow <= body*0.3
+                high = max(c, opens[i]) + body * rng.uniform(0, 0.2)
+                low = min(c, opens[i]) - body * rng.uniform(2.5, 5.0)
+            elif asym_roll < 0.04:
+                # 长上影线 (倒锤子/射击之星类型): upper_shadow >= body*2, lower_shadow <= body*0.3
+                high = max(c, opens[i]) + body * rng.uniform(2.5, 5.0)
+                low = min(c, opens[i]) - body * rng.uniform(0, 0.2)
+            else:
+                # 十字星类型: body 极小
+                high = max(c, opens[i]) + body * rng.uniform(3.0, 8.0)
+                low = min(c, opens[i]) - body * rng.uniform(3.0, 8.0)
+
+        highs.append(high)
+        lows.append(low)
 
     # 成交量：与价格波动正相关，偶发放量
     volumes = []
