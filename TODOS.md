@@ -36,11 +36,10 @@
 
 ## P2 — 后续迭代
 
-- [ ] **API 速率限制**
+- [x] **API 速率限制**
   - 问题：MVP 无用户系统，API 端点完全开放，可能被滥用消耗外部行情 API 配额
-  - 方案：FastAPI + slowapi 中间件，IP-based，30 req/min/IP
-  - 触发条件：外部 API 配额告警 或 用户量 >100
-  - 依赖：无
+  - 方案：ASGI 中间件，IP-based，30 req/60s，超限返回 429 + Retry-After
+  - 实现：自定义轻量中间件（~30行），无外部依赖
   - 来源：/plan-eng-review 架构审查 #1
 
 - [x] **make new-pattern 脚手架命令（生成 detector + test + backtest 骨架）**

@@ -42,6 +42,18 @@ Key routing rules:
 - Resume context → invoke /context-restore
 - Author a backlog-ready spec/issue → invoke /spec
 
+## 设计文档
+
+所有 gstack 设计文档位于 `~/.gstack/projects/stock-academy/`。写代码前先查阅相关设计文档。
+
+| 文档 | 说明 | 状态 |
+|------|------|:---:|
+| `34026-master-design-20260604-170314.md` | Phase 2 设计：用户系统 + 新闻聚合 + AI 解读 + 策略引擎 | APPROVED |
+| `34026-master-eng-review-test-plan-20260604-092944.md` | Phase 2 测试计划 | ACTIVE |
+| `fujiabao89-master-design-20260531-165200.md` | Phase 1 设计文档 | SUPERSEDED |
+
+**规则**: 收到与 Phase 2 相关的编码任务时，先用 Read 工具读取 `~/.gstack/projects/stock-academy/34026-master-design-20260604-170314.md` 了解完整设计上下文。
+
 ## GBrain Configuration
 
 - Engine: PGLite (本地嵌入式 Postgres，无需外部服务)
