@@ -115,6 +115,14 @@ docker compose down -v                       # 清理容器和卷
 
 # 代码检查
 docker compose exec backend ruff check app/ scripts/
+
+# 测试
+docker compose exec backend pytest tests/ -v
+
+# 回测
+docker compose exec backend python scripts/backtest.py --pattern golden-cross
+docker compose exec backend python scripts/backtest.py --all
+docker compose exec backend python scripts/backtest.py --pattern golden-cross --start 2015-01-01 --end 2025-12-31 --seed 42
 ```
 
 ### 添加新形态
@@ -162,3 +170,56 @@ docker compose exec backend ruff check app/ scripts/
 - 不写"买入""卖出""推荐"字样 — 始终用概率语言
 - MVP 不做用户系统（无登录、无自选股、无推送）
 - 数据源：合成数据生成器（仿真 30 只沪深300 成分股 10 年历史）
+
+---
+
+## 故障排查
+
+### 端口冲突
+
+```bash
+# 检查 5433/6380/8001/5173 端口占用
+docker compose ps
+lsof -i :5433
+
+# 更换端口：复制 .env.example 到 .env，修改端口映射
+cp .env.example .env
+# 编辑 .env 中的 *_PORT 变量
+```
+
+### 数据库连接失败
+
+```bash
+# 等待 PostgreSQL 就绪后重启 backend
+docker compose restart backend
+
+# 查看数据库日志
+docker compose logs db
+```
+
+### Docker 镜像构建慢
+
+```bash
+# 使用国内 pip 镜像（Dockerfile 已配置清华源）
+# 如构建仍慢，检查 Docker Desktop 网络代理设置
+
+# 清理构建缓存重试
+docker compose build --no-cache backend
+```
+
+### 前端页面空白
+
+```bash
+# 检查前端构建输出
+docker compose logs frontend
+
+# 确认 API 可访问
+curl http://localhost:8001/api/health
+```
+
+### 数据为空
+
+```bash
+# 重新生成种子数据
+docker compose exec backend python scripts/generate_synthetic_data.py --num-stocks 30 --days 2500
+```

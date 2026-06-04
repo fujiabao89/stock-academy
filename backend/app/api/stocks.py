@@ -1,10 +1,11 @@
 """股票相关 API 端点"""
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
+from .errors import NotFoundError
 from ..engine import list_all
 from ..models.daily_bar import DailyBar
 from ..models.pattern_signal import PatternSignal
@@ -80,6 +81,9 @@ async def search_stocks(
 @router.get("/{code}/overview", response_model=StockOverview)
 async def get_stock_overview(code: str, db: AsyncSession = Depends(get_db)):
     """个股概览（最新价、涨跌幅、基本信息）"""
+    if not code.isdigit() or len(code) != 6:
+        raise NotFoundError(message="股票代码格式错误", detail="请输入6位数字代码，如 000001")
+
     bars = await db.execute(
         select(DailyBar)
         .where(DailyBar.code == code)
@@ -89,7 +93,7 @@ async def get_stock_overview(code: str, db: AsyncSession = Depends(get_db)):
     bars = list(bars.scalars().all())
 
     if not bars:
-        raise HTTPException(status_code=404, detail=f"未找到股票 {code} 的数据")
+        raise NotFoundError(detail=f"未找到股票 {code} 的数据")
 
     today = bars[0]
     info = _stock_info(code)
@@ -122,6 +126,9 @@ async def get_stock_kline(
     db: AsyncSession = Depends(get_db),
 ):
     """K线数据（含均线），period: d=日K, w=周K, m=月K"""
+    if not code.isdigit() or len(code) != 6:
+        raise NotFoundError(message="股票代码格式错误", detail="请输入6位数字代码，如 000001")
+
     rows = await db.execute(
         select(DailyBar)
         .where(DailyBar.code == code)
@@ -130,7 +137,7 @@ async def get_stock_kline(
     bars = list(rows.scalars().all())
 
     if not bars:
-        raise HTTPException(status_code=404, detail=f"未找到股票 {code} 的数据")
+        raise NotFoundError(detail=f"未找到股票 {code} 的数据")
 
     if period == "d":
         result = [

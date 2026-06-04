@@ -3,12 +3,13 @@
 import json
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
 from ..engine import get, list_all
+from .errors import NotFoundError
 from ..models.pattern_signal import PatternSignal
 from ..schemas.pattern import (
     BacktestWindow,
@@ -77,7 +78,7 @@ async def get_pattern_detail(pattern_id: str):
     """形态教学详情（定义、回测数据）"""
     detector = get(pattern_id)
     if detector is None:
-        raise HTTPException(status_code=404, detail=f"未知形态: {pattern_id}")
+        raise NotFoundError(detail=f"未知形态: {pattern_id}")
 
     bt_data = _BACKTEST_DATA.get(pattern_id, {})
     f20 = bt_data.get("forward_20d", {})
@@ -113,6 +114,10 @@ async def get_pattern_detail(pattern_id: str):
 @router.get("/{pattern_id}/stocks", response_model=list[PatternSignalOut])
 async def get_pattern_stocks(pattern_id: str, db: AsyncSession = Depends(get_db)):
     """最新日期触发该形态的所有股票"""
+    detector = get(pattern_id)
+    if detector is None:
+        raise NotFoundError(detail=f"未知形态: {pattern_id}")
+
     from ..api.stocks import _stock_info
 
     # 找到该形态在 pattern_signals 表中的最新日期

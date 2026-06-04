@@ -1,6 +1,6 @@
 """FastAPI 全局异常处理 — 标准化错误响应格式"""
 
-from fastapi import Request
+from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 
 from ..schemas.error import ErrorDetail, ErrorResponse
@@ -37,10 +37,10 @@ class PatternError(AppError):
 
 
 class NotFoundError(AppError):
-    def __init__(self, detail: str | None = None):
+    def __init__(self, detail: str | None = None, message: str | None = None):
         super().__init__(
             code="NOT_FOUND",
-            message="请求的资源不存在",
+            message=message or "请求的资源不存在",
             detail=detail,
             status=404,
         )
@@ -55,5 +55,19 @@ async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:
     )
 
 
+async def http_exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=ErrorResponse(
+            error=ErrorDetail(
+                code="HTTP_ERROR",
+                message="请求处理失败",
+                detail=str(exc.detail),
+            )
+        ).model_dump(),
+    )
+
+
 def register_error_handlers(app):
     app.add_exception_handler(AppError, app_error_handler)
+    app.add_exception_handler(HTTPException, http_exception_handler)

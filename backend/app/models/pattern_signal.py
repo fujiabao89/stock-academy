@@ -2,11 +2,13 @@
 
 from datetime import date
 
-from sqlalchemy import Date, Float, Integer, String
+from sqlalchemy import JSON, Date, Float, Integer, String
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ..database import Base
+
+_jsonb_type = JSONB().with_variant(JSON(), "sqlite")
 
 
 class PatternSignal(Base):
@@ -21,6 +23,6 @@ class PatternSignal(Base):
     direction: Mapped[str] = mapped_column(String(10))  # bullish/bearish/neutral
     confidence: Mapped[float] = mapped_column(Float, default=1.0)
     description: Mapped[str] = mapped_column(String(500))
-    backtest: Mapped[dict] = mapped_column(JSONB)
-    limitations: Mapped[list[str]] = mapped_column(JSONB, default=list)
-    related_patterns: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    backtest: Mapped[dict] = mapped_column(_jsonb_type)
+    limitations: Mapped[list[str]] = mapped_column(_jsonb_type, default=list)
+    related_patterns: Mapped[list[str]] = mapped_column(_jsonb_type, default=list)
