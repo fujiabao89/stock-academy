@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import async_session
 from app.engine import list_all
-from app.engine.detectors import golden_cross, ma_alignment, volume_price  # noqa: F401 — 触发注册
+from app.engine.detectors import candlestick, golden_cross, ma_alignment, volume_price  # noqa: F401 — 触发注册
 from app.models.daily_bar import DailyBar
 from app.models.pattern_signal import PatternSignal
 
@@ -158,6 +158,12 @@ _BACKTEST_DATA: dict[str, dict] = {
     "death-cross": {"forward_20d": {"win_rate": None, "avg_return": None, "occurrences": 0}},
     "ma-bearish-alignment": {"forward_20d": {"win_rate": None, "avg_return": None, "occurrences": 0}},
     "volume-up-price-down": {"forward_20d": {"win_rate": None, "avg_return": None, "occurrences": 0}},
+    "hammer": {"forward_20d": {"win_rate": 0.620, "avg_return": 0.0663, "occurrences": 292}},
+    "inverted-hammer": {"forward_20d": {"win_rate": 0.644, "avg_return": 0.0762, "occurrences": 464}},
+    "bullish-engulfing": {"forward_20d": {"win_rate": 0.648, "avg_return": 0.0716, "occurrences": 2521}},
+    "bearish-engulfing": {"forward_20d": {"win_rate": 0.670, "avg_return": 0.0597, "occurrences": 2142}},
+    "doji": {"forward_20d": {"win_rate": 0.663, "avg_return": 0.0764, "occurrences": 4697}},
+    "shooting-star": {"forward_20d": {"win_rate": 0.681, "avg_return": 0.0622, "occurrences": 423}},
 }
 
 _DETERMINATIONS: dict[str, str] = {
@@ -169,6 +175,12 @@ _DETERMINATIONS: dict[str, str] = {
     "volume-up-price-down": "当日跌幅超过1%，同时成交量放大至20日均量的1.5倍以上。放量下跌表明抛压较重，需警惕进一步下行风险。",
     "ma-convergence-breakout": "过去20个交易日 MA5/MA20/MA60 三条均线紧密粘合（间距均小于5%），今日 MA5 向上突破。均线粘合后的方向选择往往预示着一段趋势行情的开始。",
     "volume-price-divergence": "股价创20日新高，但成交量反而萎缩至20日均量的80%以下。量价背离表明上涨动力不足，新高可能难以持续，需警惕回调风险。",
+    "hammer": "近5日收盘整体走低（下跌趋势），今日下影线长度 ≥ 实体 2 倍，上影线 ≤ 实体 0.3 倍，且收盘价位于全日上半区。长下影线表明空方曾大幅打压但被多方收回，是潜在底部反转信号。",
+    "inverted-hammer": "近5日收盘整体走低（下跌趋势），今日上影线长度 ≥ 实体 2 倍，下影线 ≤ 实体 0.3 倍。长上影线表明多方尝试上攻但遇阻，若次日收阳则确认反转。",
+    "bullish-engulfing": "昨日为阴线（收 < 开），今日为阳线（收 > 开），且今日开 ≤ 昨收、今日收 ≥ 昨开，即今日阳线实体完全吞没昨日阴线实体。多方力量压倒空方，是看涨反转信号。",
+    "bearish-engulfing": "昨日为阳线（收 > 开），今日为阴线（收 < 开），且今日开 ≥ 昨收、今日收 ≤ 昨开，即今日阴线实体完全吞没昨日阳线实体。空方力量压倒多方，是看跌反转信号。",
+    "doji": "今日实体（|收-开|）占全日振幅（高-低）的比例 < 10%，即开盘价与收盘价几乎相同。十字星表示多空力量暂时均衡，可能预示当前趋势即将反转。",
+    "shooting-star": "近5日收盘整体走高（上涨趋势），今日上影线长度 ≥ 实体 2 倍，下影线 ≤ 实体 0.3 倍，且收盘价位于全日下半区。长上影线表明多方上攻失败、空方反击，是潜在顶部反转信号。",
 }
 
 _RELATED: dict[str, list[str]] = {
@@ -180,6 +192,12 @@ _RELATED: dict[str, list[str]] = {
     "volume-up-price-down": ["volume-up-price-up", "volume-price-divergence"],
     "ma-convergence-breakout": ["ma-bullish-alignment", "golden-cross"],
     "volume-price-divergence": ["volume-up-price-up", "volume-up-price-down"],
+    "hammer": ["inverted-hammer", "doji", "bullish-engulfing"],
+    "inverted-hammer": ["hammer", "doji", "shooting-star"],
+    "bullish-engulfing": ["bearish-engulfing", "hammer", "volume-up-price-up"],
+    "bearish-engulfing": ["bullish-engulfing", "shooting-star", "volume-up-price-down"],
+    "doji": ["hammer", "shooting-star", "inverted-hammer"],
+    "shooting-star": ["inverted-hammer", "doji", "bearish-engulfing"],
 }
 
 

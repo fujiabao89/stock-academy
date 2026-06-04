@@ -2,6 +2,14 @@
 from app.engine import get, list_all
 from app.engine.detectors.golden_cross import DeathCross, GoldenCross
 from app.engine.detectors.ma_alignment import MABearishAlignment, MABullishAlignment
+from app.engine.detectors.candlestick import (
+    BearishEngulfing,
+    BullishEngulfing,
+    Doji,
+    Hammer,
+    InvertedHammer,
+    ShootingStar,
+)
 from app.engine.detectors.volume_price import (
     MAConvergenceBreakout,
     VolumePriceDivergence,
@@ -168,10 +176,156 @@ class TestVolumePriceDivergence:
         assert detector.match(bars) is False
 
 
+class TestHammer:
+    def test_downtrend_long_lower_shadow_triggers(self):
+        # 前 6 根持续下跌，最后一根锤子线
+        closes = [15.0, 14.5, 14.0, 13.5, 13.0, 12.5, 12.5]
+        opens = [15.0] * len(closes)
+        opens[-1] = 12.4  # body = 0.1
+        highs = [c + 0.02 for c in closes]
+        highs[-1] = 12.52  # upper_shadow = 0.02, body*0.3 = 0.03 ✓
+        lows = [c - 0.02 for c in closes]
+        lows[-1] = 12.0   # lower_shadow = 0.4, body*2 = 0.2 ✓
+        bars = make_bars(closes, opens=opens, highs=highs, lows=lows)
+        detector = Hammer()
+        assert detector.match(bars) is True
+
+    def test_uptrend_returns_false(self):
+        closes = list(range(10, 32))
+        bars = make_bars(closes)
+        detector = Hammer()
+        assert detector.match(bars) is False
+
+    def test_no_lower_shadow_returns_false(self):
+        closes = list(range(15, 10, -1)) * 3
+        closes = closes[:22]
+        bars = make_bars(closes)
+        detector = Hammer()
+        assert detector.match(bars) is False
+
+
+class TestInvertedHammer:
+    def test_downtrend_long_upper_shadow_triggers(self):
+        closes = [15.0, 14.5, 14.0, 13.5, 13.0, 12.5, 12.5]
+        opens = [15.0] * len(closes)
+        opens[-1] = 12.4  # body = 0.1
+        highs = [c + 0.02 for c in closes]
+        highs[-1] = 12.8  # upper_shadow = 0.3, body*2 = 0.2 ✓
+        lows = [c - 0.02 for c in closes]
+        lows[-1] = 12.38 # lower_shadow = 0.02, body*0.3 = 0.03 ✓
+        bars = make_bars(closes, opens=opens, highs=highs, lows=lows)
+        detector = InvertedHammer()
+        assert detector.match(bars) is True
+
+    def test_uptrend_returns_false(self):
+        closes = list(range(10, 32))
+        bars = make_bars(closes)
+        detector = InvertedHammer()
+        assert detector.match(bars) is False
+
+
+class TestBullishEngulfing:
+    def test_yin_then_yang_engulf_triggers(self):
+        closes = [10.0] * 22
+        opens = [10.0] * 22
+        closes[-2] = 9.5  # 昨收 < 昨开 (阴线)
+        opens[-2] = 10.0
+        opens[-1] = 9.3   # 今开 < 昨收
+        closes[-1] = 10.2  # 今收 > 昨开 (完全吞没)
+        bars = make_bars(closes, opens=opens)
+        detector = BullishEngulfing()
+        assert detector.match(bars) is True
+
+    def test_no_engulf_returns_false(self):
+        closes = [10.0] * 22
+        opens = [10.0] * 22
+        closes[-2] = 9.5
+        opens[-2] = 10.0
+        opens[-1] = 9.8   # 今开 > 昨收 (没有吞没)
+        closes[-1] = 10.2
+        bars = make_bars(closes, opens=opens)
+        detector = BullishEngulfing()
+        assert detector.match(bars) is False
+
+
+class TestBearishEngulfing:
+    def test_yang_then_yin_engulf_triggers(self):
+        closes = [10.0] * 22
+        opens = [10.0] * 22
+        closes[-2] = 10.5  # 昨收 > 昨开 (阳线)
+        opens[-2] = 10.0
+        opens[-1] = 10.7   # 今开 > 昨收
+        closes[-1] = 9.8   # 今收 < 昨开 (完全吞没)
+        bars = make_bars(closes, opens=opens)
+        detector = BearishEngulfing()
+        assert detector.match(bars) is True
+
+    def test_no_engulf_returns_false(self):
+        closes = [10.0] * 22
+        opens = [10.0] * 22
+        closes[-2] = 10.5
+        opens[-2] = 10.0
+        opens[-1] = 10.4
+        closes[-1] = 10.1  # 今收 > 昨开 (没有完全吞没)
+        bars = make_bars(closes, opens=opens)
+        detector = BearishEngulfing()
+        assert detector.match(bars) is False
+
+
+class TestDoji:
+    def test_tiny_body_triggers(self):
+        closes = [10.0] * 22
+        opens = [10.0] * 22
+        closes[-1] = 10.005  # 几乎等于开盘
+        opens[-1] = 10.0
+        highs = [c + 0.10 for c in closes]
+        highs[-1] = 10.15
+        lows = [c - 0.10 for c in closes]
+        lows[-1] = 9.85
+        bars = make_bars(closes, opens=opens, highs=highs, lows=lows)
+        detector = Doji()
+        assert detector.match(bars) is True
+
+    def test_large_body_returns_false(self):
+        closes = [10.0] * 22
+        closes[-1] = 10.5  # 大实体
+        opens = [10.0] * 22
+        opens[-1] = 10.0
+        highs = [c + 0.10 for c in closes]
+        lows = [c - 0.10 for c in closes]
+        bars = make_bars(closes, opens=opens, highs=highs, lows=lows)
+        detector = Doji()
+        assert detector.match(bars) is False
+
+
+class TestShootingStar:
+    def test_uptrend_long_upper_shadow_triggers(self):
+        closes = [10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 12.8]  # 持续上涨
+        opens = [c - 0.02 for c in closes]
+        # 最后一根手动构造：小实体 + 长上影 + 短下影 + 收盘在下半区
+        opens[-1] = 12.70
+        closes[-1] = 12.80  # body = 0.1
+        highs = [max(o, c) + 0.02 for o, c in zip(opens, closes)]
+        highs[-1] = 13.10  # upper_shadow = 13.1-12.8 = 0.3, >= 0.1*2 ✓
+        lows = [min(o, c) - 0.02 for o, c in zip(opens, closes)]
+        lows[-1] = 12.68  # lower_shadow = 12.7-12.68 = 0.02, <= 0.1*0.3=0.03 ✓
+        # (close-low)/(high-low) = (12.8-12.68)/(13.1-12.68) = 0.12/0.42 = 0.29 < 0.5 ✓
+        bars = make_bars(closes, opens=opens, highs=highs, lows=lows)
+        detector = ShootingStar()
+        assert detector.match(bars) is True
+
+    def test_downtrend_returns_false(self):
+        closes = list(range(15, 10, -1)) * 3
+        closes = closes[:22]
+        bars = make_bars(closes)
+        detector = ShootingStar()
+        assert detector.match(bars) is False
+
+
 class TestRegistry:
-    def test_all_8_detectors_registered(self):
+    def test_all_14_detectors_registered(self):
         all_d = list_all()
-        assert len(all_d) == 8
+        assert len(all_d) == 14
 
     def test_get_returns_correct_detector(self):
         d = get("golden-cross")

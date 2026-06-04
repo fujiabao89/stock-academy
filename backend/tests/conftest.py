@@ -19,6 +19,7 @@ def make_bars(
     volumes: list[int] | None = None,
     highs: list[float] | None = None,
     lows: list[float] | None = None,
+    opens: list[float] | None = None,
     start_date: date = date(2025, 1, 1),
 ) -> list[DailyBar]:
     """从价格序列构造 DailyBar 列表，自动计算均线"""
@@ -29,13 +30,15 @@ def make_bars(
         highs = [c * 1.01 for c in closes]
     if lows is None:
         lows = [c * 0.99 for c in closes]
+    if opens is None:
+        opens = [c * 0.99 for c in closes]
 
     bars = []
     for i in range(n):
         bar = DailyBar(
             code="000001",
             date=start_date + timedelta(days=i),
-            open=closes[i] * 0.99,
+            open=opens[i],
             high=highs[i],
             low=lows[i],
             close=closes[i],

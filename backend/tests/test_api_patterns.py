@@ -3,11 +3,11 @@ from httpx import AsyncClient
 
 
 class TestListPatterns:
-    async def test_returns_8_patterns(self, async_client: AsyncClient):
+    async def test_returns_14_patterns(self, async_client: AsyncClient):
         response = await async_client.get("/api/patterns")
         assert response.status_code == 200
         data = response.json()
-        assert len(data) == 8
+        assert len(data) == 14
         for p in data:
             assert "pattern_id" in p
             assert "pattern_name" in p

@@ -227,6 +227,12 @@ def _get_determination(pattern_id: str) -> str:
         "volume-up-price-down": "当日跌幅 > 1% 且 成交量/20日均量 > 1.5。与放量上涨对称，方向相反。",
         "ma-convergence-breakout": "过去20个交易日，每日 MA5/MA20/MA60 三条均线距离均 < 5%（均线粘合），且今日 MA5 向上突破（高于昨日 MA5）。",
         "volume-price-divergence": "股价创20日新高（今日高点 > 前20日所有高点），但成交量/20日均量 < 0.8（缩量新高）。",
+        "hammer": "近5日收盘整体走低（下跌趋势），今日下影线长度 ≥ 实体 2 倍，上影线 ≤ 实体 0.3 倍，且收盘价位于全日上半区。长下影线表明空方曾大幅打压但被多方收回，是潜在底部反转信号。",
+        "inverted-hammer": "近5日收盘整体走低（下跌趋势），今日上影线长度 ≥ 实体 2 倍，下影线 ≤ 实体 0.3 倍。长上影线表明多方尝试上攻但遇阻，若次日收阳则确认反转。",
+        "bullish-engulfing": "昨日为阴线（收 < 开），今日为阳线（收 > 开），且今日开 ≤ 昨收、今日收 ≥ 昨开，即今日阳线实体完全吞没昨日阴线实体。多方力量压倒空方，是看涨反转信号。",
+        "bearish-engulfing": "昨日为阳线（收 > 开），今日为阴线（收 < 开），且今日开 ≥ 昨收、今日收 ≤ 昨开，即今日阴线实体完全吞没昨日阳线实体。空方力量压倒多方，是看跌反转信号。",
+        "doji": "今日实体（|收-开|）占全日振幅（高-低）的比例 < 10%，即开盘价与收盘价几乎相同。十字星表示多空力量暂时均衡，可能预示当前趋势即将反转。",
+        "shooting-star": "近5日收盘整体走高（上涨趋势），今日上影线长度 ≥ 实体 2 倍，下影线 ≤ 实体 0.3 倍，且收盘价位于全日下半区。长上影线表明多方上攻失败、空方反击，是潜在顶部反转信号。",
     }
     return determinations.get(pattern_id, "暂无详细判定逻辑说明")
 
@@ -242,5 +248,11 @@ def _get_related(pattern_id: str) -> list[str]:
         "volume-up-price-down": ["volume-up-price-up", "volume-price-divergence"],
         "ma-convergence-breakout": ["ma-bullish-alignment", "golden-cross"],
         "volume-price-divergence": ["volume-up-price-up", "volume-up-price-down"],
+        "hammer": ["inverted-hammer", "doji", "bullish-engulfing"],
+        "inverted-hammer": ["hammer", "doji", "shooting-star"],
+        "bullish-engulfing": ["bearish-engulfing", "hammer", "volume-up-price-up"],
+        "bearish-engulfing": ["bullish-engulfing", "shooting-star", "volume-up-price-down"],
+        "doji": ["hammer", "shooting-star", "inverted-hammer"],
+        "shooting-star": ["inverted-hammer", "doji", "bearish-engulfing"],
     }
     return related.get(pattern_id, [])
