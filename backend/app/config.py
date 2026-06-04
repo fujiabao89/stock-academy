@@ -44,6 +44,10 @@ class Settings(BaseSettings):
     tushare_token: str = ""
     tushare_request_delay: float = 0.6
 
+    # 速率限制
+    rate_limit_enabled: bool = True
+    rate_limit_default: str = "30/minute"
+
     # 形态匹配引擎
     pattern_match_batch_size: int = 100
     backtest_years: int = 10
