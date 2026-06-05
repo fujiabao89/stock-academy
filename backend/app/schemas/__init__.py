@@ -3,6 +3,16 @@ from .error import ErrorDetail, ErrorResponse
 from .news import NewsArticleOut, NewsListResponse
 from .pattern import BacktestWindow, PatternDetail, PatternSignalOut, PatternStats
 from .stock import KlineItem, StockOverview, StockSearchResult
+from .strategy import (
+    StrategyCondition,
+    StrategyCreate,
+    StrategyListResponse,
+    StrategyOut,
+    StrategyRunListResponse,
+    StrategyRunOut,
+    StrategyScanResponse,
+    StrategyUpdate,
+)
 from .watchlist import WatchlistItemOut, WatchlistResponse
 
 __all__ = [
@@ -17,6 +27,14 @@ __all__ = [
     "KlineItem",
     "StockOverview",
     "StockSearchResult",
+    "StrategyCondition",
+    "StrategyCreate",
+    "StrategyListResponse",
+    "StrategyOut",
+    "StrategyRunListResponse",
+    "StrategyRunOut",
+    "StrategyScanResponse",
+    "StrategyUpdate",
     "LoginRequest",
     "RegisterRequest",
     "TokenResponse",

@@ -78,6 +78,20 @@ export default function Layout() {
           >
             新闻
           </Link>
+          <Link
+            to="/strategies"
+            style={{
+              color: "var(--color-text-secondary)",
+              fontWeight: 500,
+              transition: "color 0.15s",
+              display: "flex",
+              alignItems: "center",
+              minHeight: 44,
+              padding: "0 4px",
+            }}
+          >
+            策略
+          </Link>
           {user ? (
             <>
               <Link

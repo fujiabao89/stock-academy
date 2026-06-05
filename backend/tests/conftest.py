@@ -14,6 +14,7 @@ from app.database import Base, get_db
 from app.main import app
 from app.models.daily_bar import DailyBar  # noqa: F401 — 确保模型已导入 Base
 from app.models.news import NewsArticle  # noqa: F401 — 确保模型已导入 Base
+from app.models.strategy import Strategy, StrategyRun  # noqa: F401 — 确保模型已导入 Base
 from app.models.user import User  # noqa: F401 — 确保模型已导入 Base
 from app.models.watchlist import WatchlistItem  # noqa: F401 — 确保模型已导入 Base
 
@@ -97,3 +98,16 @@ async def register_user(client: AsyncClient, email: str = "test@example.com") ->
     })
     assert r.status_code == 201
     return r.json()["access_token"]
+
+
+async def seed_strategy(client: AsyncClient, token: str, name: str = "测试策略", conditions: list[dict] | None = None) -> dict:
+    """创建自定义策略并返回完整对象"""
+    if conditions is None:
+        conditions = [{"field": "ma5", "operator": "cross_above", "field2": "ma20"}]
+    r = await client.post(
+        "/api/strategies",
+        json={"name": name, "description": "测试用", "conditions": conditions},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert r.status_code == 201, r.text
+    return r.json()

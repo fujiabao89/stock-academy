@@ -5,6 +5,7 @@ from .news import router as news_router, watchlist_news_router
 from .patterns import router as patterns_router
 from .signals import router as signals_router
 from .stocks import router as stocks_router
+from .strategies import router as strategies_router
 from .watchlist import router as watchlist_router
 
 __all__ = [
@@ -15,6 +16,7 @@ __all__ = [
     "patterns_router",
     "signals_router",
     "stocks_router",
+    "strategies_router",
     "watchlist_news_router",
     "watchlist_router",
 ]

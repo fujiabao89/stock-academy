@@ -10,10 +10,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from .api import auth_router, glossary_router, news_router, patterns_router, register_error_handlers, signals_router, stocks_router, watchlist_news_router, watchlist_router
+from .api import auth_router, glossary_router, news_router, patterns_router, register_error_handlers, signals_router, stocks_router, strategies_router, watchlist_news_router, watchlist_router
 from .config import settings
 from .logging import correlation_middleware, get_logger, setup_logging
 from .services.news_scheduler import start_scheduler, stop_scheduler
+from .services.strategy_seeds import seed_builtin_strategies
 
 logger = get_logger(__name__)
 
@@ -23,6 +24,7 @@ _WINDOW = 60          # 窗口：60 秒
 _MAX_REQUESTS = 30    # 每窗口最多请求数（默认值，可被 config 覆盖）
 _hits: dict[str, list[float]] = defaultdict(list)
 _skip_prefixes = ("/docs", "/redoc", "/openapi.json", "/static")
+_skip_networks = ("172.", "192.168.", "10.", "127.")  # Docker/私有网络不加限制
 
 
 async def rate_limit_middleware(request: Request, call_next):
@@ -34,6 +36,10 @@ async def rate_limit_middleware(request: Request, call_next):
         return await call_next(request)
 
     client_ip = request.client.host if request.client else "unknown"
+
+    # Docker 内部网络和私有 IP 不限制
+    if any(client_ip.startswith(prefix) for prefix in _skip_networks):
+        return await call_next(request)
     now = time.monotonic()
     window = _hits[client_ip]
 
@@ -65,6 +71,9 @@ async def lifespan(app: FastAPI):
     setup_logging()
     logger.info("stock-academy starting", environment=settings.environment)
     await start_scheduler()
+    from .database import async_session
+    async with async_session() as db:
+        await seed_builtin_strategies(db)
     yield
     await stop_scheduler()
     logger.info("stock-academy shutting down")
@@ -101,6 +110,7 @@ app.include_router(glossary_router, prefix="/api")
 app.include_router(watchlist_router, prefix="/api")
 app.include_router(news_router, prefix="/api")
 app.include_router(watchlist_news_router, prefix="/api")
+app.include_router(strategies_router, prefix="/api")
 
 
 @app.get("/api/health")

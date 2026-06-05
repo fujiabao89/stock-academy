@@ -9,6 +9,9 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import NewsPage from "./pages/NewsPage";
 import WatchlistPage from "./pages/WatchlistPage";
+import StrategiesPage from "./pages/StrategiesPage";
+import StrategyDetailPage from "./pages/StrategyDetailPage";
+import StrategyFormPage from "./pages/StrategyFormPage";
 import NotFound from "./pages/NotFound";
 import { useAuth } from "./contexts/AuthContext";
 
@@ -30,6 +33,10 @@ export default function App() {
         <Route path="/learn/glossary" element={<GlossaryPage />} />
         <Route path="/news" element={<NewsPage />} />
         <Route path="/watchlist" element={<ProtectedRoute><WatchlistPage /></ProtectedRoute>} />
+        <Route path="/strategies" element={<StrategiesPage />} />
+        <Route path="/strategies/:id" element={<StrategyDetailPage />} />
+        <Route path="/strategies/new" element={<ProtectedRoute><StrategyFormPage /></ProtectedRoute>} />
+        <Route path="/strategies/:id/edit" element={<ProtectedRoute><StrategyFormPage /></ProtectedRoute>} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="*" element={<NotFound />} />
