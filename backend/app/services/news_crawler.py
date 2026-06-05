@@ -19,7 +19,7 @@ logger = get_logger(__name__)
 SINA_BASE = "https://feed.mix.sina.com.cn/api/roll/get"
 SINA_LID = "2509"
 
-_STOCK_CODE_RE = re.compile(r"\b(0[0123]\d{4}|3[0-9]\d{3}|6[012]\d{3})\b")
+_STOCK_CODE_RE = re.compile(r"\b(0[0123]\d{4}|3[0-9]\d{4}|6[0-9]\d{4})\b")
 
 
 def _extract_stock_codes(title: str, intro: str) -> list[str]:
