@@ -2,6 +2,18 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as echarts from "echarts";
 
+interface MarkPointItem {
+  name: string;
+  coord: [string, number];
+  value: string;
+  symbol: string;
+  symbolRotate?: number;
+  symbolOffset?: [number, number];
+  symbolSize: number;
+  itemStyle: Record<string, string | number>;
+  _pid: string;
+}
+
 interface KlineItem {
   date: string;
   open: number;
@@ -203,7 +215,7 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
       arr.push(s);
       byDate.set(s.date, arr);
     }
-    const result: any[] = [];
+    const result: MarkPointItem[] = [];
     for (const [date, sigs] of byDate) {
       const idx = dates.indexOf(date);
       if (idx === -1) continue;
@@ -251,7 +263,7 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
     const series: echarts.EChartsOption["series"] = [];
 
     // K 线
-    const candlestick: any = {
+    const candlestick: Record<string, unknown> = {
       type: "candlestick",
       name: "K",
       data: ohlc,
@@ -274,7 +286,7 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
         animation: false,
         tooltip: {
           trigger: "item",
-          formatter: (p: any) => p.data.value,
+          formatter: (p: { data: { value: string } }) => p.data.value,
         },
       };
     }
@@ -464,18 +476,20 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
     const inst = instanceRef.current;
     if (!inst) return;
 
-    const onMouseOver = (params: any) => {
-      if (params.dataIndex != null) setHoveredIndex(params.dataIndex);
+    const onMouseOver = (params: Record<string, unknown>) => {
+      if (params.dataIndex != null) setHoveredIndex(params.dataIndex as number);
     };
     const onMouseOut = () => setHoveredIndex(null);
-    const onClick = (params: any) => {
+    const onClick = (params: Record<string, unknown>) => {
       if (params.componentType === "markPoint") {
-        const patternId = params.data?._pid;
+        const data = params.data as Record<string, unknown> | undefined;
+        const patternId = data?._pid as string | undefined;
         if (patternId) navigate(`/learn/patterns/${patternId}`);
         return;
       }
       if (params.dataIndex != null) {
-        setPinnedIndex((prev) => (prev === params.dataIndex ? null : params.dataIndex));
+        const idx = params.dataIndex as number;
+        setPinnedIndex((prev) => (prev === idx ? null : idx));
       }
     };
     const onKeyDown = (e: KeyboardEvent) => {

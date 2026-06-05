@@ -1,11 +1,12 @@
 """股票相关 API 端点"""
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
 from .errors import NotFoundError
+from ..stock_names import _STOCK_NAMES, stock_info as _stock_info
 from ..engine import list_all
 from ..models.daily_bar import DailyBar
 from ..models.pattern_signal import PatternSignal
@@ -14,44 +15,6 @@ from ..schemas.pattern import BacktestWindow, PatternSignalOut
 from ..schemas.stock import KlineItem, StockOverview, StockSearchResult
 
 router = APIRouter(prefix="/stocks", tags=["stocks"])
-
-# 沪深300 成分股名称映射（MVP 阶段维护常用名称）
-_STOCK_NAMES: dict[str, tuple[str, str]] = {
-    "000001": ("平安银行", "sz"),
-    "000002": ("万科A", "sz"),
-    "000333": ("美的集团", "sz"),
-    "000568": ("泸州老窖", "sz"),
-    "000651": ("格力电器", "sz"),
-    "000858": ("五粮液", "sz"),
-    "002142": ("宁波银行", "sz"),
-    "002415": ("海康威视", "sz"),
-    "002594": ("比亚迪", "sz"),
-    "300750": ("宁德时代", "sz"),
-    "600000": ("浦发银行", "sh"),
-    "600009": ("上海机场", "sh"),
-    "600028": ("中国石化", "sh"),
-    "600030": ("中信证券", "sh"),
-    "600036": ("招商银行", "sh"),
-    "600048": ("保利发展", "sh"),
-    "600276": ("恒瑞医药", "sh"),
-    "600309": ("万华化学", "sh"),
-    "600519": ("贵州茅台", "sh"),
-    "600585": ("海螺水泥", "sh"),
-    "600809": ("山西汾酒", "sh"),
-    "600887": ("伊利股份", "sh"),
-    "600900": ("长江电力", "sh"),
-    "601012": ("隆基绿能", "sh"),
-    "601088": ("中国神华", "sh"),
-    "601166": ("兴业银行", "sh"),
-    "601318": ("中国平安", "sh"),
-    "601398": ("工商银行", "sh"),
-    "601668": ("中国建筑", "sh"),
-    "601888": ("中国中免", "sh"),
-}
-
-
-def _stock_info(code: str) -> tuple[str, str] | None:
-    return _STOCK_NAMES.get(code)
 
 
 @router.get("/search", response_model=list[StockSearchResult])
@@ -63,18 +26,23 @@ async def search_stocks(
     q_upper = q.upper().strip()
 
     # 先在本地名称映射中匹配
-    matches = []
-    result = await db.execute(select(DailyBar.code).distinct())
+    matched_codes = [
+        code for code, (name, _) in _STOCK_NAMES.items()
+        if q_upper in code or q_upper in name.upper()
+    ]
+    if not matched_codes:
+        return []
+
+    # 验证匹配的股票在数据库中有数据
+    result = await db.execute(
+        select(DailyBar.code).where(DailyBar.code.in_(matched_codes)).distinct()
+    )
     db_codes = {row[0] for row in result.fetchall()}
 
-    for code in db_codes:
-        info = _stock_info(code)
-        if info is None:
-            continue
-        name, market = info
-        if q_upper in code or q_upper in name.upper():
-            matches.append(StockSearchResult(code=code, name=name, market=market))
-
+    matches = [
+        StockSearchResult(code=code, name=_STOCK_NAMES[code][0], market=_STOCK_NAMES[code][1])
+        for code in matched_codes if code in db_codes
+    ]
     return matches[:20]
 
 
@@ -82,7 +50,8 @@ async def search_stocks(
 async def get_stock_overview(code: str, db: AsyncSession = Depends(get_db)):
     """个股概览（最新价、涨跌幅、基本信息）"""
     if not code.isdigit() or len(code) != 6:
-        raise NotFoundError(message="股票代码格式错误", detail="请输入6位数字代码，如 000001")
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="股票代码格式错误，请输入6位数字代码")
 
     bars = await db.execute(
         select(DailyBar)
@@ -127,19 +96,22 @@ async def get_stock_kline(
 ):
     """K线数据（含均线），period: d=日K, w=周K, m=月K"""
     if not code.isdigit() or len(code) != 6:
-        raise NotFoundError(message="股票代码格式错误", detail="请输入6位数字代码，如 000001")
-
-    rows = await db.execute(
-        select(DailyBar)
-        .where(DailyBar.code == code)
-        .order_by(DailyBar.date.asc())
-    )
-    bars = list(rows.scalars().all())
-
-    if not bars:
-        raise NotFoundError(detail=f"未找到股票 {code} 的数据")
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="股票代码格式错误，请输入6位数字代码")
 
     if period == "d":
+        rows = await db.execute(
+            select(DailyBar)
+            .where(DailyBar.code == code)
+            .order_by(DailyBar.date.desc())
+            .limit(limit)
+        )
+        bars = list(rows.scalars().all())
+        bars.reverse()
+
+        if not bars:
+            raise NotFoundError(detail=f"未找到股票 {code} 的数据")
+
         result = [
             KlineItem(
                 date=b.date,
@@ -153,11 +125,21 @@ async def get_stock_kline(
                 ma60=b.ma60,
                 ma120=b.ma120,
             )
-            for b in bars[-limit:]
+            for b in bars
         ]
         return result
 
-    # 聚合为周K/月K
+    # 聚合为周K/月K 需要全量数据
+    rows = await db.execute(
+        select(DailyBar)
+        .where(DailyBar.code == code)
+        .order_by(DailyBar.date.asc())
+    )
+    bars = list(rows.scalars().all())
+
+    if not bars:
+        raise NotFoundError(detail=f"未找到股票 {code} 的数据")
+
     if period == "w":
         freq = "W"
     else:

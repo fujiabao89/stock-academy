@@ -84,7 +84,7 @@ class TushareClient:
                 end_date=end_date,
             )
 
-        df = self._retry(_call)
+        df = await asyncio.to_thread(self._retry, _call)
 
         if df is None or df.empty:
             logger.info("tushare_no_data", ts_code=ts_code)
@@ -113,7 +113,7 @@ class TushareClient:
                 fields="ts_code,symbol,name,area,industry,list_date",
             )
 
-        df = self._retry(_call)
+        df = await asyncio.to_thread(self._retry, _call)
 
         if df is None or df.empty:
             logger.warning("tushare_stock_basic_empty")

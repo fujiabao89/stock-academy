@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
 from ..engine import get, list_all
+from ..logging import get_logger
 from .errors import NotFoundError
 from ..models.pattern_signal import PatternSignal
 from ..schemas.pattern import (
@@ -23,6 +24,7 @@ from ..schemas.pattern import (
 from ..schemas.stock import StockSearchResult
 from pydantic import BaseModel
 
+logger = get_logger(__name__)
 router = APIRouter(prefix="/patterns", tags=["patterns"])
 
 
@@ -32,8 +34,7 @@ def _load_backtest_data() -> dict[str, dict]:
         with open(json_path, "r", encoding="utf-8") as f:
             return json.load(f)
     except (FileNotFoundError, json.JSONDecodeError) as e:
-        import logging
-        logging.getLogger(__name__).warning("无法加载回测数据 %s: %s", json_path, e)
+        logger.warning("backtest_load_failed", path=str(json_path), error=str(e))
         return {}
 
 
@@ -118,7 +119,7 @@ async def get_pattern_stocks(pattern_id: str, db: AsyncSession = Depends(get_db)
     if detector is None:
         raise NotFoundError(detail=f"未知形态: {pattern_id}")
 
-    from ..api.stocks import _stock_info
+    from ..stock_names import stock_info as _stock_info
 
     # 找到该形态在 pattern_signals 表中的最新日期
     latest_date = await db.execute(

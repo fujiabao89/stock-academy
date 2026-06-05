@@ -19,7 +19,7 @@ logger = get_logger(__name__)
 # ---------- 速率限制中间件 ----------
 
 _WINDOW = 60          # 窗口：60 秒
-_MAX_REQUESTS = 30    # 每窗口最多请求数
+_MAX_REQUESTS = 30    # 每窗口最多请求数（默认值，可被 config 覆盖）
 _hits: dict[str, list[float]] = defaultdict(list)
 _skip_prefixes = ("/docs", "/redoc", "/openapi.json", "/static")
 

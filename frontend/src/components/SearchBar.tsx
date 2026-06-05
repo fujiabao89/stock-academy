@@ -11,11 +11,13 @@ export default function SearchBar() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
   const abortRef = useRef<AbortController | null>(null);
 
   const handleSearch = useCallback(async (q: string) => {
     setQuery(q);
+    setError("");
     if (q.trim().length === 0) {
       setResults([]);
       return;
@@ -31,9 +33,13 @@ export default function SearchBar() {
       if (res.ok) {
         const data = await res.json();
         setResults(data);
+      } else {
+        setError("搜索失败，请重试");
+        setResults([]);
       }
     } catch (e: any) {
       if (e?.name === "AbortError") return;
+      setError("网络错误，请检查连接后重试");
     } finally {
       setLoading(false);
     }
@@ -90,6 +96,27 @@ export default function SearchBar() {
       {loading && (
         <div style={{ padding: "var(--space-3)", color: "var(--color-text-secondary)", fontSize: 14 }}>
           搜索中...
+        </div>
+      )}
+
+      {!loading && error && (
+        <div
+          style={{
+            position: "absolute",
+            top: "100%",
+            left: 0,
+            right: 0,
+            background: "var(--color-surface)",
+            border: "1px solid var(--color-error)",
+            borderRadius: "var(--radius-md)",
+            marginTop: "var(--space-1)",
+            padding: "var(--space-3)",
+            color: "var(--color-error)",
+            fontSize: 14,
+            zIndex: 200,
+          }}
+        >
+          {error}
         </div>
       )}
 

@@ -19,19 +19,18 @@ class TestSearch:
 
 
 class TestGetStockOverview:
-    async def test_invalid_code_letters_returns_404(self, async_client: AsyncClient):
+    async def test_invalid_code_letters_returns_400(self, async_client: AsyncClient):
         response = await async_client.get("/api/stocks/ABC/overview")
-        assert response.status_code == 404
+        assert response.status_code == 400
         data = response.json()
-        assert "error" in data
-        assert data["error"]["code"] == "NOT_FOUND"
+        assert "detail" in data["error"]
         assert "6位数字" in data["error"]["detail"]
 
-    async def test_invalid_code_too_short_returns_404(self, async_client: AsyncClient):
+    async def test_invalid_code_too_short_returns_400(self, async_client: AsyncClient):
         response = await async_client.get("/api/stocks/123/overview")
-        assert response.status_code == 404
+        assert response.status_code == 400
         data = response.json()
-        assert "error" in data
+        assert "detail" in data["error"]
         assert "6位数字" in data["error"]["detail"]
 
     async def test_valid_code_no_data_returns_404(self, async_client: AsyncClient):
@@ -43,11 +42,11 @@ class TestGetStockOverview:
 
 
 class TestGetStockKline:
-    async def test_invalid_code_returns_404(self, async_client: AsyncClient):
+    async def test_invalid_code_returns_400(self, async_client: AsyncClient):
         response = await async_client.get("/api/stocks/ABC/kline")
-        assert response.status_code == 404
+        assert response.status_code == 400
         data = response.json()
-        assert "error" in data
+        assert "detail" in data["error"]
 
 
 class TestHealth:

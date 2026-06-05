@@ -19,13 +19,17 @@ interface LatestStockSignal {
 export default function Home() {
   const [signals, setSignals] = useState<LatestStockSignal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
     fetch("/api/signals/latest")
-      .then((r) => (r.ok ? r.json() : []))
+      .then((r) => {
+        if (!r.ok) throw new Error(`服务器错误 (${r.status})`);
+        return r.json();
+      })
       .then((data) => { if (!cancelled) setSignals(data); })
-      .catch(() => { if (!cancelled) setSignals([]); })
+      .catch((e) => { if (!cancelled) setError(e.message || "加载失败"); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, []);
@@ -143,6 +147,36 @@ export default function Home() {
             }}
           >
             加载中...
+          </div>
+        ) : error ? (
+          <div
+            style={{
+              textAlign: "center",
+              padding: "var(--space-10)",
+              color: "var(--color-error)",
+              fontSize: 14,
+              background: "var(--color-surface)",
+              border: "1px solid var(--color-error)",
+              borderRadius: "var(--radius-md)",
+            }}
+          >
+            {error}
+            <div style={{ marginTop: "var(--space-3)" }}>
+              <button
+                onClick={() => window.location.reload()}
+                style={{
+                  padding: "6px 16px",
+                  background: "var(--color-primary)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "var(--radius-sm)",
+                  cursor: "pointer",
+                  fontSize: 13,
+                }}
+              >
+                刷新页面
+              </button>
+            </div>
           </div>
         ) : signals.length === 0 ? (
           <div

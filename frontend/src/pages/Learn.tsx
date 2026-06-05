@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import ConfidenceBadge from "../components/ConfidenceBadge";
 
@@ -16,9 +16,11 @@ interface PatternSummary {
 const DIRECTION_LABELS: Record<string, { text: string; color: string; bg: string }> = {
   bullish: { text: "看涨", color: "var(--color-bullish)", bg: "var(--color-bullish-bg)" },
   bearish: { text: "看跌", color: "var(--color-bearish)", bg: "var(--color-bearish-bg)" },
+  neutral: { text: "中性", color: "var(--color-muted)", bg: "var(--color-surface-hover)" },
 };
 
 const CATEGORY_NAMES: Record<string, string> = {
+  "K线形态": "K线蜡烛图形态",
   "均线": "均线类形态",
   "量价": "量价类形态",
 };
@@ -41,6 +43,16 @@ export default function Learn() {
     return () => { cancelled = true; };
   }, []);
 
+  const grouped = useMemo(() => {
+    const map = new Map<string, PatternSummary[]>();
+    for (const p of patterns) {
+      const list = map.get(p.category) ?? [];
+      list.push(p);
+      map.set(p.category, list);
+    }
+    return map;
+  }, [patterns]);
+
   if (loading) {
     return (
       <div style={{ textAlign: "center", padding: "var(--space-12)", color: "var(--color-text-secondary)" }}>
@@ -56,13 +68,6 @@ export default function Learn() {
         <Link to="/" style={{ color: "var(--color-primary)", fontSize: 14 }}>← 返回首页</Link>
       </div>
     );
-  }
-
-  const grouped = new Map<string, PatternSummary[]>();
-  for (const p of patterns) {
-    const list = grouped.get(p.category) ?? [];
-    list.push(p);
-    grouped.set(p.category, list);
   }
 
   return (
@@ -87,7 +92,7 @@ export default function Learn() {
       </div>
 
       {/* Category sections */}
-      {(["均线", "量价"] as const).map((cat) => {
+      {(["K线形态", "均线", "量价"] as const).map((cat) => {
         const items = grouped.get(cat);
         if (!items || items.length === 0) return null;
         return (

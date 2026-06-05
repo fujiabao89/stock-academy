@@ -5,6 +5,7 @@ import Learn from "./pages/Learn";
 import PatternDetailPage from "./pages/PatternDetailPage";
 import GlossaryPage from "./pages/GlossaryPage";
 import StockDetail from "./pages/StockDetail";
+import NotFound from "./pages/NotFound";
 
 export default function App() {
   return (
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/learn" element={<Learn />} />
         <Route path="/learn/patterns/:patternId" element={<PatternDetailPage />} />
         <Route path="/learn/glossary" element={<GlossaryPage />} />
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   );

@@ -8,6 +8,7 @@
 
 import asyncio
 import sys
+from collections.abc import Sequence
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -22,6 +23,30 @@ from app.engine import list_all
 from app.engine.detectors import candlestick, golden_cross, ma_alignment, volume_price  # noqa: F401 — 触发注册
 from app.models.daily_bar import DailyBar
 from app.models.pattern_signal import PatternSignal
+
+
+class _BarsView(Sequence):
+    """零拷贝列表视图，避免 O(n²) 切片复制"""
+
+    __slots__ = ("_data", "_stop")
+
+    def __init__(self, data, stop):
+        self._data = data
+        self._stop = stop
+
+    def __getitem__(self, key):
+        if isinstance(key, slice):
+            start, stop, step = key.indices(self._stop)
+            return [self._data[i] for i in range(start, stop, step)]
+        if key < 0:
+            key += self._stop
+        if key < 0 or key >= self._stop:
+            raise IndexError
+        return self._data[key]
+
+    def __len__(self):
+        return self._stop
+
 
 HS300_SAMPLE = [
     ("000001", "平安银行"), ("000002", "万科A"), ("000333", "美的集团"),
@@ -298,7 +323,7 @@ async def main():
             for pid, detector in list_all().items():
                 count = 0
                 for i in range(120, len(all_bars)):
-                    if detector.match(all_bars[:i + 1]):
+                    if detector.match(_BarsView(all_bars, i + 1)):
                         count += 1
                         bt = _BACKTEST_DATA.get(pid, {})
                         signals_to_insert.append(PatternSignal(

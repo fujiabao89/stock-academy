@@ -12,6 +12,7 @@
 import argparse
 import asyncio
 import sys
+from collections.abc import Sequence
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
@@ -31,6 +32,30 @@ from app.models.daily_bar import DailyBar
 from app.models.pattern_signal import PatternSignal
 
 logger = get_logger(__name__)
+
+
+class _BarsView(Sequence):
+    """零拷贝列表视图，避免 O(n²) 切片复制"""
+
+    __slots__ = ("_data", "_stop")
+
+    def __init__(self, data, stop):
+        self._data = data
+        self._stop = stop
+
+    def __getitem__(self, key):
+        if isinstance(key, slice):
+            start, stop, step = key.indices(self._stop)
+            return [self._data[i] for i in range(start, stop, step)]
+        if key < 0:
+            key += self._stop
+        if key < 0 or key >= self._stop:
+            raise IndexError
+        return self._data[key]
+
+    def __len__(self):
+        return self._stop
+
 
 HS300_SAMPLE = [
     ("000001", "平安银行"), ("000002", "万科A"), ("000333", "美的集团"),
@@ -186,7 +211,7 @@ async def import_from_tushare(db: AsyncSession, days: int) -> tuple[int, int]:
         # 重新加载含 MA 的 bars（日期升序）
         for pid, detector in list_all().items():
             for i in range(120, len(all_bars)):
-                if detector.match(all_bars[:i + 1]):
+                if detector.match(_BarsView(all_bars, i + 1)):
                     bt = _BACKTEST_DATA.get(pid, {})
                     db.add(PatternSignal(
                         code=code,

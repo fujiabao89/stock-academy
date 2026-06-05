@@ -38,7 +38,7 @@ async def fetch_sina(code: str) -> dict | None:
         except httpx.TimeoutException:
             logger.warning("sina_api_timeout", code=code)
             return None
-        except Exception as e:
+        except httpx.HTTPError as e:
             logger.error("sina_api_error", code=code, error=str(e))
             return None
 
@@ -81,7 +81,7 @@ async def fetch_tencent(code: str) -> dict | None:
         except httpx.TimeoutException:
             logger.warning("tencent_api_timeout", code=code)
             return None
-        except Exception as e:
+        except httpx.HTTPError as e:
             logger.error("tencent_api_error", code=code, error=str(e))
             return None
 
