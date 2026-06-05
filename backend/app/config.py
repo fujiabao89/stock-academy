@@ -44,9 +44,27 @@ class Settings(BaseSettings):
     tushare_token: str = ""
     tushare_request_delay: float = 0.6
 
+    # JWT 认证
+    jwt_secret: str = "change-me-in-production-use-a-random-64-char-string"
+    jwt_algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
+    refresh_token_expire_days: int = 7
+
     # 速率限制
     rate_limit_enabled: bool = True
     rate_limit_default: str = "30/minute"
+
+    # DeepSeek AI
+    deepseek_api_key: str = ""
+    deepseek_base_url: str = "https://api.deepseek.com"
+    deepseek_model: str = "deepseek-chat"
+    deepseek_rate_per_minute: int = 10
+    deepseek_daily_limit: int = 200
+    deepseek_batch_size: int = 10
+
+    # 新闻爬虫
+    news_crawl_interval_minutes: int = 30
+    news_max_per_crawl: int = 20
 
     # 形态匹配引擎
     pattern_match_batch_size: int = 100

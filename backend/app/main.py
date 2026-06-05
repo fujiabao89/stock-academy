@@ -10,9 +10,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from .api import glossary_router, patterns_router, register_error_handlers, signals_router, stocks_router
+from .api import auth_router, glossary_router, news_router, patterns_router, register_error_handlers, signals_router, stocks_router, watchlist_news_router, watchlist_router
 from .config import settings
 from .logging import correlation_middleware, get_logger, setup_logging
+from .services.news_scheduler import start_scheduler, stop_scheduler
 
 logger = get_logger(__name__)
 
@@ -27,6 +28,9 @@ _skip_prefixes = ("/docs", "/redoc", "/openapi.json", "/static")
 async def rate_limit_middleware(request: Request, call_next):
     path = request.url.path
     if path.startswith(_skip_prefixes):
+        return await call_next(request)
+
+    if not settings.rate_limit_enabled:
         return await call_next(request)
 
     client_ip = request.client.host if request.client else "unknown"
@@ -60,7 +64,9 @@ async def rate_limit_middleware(request: Request, call_next):
 async def lifespan(app: FastAPI):
     setup_logging()
     logger.info("stock-academy starting", environment=settings.environment)
+    await start_scheduler()
     yield
+    await stop_scheduler()
     logger.info("stock-academy shutting down")
 
 
@@ -87,10 +93,14 @@ app.add_middleware(
 register_error_handlers(app)
 
 # 路由
+app.include_router(auth_router, prefix="/api")
 app.include_router(stocks_router, prefix="/api")
 app.include_router(patterns_router, prefix="/api")
 app.include_router(signals_router, prefix="/api")
 app.include_router(glossary_router, prefix="/api")
+app.include_router(watchlist_router, prefix="/api")
+app.include_router(news_router, prefix="/api")
+app.include_router(watchlist_news_router, prefix="/api")
 
 
 @app.get("/api/health")

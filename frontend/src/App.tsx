@@ -1,11 +1,23 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Learn from "./pages/Learn";
 import PatternDetailPage from "./pages/PatternDetailPage";
 import GlossaryPage from "./pages/GlossaryPage";
 import StockDetail from "./pages/StockDetail";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import NewsPage from "./pages/NewsPage";
+import WatchlistPage from "./pages/WatchlistPage";
 import NotFound from "./pages/NotFound";
+import { useAuth } from "./contexts/AuthContext";
+
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  return <>{children}</>;
+}
 
 export default function App() {
   return (
@@ -16,6 +28,10 @@ export default function App() {
         <Route path="/learn" element={<Learn />} />
         <Route path="/learn/patterns/:patternId" element={<PatternDetailPage />} />
         <Route path="/learn/glossary" element={<GlossaryPage />} />
+        <Route path="/news" element={<NewsPage />} />
+        <Route path="/watchlist" element={<ProtectedRoute><WatchlistPage /></ProtectedRoute>} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

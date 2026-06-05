@@ -36,6 +36,16 @@ class PatternError(AppError):
         )
 
 
+class AuthError(AppError):
+    def __init__(self, detail: str | None = None, message: str | None = None):
+        super().__init__(
+            code="AUTH_ERROR",
+            message=message or "认证失败",
+            detail=detail,
+            status=401,
+        )
+
+
 class NotFoundError(AppError):
     def __init__(self, detail: str | None = None, message: str | None = None):
         super().__init__(

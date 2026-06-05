@@ -36,3 +36,14 @@ _STOCK_NAMES: dict[str, tuple[str, str]] = {
 
 def stock_info(code: str) -> tuple[str, str] | None:
     return _STOCK_NAMES.get(code)
+
+
+_NAME_TO_CODE: dict[str, str] = {
+    name: code
+    for code, (name, _) in _STOCK_NAMES.items()
+}
+
+
+def find_code_by_name(name: str) -> str | None:
+    """通过股票名称查找代码"""
+    return _NAME_TO_CODE.get(name)

@@ -9,9 +9,16 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from app.config import settings
 from app.database import Base, get_db
 from app.main import app
 from app.models.daily_bar import DailyBar  # noqa: F401 — 确保模型已导入 Base
+from app.models.news import NewsArticle  # noqa: F401 — 确保模型已导入 Base
+from app.models.user import User  # noqa: F401 — 确保模型已导入 Base
+from app.models.watchlist import WatchlistItem  # noqa: F401 — 确保模型已导入 Base
+
+# 测试环境禁用速率限制，避免 429 干扰
+settings.rate_limit_enabled = False
 
 
 def make_bars(
@@ -80,3 +87,13 @@ async def async_client() -> AsyncGenerator[AsyncClient, Any]:
 
     app.dependency_overrides.clear()
     await engine.dispose()
+
+
+async def register_user(client: AsyncClient, email: str = "test@example.com") -> str:
+    """注册用户并返回 access_token"""
+    r = await client.post("/api/auth/register", json={
+        "email": email,
+        "password": "password123",
+    })
+    assert r.status_code == 201
+    return r.json()["access_token"]

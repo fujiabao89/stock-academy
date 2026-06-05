@@ -4,7 +4,7 @@ from alembic import context
 from sqlalchemy import engine_from_config, pool
 
 from app.database import Base
-from app.models import DailyBar, PatternSignal  # noqa: F401 — 确保模型被加载
+from app.models import DailyBar, NewsArticle, PatternSignal, User, WatchlistItem  # noqa: F401 — 确保模型被加载
 
 config = context.config
 if config.config_file_name is not None:
