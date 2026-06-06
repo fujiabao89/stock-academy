@@ -17,15 +17,15 @@ interface Props {
 }
 
 const C = {
-  bg: "#0F172A",
-  surface: "#1E293B",
-  border: "#334155",
-  muted: "#94A3B8",
-  text: "#F1F5F9",
-  text2: "#CBD5E1",
-  primary: "#F59E0B",
-  primaryBright: "#FBBF24",
-  baseline: "#64748B",
+  bg: "#0b1326",
+  surface: "#171f33",
+  border: "#534434",
+  muted: "#a08e7a",
+  text: "#dae2fd",
+  text2: "#d8c3ad",
+  primary: "#f59e0b",
+  primaryBright: "#ffc174",
+  baseline: "#a08e7a",
 };
 
 export default function DistributionBar({ bins, randomBaseline }: Props) {

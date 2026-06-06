@@ -18,6 +18,7 @@ export default function Layout() {
           position: "sticky",
           top: 0,
           zIndex: 100,
+          backdropFilter: "blur(12px)",
         }}
       >
         <Link
@@ -26,72 +27,45 @@ export default function Layout() {
             fontSize: 18,
             fontWeight: 700,
             color: "var(--color-text)",
-            letterSpacing: "-0.5px",
+            letterSpacing: "-0.02em",
             display: "flex",
             alignItems: "center",
             minHeight: 44,
+            textDecoration: "none",
+            fontFamily: "Inter, var(--font-sans)",
           }}
         >
           <span style={{ color: "var(--color-primary)" }}>炒股</span>
           学堂
         </Link>
-        <nav style={{ display: "flex", gap: "var(--space-6)", fontSize: 14, alignItems: "center" }}>
-          <Link
-            to="/"
-            style={{
-              color: "var(--color-text-secondary)",
-              fontWeight: 500,
-              transition: "color 0.15s",
-              display: "flex",
-              alignItems: "center",
-              minHeight: 44,
-              padding: "0 4px",
-            }}
-          >
-            首页
-          </Link>
-          <Link
-            to="/learn"
-            style={{
-              color: "var(--color-text-secondary)",
-              fontWeight: 500,
-              transition: "color 0.15s",
-              display: "flex",
-              alignItems: "center",
-              minHeight: 44,
-              padding: "0 4px",
-            }}
-          >
-            学堂
-          </Link>
-          <Link
-            to="/news"
-            style={{
-              color: "var(--color-text-secondary)",
-              fontWeight: 500,
-              transition: "color 0.15s",
-              display: "flex",
-              alignItems: "center",
-              minHeight: 44,
-              padding: "0 4px",
-            }}
-          >
-            新闻
-          </Link>
-          <Link
-            to="/strategies"
-            style={{
-              color: "var(--color-text-secondary)",
-              fontWeight: 500,
-              transition: "color 0.15s",
-              display: "flex",
-              alignItems: "center",
-              minHeight: 44,
-              padding: "0 4px",
-            }}
-          >
-            策略
-          </Link>
+        <nav style={{ display: "flex", gap: "var(--space-1)", fontSize: 14, alignItems: "center" }}>
+          {[
+            { to: "/", label: "首页" },
+            { to: "/learn", label: "学堂" },
+            { to: "/news", label: "新闻" },
+            { to: "/strategies", label: "策略" },
+          ].map(({ to, label }) => (
+            <Link
+              key={to}
+              to={to}
+              style={{
+                color: "var(--color-text-secondary)",
+                fontWeight: 500,
+                fontFamily: "Inter, var(--font-sans)",
+                transition: "color 0.15s",
+                display: "flex",
+                alignItems: "center",
+                minHeight: 44,
+                padding: "0 12px",
+                borderRadius: "var(--radius-sm)",
+                textDecoration: "none",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-text)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-secondary)")}
+            >
+              {label}
+            </Link>
+          ))}
           {user ? (
             <>
               <Link
@@ -99,16 +73,29 @@ export default function Layout() {
                 style={{
                   color: "var(--color-text-secondary)",
                   fontWeight: 500,
+                  fontFamily: "Inter, var(--font-sans)",
                   transition: "color 0.15s",
                   display: "flex",
                   alignItems: "center",
                   minHeight: 44,
-                  padding: "0 4px",
+                  padding: "0 12px",
+                  borderRadius: "var(--radius-sm)",
+                  textDecoration: "none",
                 }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-text)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-secondary)")}
               >
                 自选股
               </Link>
-              <span style={{ color: "var(--color-text-secondary)", fontSize: 13 }}>
+              <span style={{
+                color: "var(--color-text-secondary)",
+                fontSize: 12,
+                fontFamily: "var(--font-mono)",
+                padding: "4px 10px",
+                background: "var(--color-bg)",
+                border: "1px solid var(--color-border)",
+                borderRadius: "var(--radius-sm)",
+              }}>
                 {user.email}
               </span>
               <button
@@ -116,11 +103,12 @@ export default function Layout() {
                 style={{
                   color: "var(--color-text-secondary)",
                   fontWeight: 500,
-                  fontSize: 14,
+                  fontSize: 13,
+                  fontFamily: "Inter, var(--font-sans)",
                   background: "none",
                   border: "none",
                   cursor: "pointer",
-                  padding: "0 4px",
+                  padding: "0 12px",
                   minHeight: 44,
                 }}
               >
@@ -131,14 +119,18 @@ export default function Layout() {
             <Link
               to="/login"
               style={{
-                color: "var(--color-primary)",
-                fontWeight: 500,
-                transition: "color 0.15s",
-                display: "flex",
-                alignItems: "center",
-                minHeight: 44,
-                padding: "0 4px",
+                color: "var(--color-bg)",
+                fontWeight: 600,
+                fontSize: 13,
+                fontFamily: "Inter, var(--font-sans)",
+                background: "var(--color-primary)",
+                padding: "6px 16px",
+                borderRadius: "var(--radius-md)",
+                textDecoration: "none",
+                transition: "opacity 0.15s",
               }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
             >
               登录
             </Link>

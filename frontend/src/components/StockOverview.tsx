@@ -15,13 +15,11 @@ export default function StockOverview({ data }: { data: OverviewData | null }) {
     : `${(data.volume / 1e4).toFixed(1)}万`;
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-        gap: "var(--space-3)",
-      }}
-    >
+    <div style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+      gap: "var(--space-3)",
+    }}>
       <Card label="最新价" value={data.latest_price.toFixed(2)} />
       <Card
         label="涨跌幅"
@@ -36,18 +34,29 @@ export default function StockOverview({ data }: { data: OverviewData | null }) {
 
 function Card({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div
-      style={{
-        background: "var(--color-surface)",
-        border: "1px solid var(--color-border)",
-        borderRadius: "var(--radius-md)",
-        padding: "var(--space-4)",
-      }}
-    >
-      <div style={{ fontSize: 13, color: "var(--color-text-secondary)", marginBottom: "var(--space-1)" }}>
+    <div style={{
+      background: "var(--color-surface)",
+      border: "1px solid var(--color-border)",
+      borderRadius: "var(--radius-md)",
+      padding: "var(--space-4)",
+    }}>
+      <div style={{
+        fontSize: 12,
+        fontWeight: 600,
+        fontFamily: "Inter, var(--font-sans)",
+        color: "var(--color-muted)",
+        marginBottom: "var(--space-1)",
+        textTransform: "uppercase",
+        letterSpacing: "0.05em",
+      }}>
         {label}
       </div>
-      <div style={{ fontSize: 22, fontWeight: 700, color: color ?? "var(--color-text)", fontVariantNumeric: "tabular-nums" }}>
+      <div style={{
+        fontSize: 22,
+        fontWeight: 700,
+        fontFamily: "var(--font-mono)",
+        color: color ?? "var(--color-text)",
+      }}>
         {value}
       </div>
     </div>

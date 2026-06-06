@@ -88,7 +88,7 @@ export default function StockDetail() {
 
   if (loading) {
     return (
-      <div style={{ textAlign: "center", padding: "var(--space-12)", color: "var(--color-text-secondary)" }}>
+      <div style={{ textAlign: "center", padding: "var(--space-12)", color: "var(--color-text-secondary)", fontFamily: "Inter, var(--font-sans)", fontSize: 14 }}>
         加载中...
       </div>
     );
@@ -97,10 +97,8 @@ export default function StockDetail() {
   if (error) {
     return (
       <div style={{ textAlign: "center", padding: "var(--space-12)" }}>
-        <p style={{ color: "var(--color-bearish)", marginBottom: "var(--space-4)" }}>{error}</p>
-        <Link to="/" style={{ color: "var(--color-primary)", fontSize: 14, display: "inline-flex", alignItems: "center", minHeight: 44, padding: "4px 0" }}>
-          ← 返回首页
-        </Link>
+        <p style={{ color: "var(--color-destructive)", marginBottom: "var(--space-4)", fontFamily: "Inter, var(--font-sans)", fontSize: 14 }}>{error}</p>
+        <Link to="/" style={{ color: "var(--color-primary)", fontSize: 14 }}>← 返回首页</Link>
       </div>
     );
   }
@@ -108,13 +106,24 @@ export default function StockDetail() {
   return (
     <div>
       {/* Breadcrumb */}
-      <div style={{ marginBottom: "var(--space-5)", fontSize: 14, color: "var(--color-text-secondary)" }}>
-        <Link to="/" style={{ color: "var(--color-text-secondary)", display: "inline-flex", alignItems: "center", minHeight: 44 }}>
+      <div style={{
+        marginBottom: "var(--space-6)",
+        fontSize: 13,
+        color: "var(--color-text-secondary)",
+        fontFamily: "Inter, var(--font-sans)",
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--space-2)",
+      }}>
+        <Link to="/" style={{ color: "var(--color-muted)", textDecoration: "none" }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-primary)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-muted)")}>
           首页
         </Link>
-        <span style={{ margin: "0 var(--space-2)" }}>/</span>
-        <span style={{ color: "var(--color-text)" }}>
-          {overview?.name ?? code} ({code})
+        <span style={{ color: "var(--color-border)" }}>/</span>
+        <span style={{ color: "var(--color-text)", fontWeight: 500 }}>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, color: "var(--color-muted)" }}>{code}</span>
+          <span style={{ marginLeft: "var(--space-2)" }}>{overview?.name ?? ""}</span>
         </span>
       </div>
 
@@ -124,14 +133,12 @@ export default function StockDetail() {
       </div>
 
       {/* Tabs */}
-      <div
-        style={{
-          display: "flex",
-          gap: 0,
-          borderBottom: "1px solid var(--color-border)",
-          marginBottom: "var(--space-5)",
-        }}
-      >
+      <div style={{
+        display: "flex",
+        gap: 0,
+        borderBottom: "1px solid var(--color-border)",
+        marginBottom: "var(--space-5)",
+      }}>
         {([
           ["kline", "K线图"],
           ["signals", `形态信号 (${signals.length})`],
@@ -142,11 +149,13 @@ export default function StockDetail() {
             style={{
               padding: "12px 20px",
               fontSize: 14,
-              minHeight: 44,
-              fontWeight: 500,
+              fontFamily: "Inter, var(--font-sans)",
+              fontWeight: 600,
               color: tab === key ? "var(--color-primary)" : "var(--color-text-secondary)",
               borderBottom: tab === key ? "2px solid var(--color-primary)" : "2px solid transparent",
               transition: "color 0.15s, border-color 0.15s",
+              background: "none",
+              cursor: "pointer",
             }}
           >
             {label}

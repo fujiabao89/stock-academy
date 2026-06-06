@@ -52,24 +52,50 @@ export default function GlossaryPage() {
   return (
     <div>
       {/* Breadcrumb */}
-      <div style={{ marginBottom: "var(--space-5)", fontSize: 14, color: "var(--color-text-secondary)" }}>
-        <Link to="/" style={{ color: "var(--color-text-secondary)", display: "inline-flex", alignItems: "center", minHeight: 44 }}>
+      <div style={{
+        marginBottom: "var(--space-6)",
+        fontSize: 13,
+        color: "var(--color-text-secondary)",
+        fontFamily: "Inter, var(--font-sans)",
+        display: "flex",
+        alignItems: "center",
+        gap: "var(--space-2)",
+      }}>
+        <Link to="/" style={{ color: "var(--color-muted)", textDecoration: "none" }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-primary)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-muted)")}>
           首页
         </Link>
-        <span style={{ margin: "0 var(--space-2)" }}>/</span>
-        <Link to="/learn" style={{ color: "var(--color-text-secondary)", display: "inline-flex", alignItems: "center", minHeight: 44 }}>
+        <span style={{ color: "var(--color-border)" }}>/</span>
+        <Link to="/learn" style={{ color: "var(--color-muted)", textDecoration: "none" }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-primary)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-muted)")}>
           学堂
         </Link>
-        <span style={{ margin: "0 var(--space-2)" }}>/</span>
-        <span style={{ color: "var(--color-text)" }}>术语词典</span>
+        <span style={{ color: "var(--color-border)" }}>/</span>
+        <span style={{ color: "var(--color-text)", fontWeight: 500 }}>术语词典</span>
       </div>
 
       {/* Header */}
       <div style={{ marginBottom: "var(--space-6)" }}>
-        <h1 style={{ fontSize: "clamp(20px, 3vw, 24px)", fontWeight: 700, color: "var(--color-text)", margin: "0 0 var(--space-3) 0" }}>
+        <h1 style={{
+          fontSize: "clamp(22px, 3vw, 32px)",
+          fontWeight: 700,
+          color: "var(--color-text)",
+          margin: "0 0 var(--space-3) 0",
+          fontFamily: "Inter, var(--font-sans)",
+          letterSpacing: "-0.01em",
+        }}>
           术语词典
         </h1>
-        <p style={{ fontSize: 15, color: "var(--color-text-secondary)", lineHeight: 1.7, margin: 0, maxWidth: 640 }}>
+        <p style={{
+          fontSize: 14,
+          color: "var(--color-text-secondary)",
+          lineHeight: 1.7,
+          margin: 0,
+          maxWidth: 640,
+          fontFamily: "Inter, var(--font-sans)",
+        }}>
           收录技术分析、交易、基本面相关的常用术语，帮助你更好地理解形态信号和指标含义。
         </p>
       </div>
@@ -86,6 +112,7 @@ export default function GlossaryPage() {
             maxWidth: 480,
             padding: "10px 16px",
             fontSize: 14,
+            fontFamily: "Inter, var(--font-sans)",
             color: "var(--color-text)",
             background: "var(--color-surface)",
             border: "1px solid var(--color-border)",
@@ -101,15 +128,15 @@ export default function GlossaryPage() {
 
       {/* Results */}
       {loading ? (
-        <div style={{ textAlign: "center", padding: "var(--space-10)", color: "var(--color-text-secondary)" }}>
+        <div style={{ textAlign: "center", padding: "var(--space-10)", color: "var(--color-text-secondary)", fontFamily: "Inter, var(--font-sans)", fontSize: 14 }}>
           加载中...
         </div>
       ) : error ? (
-        <div style={{ textAlign: "center", padding: "var(--space-10)", color: "var(--color-bearish)" }}>
+        <div style={{ textAlign: "center", padding: "var(--space-10)", color: "var(--color-destructive)", fontFamily: "Inter, var(--font-sans)", fontSize: 14 }}>
           {error}
         </div>
       ) : terms.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "var(--space-10)", color: "var(--color-text-secondary)", fontSize: 14 }}>
+        <div style={{ textAlign: "center", padding: "var(--space-10)", color: "var(--color-text-secondary)", fontSize: 14, fontFamily: "Inter, var(--font-sans)" }}>
           未找到匹配的术语
         </div>
       ) : (
@@ -126,10 +153,10 @@ export default function GlossaryPage() {
                     background: CATEGORY_COLORS[category] ?? "var(--color-muted)",
                   }}
                 />
-                <h2 style={{ fontSize: 15, fontWeight: 600, color: "var(--color-text)", margin: 0 }}>
+                <h2 style={{ fontSize: 15, fontWeight: 600, color: "var(--color-text)", margin: 0, fontFamily: "Inter, var(--font-sans)" }}>
                   {category}
                 </h2>
-                <span style={{ fontSize: 12, color: "var(--color-muted)" }}>({items.length})</span>
+                <span style={{ fontSize: 12, color: "var(--color-muted)", fontFamily: "var(--font-mono)" }}>({items.length})</span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
                 {items.map((t) => (
@@ -140,10 +167,19 @@ export default function GlossaryPage() {
                       background: "var(--color-surface)",
                       border: "1px solid var(--color-border)",
                       borderRadius: "var(--radius-md)",
+                      transition: "border-color 0.15s, background 0.15s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = "var(--color-primary)";
+                      e.currentTarget.style.background = "var(--color-surface-hover)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = "var(--color-border)";
+                      e.currentTarget.style.background = "var(--color-surface)";
                     }}
                   >
                     <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", flexWrap: "wrap", marginBottom: "var(--space-2)" }}>
-                      <span style={{ fontSize: 15, fontWeight: 600, color: "var(--color-text)" }}>
+                      <span style={{ fontSize: 15, fontWeight: 600, color: "var(--color-text)", fontFamily: "Inter, var(--font-sans)" }}>
                         {t.term}
                       </span>
                       {t.aliases.filter((a) => a !== t.term.toLowerCase()).slice(0, 3).map((a) => (
@@ -151,17 +187,19 @@ export default function GlossaryPage() {
                           key={a}
                           style={{
                             fontSize: 11,
-                            color: "var(--color-muted)",
-                            background: "var(--color-accent-bg)",
-                            padding: "2px 6px",
+                            fontFamily: "Inter, var(--font-sans)",
+                            color: "var(--color-primary)",
+                            background: "var(--color-primary-bg)",
+                            padding: "2px 8px",
                             borderRadius: "var(--radius-sm)",
+                            border: "1px solid var(--color-primary)",
                           }}
                         >
                           {a}
                         </span>
                       ))}
                     </div>
-                    <p style={{ fontSize: 14, color: "var(--color-text-secondary)", lineHeight: 1.7, margin: 0 }}>
+                    <p style={{ fontSize: 14, color: "var(--color-text-secondary)", lineHeight: 1.7, margin: 0, fontFamily: "Inter, var(--font-sans)" }}>
                       {t.content}
                     </p>
                   </div>

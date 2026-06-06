@@ -29,12 +29,20 @@ function formatTime(iso: string): string {
 
 export default function NewsCard({ article }: Props) {
   return (
-    <div
-      style={{
-        padding: "var(--space-4)",
-        border: "1px solid var(--color-border)",
-        borderRadius: "var(--radius-md)",
-        background: "var(--color-surface)",
+    <div style={{
+      padding: "var(--space-5)",
+      border: "1px solid var(--color-border)",
+      borderRadius: "var(--radius-md)",
+      background: "var(--color-surface)",
+      transition: "border-color 0.15s, background 0.15s",
+    }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.borderColor = "var(--color-primary)";
+        e.currentTarget.style.background = "var(--color-surface-hover)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.borderColor = "var(--color-border)";
+        e.currentTarget.style.background = "var(--color-surface)";
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "var(--space-2)" }}>
@@ -45,45 +53,52 @@ export default function NewsCard({ article }: Props) {
           style={{
             fontSize: 15,
             fontWeight: 600,
+            fontFamily: "Inter, var(--font-sans)",
             color: "var(--color-text)",
             textDecoration: "none",
             lineHeight: 1.4,
           }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-primary)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text)")}
         >
           {article.title}
         </a>
-        <span style={{ fontSize: 12, color: "var(--color-text-secondary)", whiteSpace: "nowrap", marginLeft: "var(--space-3)" }}>
+        <span style={{
+          fontSize: 12,
+          fontFamily: "var(--font-mono)",
+          color: "var(--color-muted)",
+          whiteSpace: "nowrap",
+          marginLeft: "var(--space-3)",
+        }}>
           {formatTime(article.published_at)}
         </span>
       </div>
 
-      <div style={{ fontSize: 13, color: "var(--color-text-secondary)", marginBottom: "var(--space-3)", lineHeight: 1.5 }}>
+      <div style={{ fontSize: 13, color: "var(--color-text-secondary)", marginBottom: "var(--space-3)", lineHeight: 1.6, fontFamily: "Inter, var(--font-sans)" }}>
         {article.content_summary}
       </div>
 
       {article.ai_summary && (
-        <div
-          style={{
-            padding: "var(--space-3)",
-            background: "var(--color-bg)",
-            borderRadius: "var(--radius-sm)",
-            fontSize: 13,
-            color: "var(--color-text)",
-            lineHeight: 1.5,
-            marginBottom: "var(--space-3)",
-          }}
-        >
+        <div style={{
+          padding: "var(--space-3)",
+          background: "var(--color-bg)",
+          borderRadius: "var(--radius-sm)",
+          fontSize: 13,
+          fontFamily: "Inter, var(--font-sans)",
+          color: "var(--color-text)",
+          lineHeight: 1.6,
+          marginBottom: "var(--space-3)",
+          border: "1px solid var(--color-border)",
+        }}>
           <span style={{ fontWeight: 600, color: "var(--color-primary)" }}>AI 解读：</span>
           {article.ai_summary}
           {article.sentiment && (
-            <span
-              style={{
-                marginLeft: "var(--space-2)",
-                fontSize: 12,
-                fontWeight: 600,
-                color: sentimentColor(article.sentiment),
-              }}
-            >
+            <span style={{
+              marginLeft: "var(--space-2)",
+              fontSize: 12,
+              fontWeight: 600,
+              color: sentimentColor(article.sentiment),
+            }}>
               [{article.sentiment}]
             </span>
           )}
@@ -91,16 +106,19 @@ export default function NewsCard({ article }: Props) {
       )}
 
       <div style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap", alignItems: "center" }}>
-        <span style={{ fontSize: 12, color: "var(--color-muted)" }}>{article.source}</span>
+        <span style={{ fontSize: 12, color: "var(--color-muted)", fontFamily: "Inter, var(--font-sans)" }}>{article.source}</span>
         {article.stock_names.map((name, i) => (
           <span
             key={article.stock_codes[i] ?? i}
             style={{
-              fontSize: 12,
+              fontSize: 11,
+              fontWeight: 500,
+              fontFamily: "Inter, var(--font-sans)",
               color: "var(--color-primary)",
-              background: "var(--color-bullish-bg)",
-              padding: "1px 6px",
-              borderRadius: 4,
+              background: "var(--color-primary-bg)",
+              padding: "2px 8px",
+              borderRadius: "var(--radius-sm)",
+              border: "1px solid var(--color-primary)",
             }}
           >
             {name}

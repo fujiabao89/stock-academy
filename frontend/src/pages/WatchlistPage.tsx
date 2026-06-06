@@ -73,12 +73,30 @@ export default function WatchlistPage() {
     }
   };
 
-  if (loading) return <div style={{ padding: "var(--space-8)", textAlign: "center", color: "var(--color-text-secondary)" }}>加载中...</div>;
+  if (loading) return (
+    <div style={{ padding: "var(--space-10)", textAlign: "center", color: "var(--color-text-secondary)", fontFamily: "Inter, var(--font-sans)", fontSize: 14 }}>
+      加载中...
+    </div>
+  );
 
   return (
     <div style={{ maxWidth: 600, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 var(--space-2) 0" }}>我的自选股</h1>
-      <p style={{ fontSize: 14, color: "var(--color-text-secondary)", margin: "0 0 var(--space-6) 0" }}>
+      <h1 style={{
+        fontSize: "clamp(22px, 3vw, 32px)",
+        fontWeight: 700,
+        margin: "0 0 var(--space-2) 0",
+        color: "var(--color-text)",
+        fontFamily: "Inter, var(--font-sans)",
+        letterSpacing: "-0.01em",
+      }}>
+        我的自选股
+      </h1>
+      <p style={{
+        fontSize: 14,
+        color: "var(--color-text-secondary)",
+        margin: "0 0 var(--space-6) 0",
+        fontFamily: "Inter, var(--font-sans)",
+      }}>
         添加关注的股票，追踪它们的新闻动态
       </p>
 
@@ -95,12 +113,17 @@ export default function WatchlistPage() {
             flex: 1,
             padding: "10px 12px",
             fontSize: 14,
+            fontFamily: "var(--font-mono)",
             border: "1px solid var(--color-border)",
-            borderRadius: "var(--radius-sm)",
+            borderRadius: "var(--radius-md)",
             background: "var(--color-surface)",
             color: "var(--color-text)",
             boxSizing: "border-box",
+            outline: "none",
+            transition: "border-color 0.15s",
           }}
+          onFocus={(e) => (e.currentTarget.style.borderColor = "var(--color-primary)")}
+          onBlur={(e) => (e.currentTarget.style.borderColor = "var(--color-border)")}
         />
         <button
           type="submit"
@@ -109,12 +132,14 @@ export default function WatchlistPage() {
             padding: "10px 20px",
             fontSize: 14,
             fontWeight: 600,
-            color: "#fff",
+            fontFamily: "Inter, var(--font-sans)",
+            color: "var(--color-bg)",
             background: adding ? "var(--color-muted)" : "var(--color-primary)",
             border: "none",
-            borderRadius: "var(--radius-sm)",
+            borderRadius: "var(--radius-md)",
             cursor: adding ? "not-allowed" : "pointer",
             whiteSpace: "nowrap",
+            transition: "background 0.15s",
           }}
         >
           {adding ? "添加中..." : "添加"}
@@ -123,11 +148,13 @@ export default function WatchlistPage() {
 
       {error && (
         <div style={{
-          padding: "var(--space-3)",
-          background: "var(--color-bearish-bg)",
-          color: "var(--color-bearish)",
-          borderRadius: "var(--radius-sm)",
+          padding: "var(--space-4)",
+          background: "var(--color-surface)",
+          border: "1px solid var(--color-destructive)",
+          color: "var(--color-destructive)",
+          borderRadius: "var(--radius-md)",
           fontSize: 14,
+          fontFamily: "Inter, var(--font-sans)",
           marginBottom: "var(--space-4)",
         }}>
           {error}
@@ -135,11 +162,20 @@ export default function WatchlistPage() {
       )}
 
       {items.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "var(--space-8)", color: "var(--color-text-secondary)" }}>
+        <div style={{
+          textAlign: "center",
+          padding: "var(--space-8)",
+          color: "var(--color-text-secondary)",
+          fontFamily: "Inter, var(--font-sans)",
+          fontSize: 14,
+          background: "var(--color-surface)",
+          border: "1px solid var(--color-border)",
+          borderRadius: "var(--radius-md)",
+        }}>
           还没有添加自选股
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
           {items.map((item) => (
             <div
               key={item.code}
@@ -147,18 +183,35 @@ export default function WatchlistPage() {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                padding: "var(--space-3) var(--space-4)",
+                padding: "var(--space-4) var(--space-5)",
                 border: "1px solid var(--color-border)",
-                borderRadius: "var(--radius-sm)",
+                borderRadius: "var(--radius-md)",
                 background: "var(--color-surface)",
+                transition: "border-color 0.15s, background 0.15s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "var(--color-primary)";
+                e.currentTarget.style.background = "var(--color-surface-hover)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--color-border)";
+                e.currentTarget.style.background = "var(--color-surface)";
               }}
             >
               <div>
-                <span style={{ fontWeight: 600, fontSize: 15 }}>{item.name}</span>
-                <span style={{ fontSize: 13, color: "var(--color-text-secondary)", marginLeft: "var(--space-2)" }}>
+                <span style={{ fontWeight: 600, fontSize: 15, fontFamily: "Inter, var(--font-sans)", color: "var(--color-text)" }}>{item.name}</span>
+                <span style={{ fontSize: 13, fontFamily: "var(--font-mono)", color: "var(--color-text-secondary)", marginLeft: "var(--space-2)" }}>
                   {item.code}
                 </span>
-                <span style={{ fontSize: 12, color: "var(--color-muted)", marginLeft: "var(--space-2)" }}>
+                <span style={{
+                  fontSize: 11,
+                  fontFamily: "Inter, var(--font-sans)",
+                  color: "var(--color-primary)",
+                  marginLeft: "var(--space-2)",
+                  padding: "1px 6px",
+                  border: "1px solid var(--color-primary)",
+                  borderRadius: "var(--radius-sm)",
+                }}>
                   {item.market === "sh" ? "沪" : item.market === "sz" ? "深" : ""}
                 </span>
               </div>
@@ -167,11 +220,21 @@ export default function WatchlistPage() {
                 style={{
                   padding: "4px 12px",
                   fontSize: 13,
-                  color: "var(--color-bearish)",
+                  fontFamily: "Inter, var(--font-sans)",
+                  color: "var(--color-text-secondary)",
                   background: "transparent",
                   border: "1px solid var(--color-border)",
                   borderRadius: "var(--radius-sm)",
                   cursor: "pointer",
+                  transition: "color 0.15s, border-color 0.15s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = "var(--color-destructive)";
+                  e.currentTarget.style.borderColor = "var(--color-destructive)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = "var(--color-text-secondary)";
+                  e.currentTarget.style.borderColor = "var(--color-border)";
                 }}
               >
                 移除

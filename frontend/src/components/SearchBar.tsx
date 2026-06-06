@@ -82,15 +82,22 @@ export default function SearchBar() {
           width: "100%",
           padding: "14px 16px",
           fontSize: 16,
+          fontFamily: "var(--font-mono)",
           background: "var(--color-surface)",
-          border: "2px solid var(--color-border)",
+          border: "1px solid var(--color-border)",
           borderRadius: "var(--radius-md)",
           color: "var(--color-text)",
           outline: "none",
-          transition: "border-color 0.2s",
+          transition: "border-color 0.2s, background 0.2s",
         }}
-        onFocus={(e) => (e.target.style.borderColor = "var(--color-primary)")}
-        onBlur={(e) => (e.target.style.borderColor = "var(--color-border)")}
+        onFocus={(e) => {
+          e.target.style.borderColor = "var(--color-primary)";
+          e.target.style.background = "var(--color-surface-hover)";
+        }}
+        onBlur={(e) => {
+          e.target.style.borderColor = "var(--color-border)";
+          e.target.style.background = "var(--color-surface)";
+        }}
       />
 
       {loading && (
@@ -107,12 +114,13 @@ export default function SearchBar() {
             left: 0,
             right: 0,
             background: "var(--color-surface)",
-            border: "1px solid var(--color-error)",
+            border: "1px solid var(--color-destructive)",
             borderRadius: "var(--radius-md)",
             marginTop: "var(--space-1)",
             padding: "var(--space-3)",
-            color: "var(--color-error)",
+            color: "var(--color-destructive)",
             fontSize: 14,
+            fontFamily: "Inter, var(--font-sans)",
             zIndex: 200,
           }}
         >
@@ -151,21 +159,23 @@ export default function SearchBar() {
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
               <div>
-                <span style={{ fontWeight: 600, marginRight: "var(--space-2)" }}>
+                <span style={{ fontWeight: 600, marginRight: "var(--space-2)", fontFamily: "Inter, var(--font-sans)" }}>
                   {r.name}
                 </span>
-                <span style={{ color: "var(--color-text-secondary)", fontSize: 14 }}>
+                <span style={{ color: "var(--color-text-secondary)", fontSize: 13, fontFamily: "var(--font-mono)" }}>
                   {r.code}
                 </span>
               </div>
               <span
                 style={{
-                  fontSize: 12,
+                  fontSize: 11,
+                  fontWeight: 700,
+                  fontFamily: "Inter, var(--font-sans)",
                   padding: "2px 8px",
                   borderRadius: "var(--radius-sm)",
-                  background: r.market === "sh" ? "var(--color-accent)" : "var(--color-primary)",
-                  color: "#fff",
-                  opacity: 0.8,
+                  background: r.market === "sh" ? "var(--color-accent-bg)" : "var(--color-primary-bg)",
+                  color: r.market === "sh" ? "var(--color-accent)" : "var(--color-primary)",
+                  border: `1px solid ${r.market === "sh" ? "var(--color-accent)" : "var(--color-primary)"}`,
                 }}
               >
                 {r.market === "sh" ? "沪" : "深"}
