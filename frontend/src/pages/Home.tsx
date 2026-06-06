@@ -24,6 +24,8 @@ const HOT_STOCKS = [
   { code: "002594", name: "比亚迪" },
 ];
 
+const TABLE_HEADERS = ["股票名称", "形态标签", "操作"] as const;
+
 const SECTORS = [
   { name: "半导体", change: "+4.5%", bullish: true, colSpan: 2, rowSpan: 2 },
   { name: "通信", change: "+2.1%", bullish: true },
@@ -76,7 +78,7 @@ export default function Home() {
             linear-gradient(rgba(83,68,52,0.18) 1px, transparent 1px),
             linear-gradient(90deg, rgba(83,68,52,0.18) 1px, transparent 1px)
           `,
-          backgroundSize: "40px 40px",
+          backgroundSize: "var(--terminal-grid-size)",
           backgroundPosition: "center",
         }}
       >
@@ -230,7 +232,7 @@ export default function Home() {
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
-                    {["股票名称", "形态标签", "操作"].map((h) => (
+                    {TABLE_HEADERS.map((h) => (
                       <th key={h} style={{
                         padding: "var(--space-3) var(--space-5)",
                         fontSize: 11,
@@ -340,7 +342,7 @@ export default function Home() {
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
-                    {["股票名称", "形态标签", "操作"].map((h) => (
+                    {TABLE_HEADERS.map((h) => (
                       <th key={h} style={{
                         padding: "var(--space-3) var(--space-5)",
                         fontSize: 11,
@@ -538,7 +540,7 @@ export default function Home() {
                   }}
                 >
                   <span>{s.name}</span>
-                  {s.change && <span style={{ fontSize: 9 }}>{s.change}</span>}
+                  <span style={{ fontSize: 9 }}>{s.change || "—"}</span>
                 </div>
               ))}
             </div>

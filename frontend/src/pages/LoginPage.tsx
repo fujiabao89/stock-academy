@@ -58,7 +58,7 @@ export default function LoginPage() {
         )}
 
         <div style={{ marginBottom: "var(--space-4)" }}>
-          <label style={{
+          <label htmlFor="login-email" style={{
             display: "block",
             fontSize: 13,
             fontWeight: 600,
@@ -71,6 +71,7 @@ export default function LoginPage() {
             邮箱
           </label>
           <input
+            id="login-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -95,7 +96,7 @@ export default function LoginPage() {
         </div>
 
         <div style={{ marginBottom: "var(--space-5)" }}>
-          <label style={{
+          <label htmlFor="login-password" style={{
             display: "block",
             fontSize: 13,
             fontWeight: 600,
@@ -108,6 +109,7 @@ export default function LoginPage() {
             密码
           </label>
           <input
+            id="login-password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}

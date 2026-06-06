@@ -69,7 +69,7 @@ export default function RegisterPage() {
         )}
 
         <div style={{ marginBottom: "var(--space-4)" }}>
-          <label style={{
+          <label htmlFor="register-email" style={{
             display: "block",
             fontSize: 13,
             fontWeight: 600,
@@ -82,6 +82,7 @@ export default function RegisterPage() {
             邮箱
           </label>
           <input
+            id="register-email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -106,7 +107,7 @@ export default function RegisterPage() {
         </div>
 
         <div style={{ marginBottom: "var(--space-4)" }}>
-          <label style={{
+          <label htmlFor="register-password" style={{
             display: "block",
             fontSize: 13,
             fontWeight: 600,
@@ -119,6 +120,7 @@ export default function RegisterPage() {
             密码
           </label>
           <input
+            id="register-password"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -144,7 +146,7 @@ export default function RegisterPage() {
         </div>
 
         <div style={{ marginBottom: "var(--space-5)" }}>
-          <label style={{
+          <label htmlFor="register-confirm" style={{
             display: "block",
             fontSize: 13,
             fontWeight: 600,
@@ -157,6 +159,7 @@ export default function RegisterPage() {
             确认密码
           </label>
           <input
+            id="register-confirm"
             type="password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}

@@ -34,7 +34,10 @@ export default function StrategyDetailPage() {
         if (!r.ok) throw new Error("策略不存在");
         return r.json();
       }),
-      fetch(`/api/strategies/${id}/runs`).then((r) => r.json()),
+      fetch(`/api/strategies/${id}/runs`).then((r) => {
+        if (!r.ok) throw new Error("扫描记录加载失败");
+        return r.json();
+      }),
     ])
       .then(([s, r]) => {
         setStrategy(s);
