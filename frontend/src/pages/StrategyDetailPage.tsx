@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import StrategyCard from "../components/StrategyCard";
 import type { Strategy } from "../components/StrategyCard";
 import { useAuth } from "../contexts/AuthContext";
+import Skeleton, { SkeletonCard } from "../components/Skeleton";
 
 interface StrategyRun {
   id: number;
@@ -75,8 +76,13 @@ export default function StrategyDetailPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: "var(--space-10)", textAlign: "center", color: "var(--color-text-secondary)", fontFamily: "Inter, var(--font-sans)", fontSize: 14 }}>
-        加载中...
+      <div style={{ maxWidth: 800, margin: "0 auto", display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+        <div style={{ marginBottom: "var(--space-2)", display: "flex", gap: "var(--space-2)" }}>
+          <Skeleton width={60} height={13} />
+          <Skeleton width={80} height={13} />
+        </div>
+        <SkeletonCard lines={3} />
+        <SkeletonCard lines={2} />
       </div>
     );
   }

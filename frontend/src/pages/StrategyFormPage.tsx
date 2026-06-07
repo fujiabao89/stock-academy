@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { Strategy, StrategyCondition } from "../components/StrategyCard";
+import { getAccessToken } from "../contexts/AuthContext";
+import Skeleton, { SkeletonCard } from "../components/Skeleton";
 
 const FIELD_OPTIONS = [
   { value: "open", label: "开盘价" },
@@ -76,8 +78,12 @@ export default function StrategyFormPage() {
 
   if (!loaded) {
     return (
-      <div style={{ padding: "var(--space-10)", textAlign: "center", color: "var(--color-text-secondary)", fontFamily: "Inter, var(--font-sans)", fontSize: 14 }}>
-        加载中...
+      <div style={{ maxWidth: 640, margin: "0 auto", display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+        <Skeleton width={180} height={32} />
+        <SkeletonCard lines={1} />
+        <SkeletonCard lines={1} />
+        <SkeletonCard lines={2} />
+        <SkeletonCard lines={2} />
       </div>
     );
   }
@@ -101,8 +107,7 @@ export default function StrategyFormPage() {
     setError("");
 
     const body = { name, description, enabled, conditions };
-    const token = localStorage.getItem("stock_academy_tokens");
-    const access = token ? JSON.parse(token).access : "";
+    const access = getAccessToken() ?? "";
     const headers = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${access}`,

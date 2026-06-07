@@ -449,7 +449,7 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
       dataZoom: [
         {
           type: "inside", xAxisIndex: [0, 1, 2],
-          zoomOnMouseWheel: true, moveOnMouseWheel: false, moveOnMouseMove: true,
+          zoomOnMouseWheel: true, moveOnMouseWheel: false, moveOnMouseMove: false,
         },
         {
           type: "slider", xAxisIndex: [0, 1, 2], bottom: 2, height: 28,
@@ -469,7 +469,34 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
     if (!instanceRef.current) {
       instanceRef.current = echarts.init(chartRef.current, null, { renderer: "svg" });
     }
-    instanceRef.current.setOption(buildOption(), true);
+
+    const inst = instanceRef.current;
+    // 保存当前缩放位置，避免 setOption(notMerge) 重置视图
+    let savedStart: number | undefined;
+    let savedEnd: number | undefined;
+    try {
+      const prev = inst.getOption() as Record<string, unknown>;
+      const dz = prev.dataZoom as Array<Record<string, unknown>> | undefined;
+      if (dz?.[0]) {
+        savedStart = dz[0].start as number;
+        savedEnd = dz[0].end as number;
+      }
+    } catch { /* ECharts getOption 在首次渲染可能返回 null */ }
+
+    const option = buildOption();
+
+    if (
+      savedStart != null &&
+      savedEnd != null &&
+      !(savedStart === 0 && savedEnd === 100)
+    ) {
+      if (Array.isArray(option.dataZoom)) {
+        option.dataZoom[0] = { ...option.dataZoom[0], start: savedStart, end: savedEnd };
+        option.dataZoom[1] = { ...option.dataZoom[1], start: savedStart, end: savedEnd };
+      }
+    }
+
+    inst.setOption(option, true);
   }, [buildOption, data]);
 
   useEffect(() => {

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import NewsCard from "../components/NewsCard";
 import type { NewsArticle } from "../components/NewsCard";
+import { SkeletonCard } from "../components/Skeleton";
 
 export default function NewsPage() {
   const [articles, setArticles] = useState<NewsArticle[]>([]);
@@ -66,7 +67,13 @@ export default function NewsPage() {
   }, [nextCursor, loadingMore]);
 
   if (loading) {
-    return <div style={{ padding: "var(--space-10)", textAlign: "center", color: "var(--color-text-secondary)", fontFamily: "Inter, var(--font-sans)", fontSize: 14 }}>加载中...</div>;
+    return (
+      <div style={{ maxWidth: 720, margin: "0 auto", display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <SkeletonCard key={i} lines={3} />
+        ))}
+      </div>
+    );
   }
 
   return (

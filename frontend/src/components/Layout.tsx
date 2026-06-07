@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Link, Outlet } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function Layout() {
   const { user, logout } = useAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
@@ -38,7 +40,27 @@ export default function Layout() {
           <span style={{ color: "var(--color-primary)" }}>炒股</span>
           学堂
         </Link>
-        <nav style={{ display: "flex", gap: "var(--space-1)", fontSize: 14, alignItems: "center" }}>
+
+        <button
+          className="nav-hamburger"
+          onClick={() => setMenuOpen((v) => !v)}
+          aria-label={menuOpen ? "关闭菜单" : "打开菜单"}
+        >
+          {menuOpen ? (
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="5" y1="5" x2="15" y2="15" />
+              <line x1="15" y1="5" x2="5" y2="15" />
+            </svg>
+          ) : (
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="3" y1="5" x2="17" y2="5" />
+              <line x1="3" y1="10" x2="17" y2="10" />
+              <line x1="3" y1="15" x2="17" y2="15" />
+            </svg>
+          )}
+        </button>
+
+        <nav className={`nav-links-desktop${menuOpen ? " open" : ""}`}>
           {[
             { to: "/", label: "首页" },
             { to: "/learn", label: "学堂" },
@@ -62,6 +84,7 @@ export default function Layout() {
               }}
               onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-text)")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-secondary)")}
+              onClick={() => setMenuOpen(false)}
             >
               {label}
             </Link>
@@ -84,6 +107,7 @@ export default function Layout() {
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-text)")}
                 onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-secondary)")}
+                onClick={() => setMenuOpen(false)}
               >
                 自选股
               </Link>
@@ -99,7 +123,7 @@ export default function Layout() {
                 {user.email}
               </span>
               <button
-                onClick={logout}
+                onClick={() => { logout(); setMenuOpen(false); }}
                 style={{
                   color: "var(--color-text-secondary)",
                   fontWeight: 500,
@@ -131,6 +155,7 @@ export default function Layout() {
               }}
               onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
               onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+              onClick={() => setMenuOpen(false)}
             >
               登录
             </Link>

@@ -1,5 +1,6 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Home from "./pages/Home";
 import Learn from "./pages/Learn";
 import PatternDetailPage from "./pages/PatternDetailPage";
@@ -13,14 +14,6 @@ import StrategiesPage from "./pages/StrategiesPage";
 import StrategyDetailPage from "./pages/StrategyDetailPage";
 import StrategyFormPage from "./pages/StrategyFormPage";
 import NotFound from "./pages/NotFound";
-import { useAuth } from "./contexts/AuthContext";
-
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
-  if (loading) return null;
-  if (!user) return <Navigate to="/login" replace />;
-  return <>{children}</>;
-}
 
 export default function App() {
   return (

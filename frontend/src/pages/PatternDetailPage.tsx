@@ -4,6 +4,7 @@ import PatternCard from "../components/PatternCard";
 import KlineChart from "../components/KlineChart";
 import ConfidenceBadge from "../components/ConfidenceBadge";
 import DistributionBar from "../components/DistributionBar";
+import Skeleton, { SkeletonCard, SkeletonTable } from "../components/Skeleton";
 import type { PatternSignal } from "./StockDetail";
 
 interface KlineItem {
@@ -155,8 +156,16 @@ export default function PatternDetailPage() {
 
   if (loading) {
     return (
-      <div style={{ textAlign: "center", padding: "var(--space-12)", color: "var(--color-text-secondary)", fontFamily: "Inter, var(--font-sans)", fontSize: 14 }}>
-        加载中...
+      <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", flexDirection: "column", gap: "var(--space-5)" }}>
+        <div style={{ display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
+          <Skeleton width={48} height={13} />
+          <Skeleton width={12} height={13} />
+          <Skeleton width={100} height={13} />
+        </div>
+        <Skeleton width="60%" height={28} />
+        <SkeletonCard lines={3} />
+        <Skeleton width="100%" height={280} radius="var(--radius-md)" />
+        <SkeletonTable rows={3} cols={3} />
       </div>
     );
   }

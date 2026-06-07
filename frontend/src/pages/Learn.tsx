@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import ConfidenceBadge from "../components/ConfidenceBadge";
+import { SkeletonCard } from "../components/Skeleton";
 
 interface PatternSummary {
   pattern_id: string;
@@ -55,8 +56,10 @@ export default function Learn() {
 
   if (loading) {
     return (
-      <div style={{ textAlign: "center", padding: "var(--space-12)", color: "var(--color-text-secondary)", fontFamily: "Inter, var(--font-sans)", fontSize: 14 }}>
-        加载中...
+      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-5)" }}>
+        {Array.from({ length: 4 }).map((_, i) => (
+          <SkeletonCard key={i} lines={2} />
+        ))}
       </div>
     );
   }

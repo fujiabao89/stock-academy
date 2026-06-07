@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import KlineChart from "../components/KlineChart";
 import PatternSignalList from "../components/PatternSignalList";
 import StockOverview from "../components/StockOverview";
+import Skeleton, { SkeletonTable } from "../components/Skeleton";
 
 interface OverviewData {
   code: string;
@@ -88,8 +89,14 @@ export default function StockDetail() {
 
   if (loading) {
     return (
-      <div style={{ textAlign: "center", padding: "var(--space-12)", color: "var(--color-text-secondary)", fontFamily: "Inter, var(--font-sans)", fontSize: 14 }}>
-        加载中...
+      <div>
+        <div style={{ marginBottom: "var(--space-6)", display: "flex", gap: "var(--space-2)", alignItems: "center" }}>
+          <Skeleton width={48} height={13} />
+          <Skeleton width={12} height={13} />
+          <Skeleton width={120} height={13} />
+        </div>
+        <Skeleton width="100%" height={320} radius="var(--radius-md)" style={{ marginBottom: "var(--space-5)" }} />
+        <SkeletonTable rows={4} cols={3} />
       </div>
     );
   }

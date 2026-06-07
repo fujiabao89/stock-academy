@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth, getAccessToken } from "../contexts/AuthContext";
+import { SkeletonCard } from "../components/Skeleton";
 
 interface WatchlistItem {
   code: string;
@@ -23,9 +24,8 @@ export default function WatchlistPage() {
   }, []);
 
   const load = useCallback(async () => {
-    const tokens = JSON.parse(localStorage.getItem("stock_academy_tokens") ?? "{}");
     const r = await fetch("/api/user/watchlist", {
-      headers: { Authorization: `Bearer ${tokens.access}` },
+      headers: { Authorization: `Bearer ${getAccessToken()}` },
     });
     const data = await r.json();
     if (!cancelled.current) {
@@ -44,10 +44,9 @@ export default function WatchlistPage() {
     setError("");
     setAdding(true);
     try {
-      const tokens = JSON.parse(localStorage.getItem("stock_academy_tokens") ?? "{}");
       const r = await fetch(`/api/user/watchlist/${codeInput.trim()}`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${tokens.access}` },
+        headers: { Authorization: `Bearer ${getAccessToken()}` },
       });
       if (!r.ok) {
         const err = await r.json();
@@ -63,10 +62,9 @@ export default function WatchlistPage() {
   };
 
   const handleRemove = async (code: string) => {
-    const tokens = JSON.parse(localStorage.getItem("stock_academy_tokens") ?? "{}");
     const r = await fetch(`/api/user/watchlist/${code}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${tokens.access}` },
+      headers: { Authorization: `Bearer ${getAccessToken()}` },
     });
     if (r.ok || r.status === 404) {
       await load();
@@ -74,8 +72,10 @@ export default function WatchlistPage() {
   };
 
   if (loading) return (
-    <div style={{ padding: "var(--space-10)", textAlign: "center", color: "var(--color-text-secondary)", fontFamily: "Inter, var(--font-sans)", fontSize: 14 }}>
-      加载中...
+    <div style={{ maxWidth: 600, margin: "0 auto", display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <SkeletonCard key={i} lines={1} />
+      ))}
     </div>
   );
 

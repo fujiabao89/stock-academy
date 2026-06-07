@@ -57,6 +57,11 @@ class TushareClient:
                     logger.warning("tushare_retry", attempt=attempt, wait=wait, error=msg)
                     time.sleep(wait)
                     continue
+                if "频率超限" in msg or "rate limit" in msg.lower():
+                    wait = 65
+                    logger.warning("tushare_rate_limit", attempt=attempt, wait=wait, error=msg)
+                    time.sleep(wait)
+                    continue
                 raise TushareError(f"Tushare API 错误: {msg}") from e
 
         raise TushareError(f"Tushare API 重试{max_retries}次后仍失败: {last_err}")

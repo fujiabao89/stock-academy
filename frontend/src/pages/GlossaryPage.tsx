@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
+import { SkeletonCard } from "../components/Skeleton";
 
 interface GlossaryTerm {
   term: string;
@@ -128,8 +129,10 @@ export default function GlossaryPage() {
 
       {/* Results */}
       {loading ? (
-        <div style={{ textAlign: "center", padding: "var(--space-10)", color: "var(--color-text-secondary)", fontFamily: "Inter, var(--font-sans)", fontSize: 14 }}>
-          加载中...
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <SkeletonCard key={i} lines={1} />
+          ))}
         </div>
       ) : error ? (
         <div style={{ textAlign: "center", padding: "var(--space-10)", color: "var(--color-destructive)", fontFamily: "Inter, var(--font-sans)", fontSize: 14 }}>

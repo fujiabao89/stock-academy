@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import StrategyCard from "../components/StrategyCard";
 import type { Strategy } from "../components/StrategyCard";
 import { useAuth } from "../contexts/AuthContext";
+import { SkeletonCard } from "../components/Skeleton";
 
 export default function StrategiesPage() {
   const [strategies, setStrategies] = useState<Strategy[]>([]);
@@ -28,8 +29,10 @@ export default function StrategiesPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: "var(--space-10)", textAlign: "center", color: "var(--color-text-secondary)", fontFamily: "Inter, var(--font-sans)", fontSize: 14 }}>
-        加载中...
+      <div style={{ maxWidth: 800, margin: "0 auto", display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
+        {Array.from({ length: 4 }).map((_, i) => (
+          <SkeletonCard key={i} lines={2} />
+        ))}
       </div>
     );
   }

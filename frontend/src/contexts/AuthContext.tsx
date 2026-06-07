@@ -32,6 +32,10 @@ function loadTokens(): { access: string; refresh: string } | null {
   }
 }
 
+export function getAccessToken(): string | null {
+  return loadTokens()?.access ?? null;
+}
+
 function clearTokens() {
   localStorage.removeItem(TOKENS_KEY);
 }

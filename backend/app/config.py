@@ -42,7 +42,7 @@ class Settings(BaseSettings):
 
     # Tushare 行情数据
     tushare_token: str = ""
-    tushare_request_delay: float = 0.6
+    tushare_request_delay: float = 1.5
 
     # JWT 认证
     jwt_secret: str = "change-me-in-production-use-a-random-64-char-string"

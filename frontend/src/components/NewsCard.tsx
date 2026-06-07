@@ -102,6 +102,14 @@ export default function NewsCard({ article }: Props) {
               [{article.sentiment}]
             </span>
           )}
+          <div style={{
+            marginTop: "var(--space-2)",
+            fontSize: 11,
+            color: "var(--color-disclaimer)",
+            fontFamily: "Inter, var(--font-sans)",
+          }}>
+            AI 生成，仅供参考，不构成投资建议
+          </div>
         </div>
       )}
 
