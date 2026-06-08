@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { Strategy, StrategyCondition } from "../components/StrategyCard";
-import { getAccessToken } from "../contexts/AuthContext";
-import Skeleton, { SkeletonCard } from "../components/Skeleton";
 
 const FIELD_OPTIONS = [
   { value: "open", label: "开盘价" },
@@ -78,12 +76,8 @@ export default function StrategyFormPage() {
 
   if (!loaded) {
     return (
-      <div style={{ maxWidth: 640, margin: "0 auto", display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
-        <Skeleton width={180} height={32} />
-        <SkeletonCard lines={1} />
-        <SkeletonCard lines={1} />
-        <SkeletonCard lines={2} />
-        <SkeletonCard lines={2} />
+      <div style={{ padding: "var(--space-8)", textAlign: "center", color: "var(--color-text-secondary)" }}>
+        加载中...
       </div>
     );
   }
@@ -107,7 +101,8 @@ export default function StrategyFormPage() {
     setError("");
 
     const body = { name, description, enabled, conditions };
-    const access = getAccessToken() ?? "";
+    const token = localStorage.getItem("stock_academy_tokens");
+    const access = token ? JSON.parse(token).access : "";
     const headers = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${access}`,
@@ -139,43 +134,22 @@ export default function StrategyFormPage() {
 
   return (
     <div style={{ maxWidth: 640, margin: "0 auto" }}>
-      <h1 style={{
-        fontSize: "clamp(22px, 3vw, 32px)",
-        fontWeight: 700,
-        margin: "0 0 var(--space-6) 0",
-        color: "var(--color-text)",
-        fontFamily: "Inter, var(--font-sans)",
-        letterSpacing: "-0.01em",
-      }}>
+      <h1 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 var(--space-6) 0" }}>
         {isEdit ? "编辑策略" : "新建策略"}
       </h1>
 
       {error && (
         <div style={{
-          padding: "var(--space-4)",
-          marginBottom: "var(--space-4)",
-          background: "var(--color-surface)",
-          border: "1px solid var(--color-destructive)",
-          color: "var(--color-destructive)",
-          borderRadius: "var(--radius-md)",
-          fontSize: 14,
-          fontFamily: "Inter, var(--font-sans)",
+          padding: "var(--space-3)", marginBottom: "var(--space-4)",
+          background: "var(--color-bearish-bg)", color: "var(--color-bearish)",
+          borderRadius: "var(--radius-sm)", fontSize: 14,
         }}>
           {error}
         </div>
       )}
 
       <div style={{ marginBottom: "var(--space-4)" }}>
-        <label style={{
-          display: "block",
-          fontSize: 13,
-          fontWeight: 600,
-          fontFamily: "Inter, var(--font-sans)",
-          color: "var(--color-muted)",
-          marginBottom: "var(--space-2)",
-          textTransform: "uppercase",
-          letterSpacing: "0.05em",
-        }}>
+        <label style={{ display: "block", fontSize: 13, fontWeight: 500, marginBottom: "var(--space-1)" }}>
           策略名称 *
         </label>
         <input
@@ -183,29 +157,16 @@ export default function StrategyFormPage() {
           onChange={(e) => setName(e.target.value)}
           maxLength={100}
           style={{
-            width: "100%", padding: "10px 12px", fontSize: 14,
-            fontFamily: "Inter, var(--font-sans)",
-            border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)",
+            width: "100%", padding: "6px 10px", fontSize: 14,
+            border: "1px solid var(--color-border)", borderRadius: "var(--radius-sm)",
             background: "var(--color-surface)", color: "var(--color-text)",
-            boxSizing: "border-box", outline: "none",
-            transition: "border-color 0.15s",
+            boxSizing: "border-box",
           }}
-          onFocus={(e) => (e.currentTarget.style.borderColor = "var(--color-primary)")}
-          onBlur={(e) => (e.currentTarget.style.borderColor = "var(--color-border)")}
         />
       </div>
 
       <div style={{ marginBottom: "var(--space-4)" }}>
-        <label style={{
-          display: "block",
-          fontSize: 13,
-          fontWeight: 600,
-          fontFamily: "Inter, var(--font-sans)",
-          color: "var(--color-muted)",
-          marginBottom: "var(--space-2)",
-          textTransform: "uppercase",
-          letterSpacing: "0.05em",
-        }}>
+        <label style={{ display: "block", fontSize: 13, fontWeight: 500, marginBottom: "var(--space-1)" }}>
           描述
         </label>
         <textarea
@@ -214,20 +175,16 @@ export default function StrategyFormPage() {
           maxLength={500}
           rows={2}
           style={{
-            width: "100%", padding: "10px 12px", fontSize: 14,
-            fontFamily: "Inter, var(--font-sans)",
-            border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)",
+            width: "100%", padding: "6px 10px", fontSize: 14,
+            border: "1px solid var(--color-border)", borderRadius: "var(--radius-sm)",
             background: "var(--color-surface)", color: "var(--color-text)",
-            boxSizing: "border-box", resize: "vertical", outline: "none",
-            transition: "border-color 0.15s",
+            boxSizing: "border-box", resize: "vertical",
           }}
-          onFocus={(e) => (e.currentTarget.style.borderColor = "var(--color-primary)")}
-          onBlur={(e) => (e.currentTarget.style.borderColor = "var(--color-border)")}
         />
       </div>
 
-      <div style={{ marginBottom: "var(--space-5)" }}>
-        <label style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", fontSize: 14, cursor: "pointer", fontFamily: "Inter, var(--font-sans)", color: "var(--color-text)" }}>
+      <div style={{ marginBottom: "var(--space-4)" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", fontSize: 13, cursor: "pointer" }}>
           <input
             type="checkbox"
             checked={enabled}
@@ -238,15 +195,7 @@ export default function StrategyFormPage() {
       </div>
 
       <section style={{ marginBottom: "var(--space-6)" }}>
-        <h2 style={{
-          fontSize: 13,
-          fontWeight: 600,
-          margin: "0 0 var(--space-4) 0",
-          color: "var(--color-muted)",
-          fontFamily: "Inter, var(--font-sans)",
-          textTransform: "uppercase",
-          letterSpacing: "0.05em",
-        }}>
+        <h2 style={{ fontSize: 15, fontWeight: 600, margin: "0 0 var(--space-3) 0" }}>
           条件列表（AND 逻辑）
         </h2>
 
@@ -254,12 +203,9 @@ export default function StrategyFormPage() {
           <div
             key={i}
             style={{
-              padding: "var(--space-4)",
-              marginBottom: "var(--space-3)",
-              border: "1px solid var(--color-border)",
-              borderRadius: "var(--radius-md)",
-              background: "var(--color-surface)",
-              position: "relative",
+              padding: "var(--space-3)", marginBottom: "var(--space-2)",
+              border: "1px solid var(--color-border)", borderRadius: "var(--radius-sm)",
+              background: "var(--color-surface)", position: "relative",
             }}
           >
             <div style={{ display: "flex", gap: "var(--space-2)", flexWrap: "wrap", alignItems: "center" }}>
@@ -301,7 +247,7 @@ export default function StrategyFormPage() {
                   value={cond.value ?? ""}
                   onChange={(e) => updateCond(i, { value: e.target.value ? Number(e.target.value) : null })}
                   placeholder="阈值"
-                  style={{ ...selectStyle, width: 80, fontFamily: "var(--font-mono)" }}
+                  style={{ ...selectStyle, width: 80 }}
                 />
               )}
               {showPattern(cond) && (
@@ -322,13 +268,9 @@ export default function StrategyFormPage() {
                 onClick={() => rmCond(i)}
                 style={{
                   position: "absolute", top: 8, right: 8,
-                  background: "none", border: "none",
-                  color: "var(--color-text-secondary)",
+                  background: "none", border: "none", color: "var(--color-bearish)",
                   cursor: "pointer", fontSize: 12, padding: "2px 6px",
-                  fontFamily: "Inter, var(--font-sans)",
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-destructive)")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text-secondary)")}
               >
                 移除
               </button>
@@ -341,13 +283,9 @@ export default function StrategyFormPage() {
             onClick={addCond}
             style={{
               fontSize: 13, color: "var(--color-primary)", background: "none",
-              fontFamily: "Inter, var(--font-sans)",
-              border: "1px dashed var(--color-primary)", borderRadius: "var(--radius-md)",
-              padding: "8px 12px", cursor: "pointer", width: "100%",
-              transition: "background 0.15s",
+              border: "1px dashed var(--color-primary)", borderRadius: "var(--radius-sm)",
+              padding: "4px 12px", cursor: "pointer", width: "100%",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--color-primary-bg)")}
-            onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
           >
             + 添加条件
           </button>
@@ -358,19 +296,9 @@ export default function StrategyFormPage() {
         <button
           onClick={() => navigate(-1)}
           style={{
-            padding: "8px 20px", fontSize: 14, fontFamily: "Inter, var(--font-sans)",
-            background: "none",
-            border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)",
+            padding: "8px 20px", fontSize: 14, background: "none",
+            border: "1px solid var(--color-border)", borderRadius: "var(--radius-sm)",
             color: "var(--color-text-secondary)", cursor: "pointer",
-            transition: "border-color 0.15s, color 0.15s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "var(--color-text-secondary)";
-            e.currentTarget.style.color = "var(--color-text)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "var(--color-border)";
-            e.currentTarget.style.color = "var(--color-text-secondary)";
           }}
         >
           取消
@@ -379,13 +307,11 @@ export default function StrategyFormPage() {
           onClick={handleSubmit}
           disabled={submitting}
           style={{
-            padding: "8px 24px", fontSize: 14, fontWeight: 600,
-            fontFamily: "Inter, var(--font-sans)",
-            color: "var(--color-bg)", background: "var(--color-primary)",
-            border: "none", borderRadius: "var(--radius-md)",
+            padding: "8px 20px", fontSize: 14, fontWeight: 500,
+            color: "#fff", background: "var(--color-primary)",
+            border: "none", borderRadius: "var(--radius-sm)",
             cursor: submitting ? "wait" : "pointer",
             opacity: submitting ? 0.6 : 1,
-            transition: "opacity 0.15s",
           }}
         >
           {submitting ? "保存中..." : isEdit ? "保存修改" : "创建策略"}
@@ -396,12 +322,10 @@ export default function StrategyFormPage() {
 }
 
 const selectStyle: React.CSSProperties = {
-  padding: "6px 10px",
+  padding: "4px 8px",
   fontSize: 13,
-  fontFamily: "Inter, var(--font-sans)",
   border: "1px solid var(--color-border)",
   borderRadius: "var(--radius-sm)",
   background: "var(--color-surface)",
   color: "var(--color-text)",
-  outline: "none",
 };

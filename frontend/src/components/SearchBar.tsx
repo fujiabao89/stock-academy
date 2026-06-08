@@ -76,28 +76,21 @@ export default function SearchBar() {
         value={query}
         onChange={(e) => handleSearch(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder="输入股票代码或名称搜索，按 Enter 跳转..."
+        placeholder="搜索股票代码或名称 /"
         autoFocus
         style={{
           width: "100%",
           padding: "14px 16px",
           fontSize: 16,
-          fontFamily: "var(--font-mono)",
           background: "var(--color-surface)",
-          border: "1px solid var(--color-border)",
+          border: "2px solid var(--color-border)",
           borderRadius: "var(--radius-md)",
           color: "var(--color-text)",
           outline: "none",
-          transition: "border-color 0.2s, background 0.2s",
+          transition: "border-color 0.2s",
         }}
-        onFocus={(e) => {
-          e.target.style.borderColor = "var(--color-primary)";
-          e.target.style.background = "var(--color-surface-hover)";
-        }}
-        onBlur={(e) => {
-          e.target.style.borderColor = "var(--color-border)";
-          e.target.style.background = "var(--color-surface)";
-        }}
+        onFocus={(e) => (e.target.style.borderColor = "var(--color-primary)")}
+        onBlur={(e) => (e.target.style.borderColor = "var(--color-border)")}
       />
 
       {loading && (
@@ -120,7 +113,6 @@ export default function SearchBar() {
             padding: "var(--space-3)",
             color: "var(--color-destructive)",
             fontSize: 14,
-            fontFamily: "Inter, var(--font-sans)",
             zIndex: 200,
           }}
         >
@@ -159,23 +151,21 @@ export default function SearchBar() {
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
               <div>
-                <span style={{ fontWeight: 600, marginRight: "var(--space-2)", fontFamily: "Inter, var(--font-sans)" }}>
+                <span style={{ fontWeight: 600, marginRight: "var(--space-2)" }}>
                   {r.name}
                 </span>
-                <span style={{ color: "var(--color-text-secondary)", fontSize: 13, fontFamily: "var(--font-mono)" }}>
+                <span style={{ color: "var(--color-text-secondary)", fontSize: 14 }}>
                   {r.code}
                 </span>
               </div>
               <span
                 style={{
-                  fontSize: 11,
-                  fontWeight: 700,
-                  fontFamily: "Inter, var(--font-sans)",
+                  fontSize: 12,
                   padding: "2px 8px",
                   borderRadius: "var(--radius-sm)",
-                  background: r.market === "sh" ? "var(--color-accent-bg)" : "var(--color-primary-bg)",
-                  color: r.market === "sh" ? "var(--color-accent)" : "var(--color-primary)",
-                  border: `1px solid ${r.market === "sh" ? "var(--color-accent)" : "var(--color-primary)"}`,
+                  background: r.market === "sh" ? "var(--color-accent)" : "var(--color-primary)",
+                  color: "#fff",
+                  opacity: 0.8,
                 }}
               >
                 {r.market === "sh" ? "沪" : "深"}
@@ -206,7 +196,7 @@ export default function SearchBar() {
           <div style={{ marginBottom: "var(--space-2)" }}>
             未找到「{query}」
           </div>
-          <div style={{ fontSize: 12, color: "var(--color-muted)" }}>
+          <div style={{ fontSize: 12, color: "var(--color-text-muted)" }}>
             目前仅支持沪深 300 成分股（如 600519 贵州茅台、000001 平安银行）
           </div>
         </div>

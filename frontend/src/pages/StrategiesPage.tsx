@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import StrategyCard from "../components/StrategyCard";
 import type { Strategy } from "../components/StrategyCard";
 import { useAuth } from "../contexts/AuthContext";
-import { SkeletonCard } from "../components/Skeleton";
 
 export default function StrategiesPage() {
   const [strategies, setStrategies] = useState<Strategy[]>([]);
@@ -29,10 +28,8 @@ export default function StrategiesPage() {
 
   if (loading) {
     return (
-      <div style={{ maxWidth: 800, margin: "0 auto", display: "flex", flexDirection: "column", gap: "var(--space-4)" }}>
-        {Array.from({ length: 4 }).map((_, i) => (
-          <SkeletonCard key={i} lines={2} />
-        ))}
+      <div style={{ padding: "var(--space-8)", textAlign: "center", color: "var(--color-text-secondary)" }}>
+        加载中...
       </div>
     );
   }
@@ -42,17 +39,10 @@ export default function StrategiesPage() {
 
   return (
     <div style={{ maxWidth: 800, margin: "0 auto" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "var(--space-6)", gap: "var(--space-4)", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "var(--space-6)" }}>
         <div>
-          <h1 style={{
-            fontSize: "clamp(22px, 3vw, 32px)",
-            fontWeight: 700,
-            margin: "0 0 var(--space-2) 0",
-            color: "var(--color-text)",
-            fontFamily: "Inter, var(--font-sans)",
-            letterSpacing: "-0.01em",
-          }}>策略引擎</h1>
-          <p style={{ fontSize: 14, color: "var(--color-text-secondary)", margin: 0, fontFamily: "Inter, var(--font-sans)" }}>
+          <h1 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 var(--space-1) 0" }}>策略引擎</h1>
+          <p style={{ fontSize: 14, color: "var(--color-text-secondary)", margin: 0 }}>
             组合 K 线形态与指标条件，一键扫描全市场
           </p>
         </div>
@@ -60,16 +50,13 @@ export default function StrategiesPage() {
           <Link
             to="/strategies/new"
             style={{
-              padding: "8px 20px",
+              padding: "6px 16px",
               fontSize: 14,
-              fontWeight: 600,
-              fontFamily: "Inter, var(--font-sans)",
-              color: "var(--color-bg)",
+              fontWeight: 500,
+              color: "#fff",
               background: "var(--color-primary)",
-              borderRadius: "var(--radius-md)",
+              borderRadius: "var(--radius-sm)",
               textDecoration: "none",
-              whiteSpace: "nowrap",
-              transition: "opacity 0.15s",
             }}
           >
             新建策略
@@ -80,12 +67,10 @@ export default function StrategiesPage() {
       {error && (
         <div style={{
           padding: "var(--space-4)",
-          background: "var(--color-surface)",
-          border: "1px solid var(--color-destructive)",
-          color: "var(--color-destructive)",
-          borderRadius: "var(--radius-md)",
+          background: "var(--color-bearish-bg)",
+          color: "var(--color-bearish)",
+          borderRadius: "var(--radius-sm)",
           fontSize: 14,
-          fontFamily: "Inter, var(--font-sans)",
           marginBottom: "var(--space-4)",
         }}>
           {error}
@@ -94,15 +79,7 @@ export default function StrategiesPage() {
 
       {builtin.length > 0 && (
         <section style={{ marginBottom: "var(--space-6)" }}>
-          <h2 style={{
-            fontSize: 13,
-            fontWeight: 600,
-            margin: "0 0 var(--space-4) 0",
-            color: "var(--color-muted)",
-            fontFamily: "Inter, var(--font-sans)",
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-          }}>
+          <h2 style={{ fontSize: 16, fontWeight: 600, margin: "0 0 var(--space-3) 0", color: "var(--color-text-secondary)" }}>
             内置策略
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
@@ -117,15 +94,7 @@ export default function StrategiesPage() {
 
       {custom.length > 0 && (
         <section style={{ marginBottom: "var(--space-6)" }}>
-          <h2 style={{
-            fontSize: 13,
-            fontWeight: 600,
-            margin: "0 0 var(--space-4) 0",
-            color: "var(--color-muted)",
-            fontFamily: "Inter, var(--font-sans)",
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-          }}>
+          <h2 style={{ fontSize: 16, fontWeight: 600, margin: "0 0 var(--space-3) 0", color: "var(--color-text-secondary)" }}>
             自定义策略
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
@@ -139,16 +108,7 @@ export default function StrategiesPage() {
       )}
 
       {strategies.length === 0 && !error && (
-        <div style={{
-          textAlign: "center",
-          padding: "var(--space-8)",
-          color: "var(--color-text-secondary)",
-          fontFamily: "Inter, var(--font-sans)",
-          fontSize: 14,
-          background: "var(--color-surface)",
-          border: "1px solid var(--color-border)",
-          borderRadius: "var(--radius-md)",
-        }}>
+        <div style={{ textAlign: "center", padding: "var(--space-8)", color: "var(--color-text-secondary)" }}>
           暂无策略
         </div>
       )}

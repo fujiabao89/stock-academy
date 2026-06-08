@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import ConfidenceBadge from "../components/ConfidenceBadge";
-import { SkeletonCard } from "../components/Skeleton";
 
 interface PatternSummary {
   pattern_id: string;
@@ -17,7 +16,7 @@ interface PatternSummary {
 const DIRECTION_LABELS: Record<string, { text: string; color: string; bg: string }> = {
   bullish: { text: "看涨", color: "var(--color-bullish)", bg: "var(--color-bullish-bg)" },
   bearish: { text: "看跌", color: "var(--color-bearish)", bg: "var(--color-bearish-bg)" },
-  neutral: { text: "中性", color: "var(--color-muted)", bg: "var(--color-surface-hover)" },
+  neutral: { text: "中性", color: "var(--color-text-muted)", bg: "var(--color-surface-hover)" },
 };
 
 const CATEGORY_NAMES: Record<string, string> = {
@@ -56,10 +55,8 @@ export default function Learn() {
 
   if (loading) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-5)" }}>
-        {Array.from({ length: 4 }).map((_, i) => (
-          <SkeletonCard key={i} lines={2} />
-        ))}
+      <div style={{ textAlign: "center", padding: "var(--space-12)", color: "var(--color-text-secondary)" }}>
+        加载中...
       </div>
     );
   }
@@ -67,7 +64,7 @@ export default function Learn() {
   if (error) {
     return (
       <div style={{ textAlign: "center", padding: "var(--space-12)" }}>
-        <p style={{ color: "var(--color-destructive)", marginBottom: "var(--space-4)", fontFamily: "Inter, var(--font-sans)", fontSize: 14 }}>{error}</p>
+        <p style={{ color: "var(--color-bearish)", marginBottom: "var(--space-4)" }}>{error}</p>
         <Link to="/" style={{ color: "var(--color-primary)", fontSize: 14 }}>← 返回首页</Link>
       </div>
     );
@@ -76,44 +73,20 @@ export default function Learn() {
   return (
     <div>
       {/* Breadcrumb */}
-      <div style={{
-        marginBottom: "var(--space-6)",
-        fontSize: 13,
-        color: "var(--color-text-secondary)",
-        fontFamily: "Inter, var(--font-sans)",
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--space-2)",
-      }}>
-        <Link to="/" style={{ color: "var(--color-muted)", textDecoration: "none" }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-primary)")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-muted)")}>
+      <div style={{ marginBottom: "var(--space-5)", fontSize: 14, color: "var(--color-text-secondary)" }}>
+        <Link to="/" style={{ color: "var(--color-text-secondary)", display: "inline-flex", alignItems: "center", minHeight: 44 }}>
           首页
         </Link>
-        <span style={{ color: "var(--color-border)" }}>/</span>
-        <span style={{ color: "var(--color-text)", fontWeight: 500 }}>学堂</span>
+        <span style={{ margin: "0 var(--space-2)" }}>/</span>
+        <span style={{ color: "var(--color-text)" }}>学堂</span>
       </div>
 
       {/* Header */}
-      <div style={{ marginBottom: "var(--space-8)" }}>
-        <h1 style={{
-          fontSize: "clamp(22px, 3vw, 32px)",
-          fontWeight: 700,
-          color: "var(--color-text)",
-          margin: "0 0 var(--space-3) 0",
-          fontFamily: "Inter, var(--font-sans)",
-          letterSpacing: "-0.01em",
-        }}>
+      <div style={{ marginBottom: "var(--space-6)" }}>
+        <h1 style={{ fontSize: "clamp(20px, 3vw, 24px)", fontWeight: 700, color: "var(--color-text)", margin: "0 0 var(--space-3) 0" }}>
           形态教学
         </h1>
-        <p style={{
-          fontSize: 15,
-          color: "var(--color-text-secondary)",
-          lineHeight: 1.7,
-          margin: 0,
-          maxWidth: 640,
-          fontFamily: "Inter, var(--font-sans)",
-        }}>
+        <p style={{ fontSize: 15, color: "var(--color-text-secondary)", lineHeight: 1.7, margin: 0, maxWidth: 640 }}>
           每种技术形态都有其判定逻辑和历史回测数据。理解形态的原理和局限性，比记住结论更重要。
         </p>
       </div>
@@ -123,25 +96,17 @@ export default function Learn() {
         const items = grouped.get(cat);
         if (!items || items.length === 0) return null;
         return (
-          <div key={cat} style={{ marginBottom: "var(--space-10)" }}>
-            <h2 style={{
-              fontSize: 13,
-              fontWeight: 700,
-              fontFamily: "Inter, var(--font-sans)",
-              color: "var(--color-muted)",
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-              margin: "0 0 var(--space-4) 0",
-              paddingBottom: "var(--space-2)",
-              borderBottom: "1px solid var(--color-border)",
-            }}>
+          <div key={cat} style={{ marginBottom: "var(--space-8)" }}>
+            <h2 style={{ fontSize: 16, fontWeight: 600, color: "var(--color-text)", margin: "0 0 var(--space-4) 0" }}>
               {CATEGORY_NAMES[cat] ?? cat}
             </h2>
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 340px), 1fr))",
-              gap: "var(--space-3)",
-            }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 320px), 1fr))",
+                gap: "var(--space-4)",
+              }}
+            >
               {items.map((p) => {
                 const dir = DIRECTION_LABELS[p.direction];
                 return (
@@ -149,14 +114,14 @@ export default function Learn() {
                     key={p.pattern_id}
                     to={`/learn/patterns/${p.pattern_id}`}
                     style={{
-                      display: "flex",
-                      flexDirection: "column",
+                      display: "block",
                       padding: "var(--space-5)",
                       background: "var(--color-surface)",
                       border: "1px solid var(--color-border)",
                       borderRadius: "var(--radius-md)",
-                      transition: "border-color 0.15s, background 0.15s",
-                      textDecoration: "none",
+                      transition: "border-color 0.2s, background 0.2s",
+                      cursor: "pointer",
+                      minHeight: 44,
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.borderColor = "var(--color-primary)";
@@ -167,21 +132,21 @@ export default function Learn() {
                       e.currentTarget.style.background = "var(--color-surface)";
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", marginBottom: "var(--space-3)" }}>
-                      <span style={{ fontSize: 15, fontWeight: 600, color: "var(--color-text)", fontFamily: "Inter, var(--font-sans)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "var(--space-2)", marginBottom: "var(--space-2)" }}>
+                      <span style={{ fontSize: 15, fontWeight: 600, color: "var(--color-text)" }}>
                         {p.pattern_name}
                       </span>
                       {dir && (
-                        <span style={{
-                          fontSize: 11,
-                          fontWeight: 600,
-                          fontFamily: "Inter, var(--font-sans)",
-                          color: dir.color,
-                          background: dir.bg,
-                          padding: "2px 8px",
-                          borderRadius: "var(--radius-sm)",
-                          border: `1px solid ${dir.color}`,
-                        }}>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 500,
+                            color: dir.color,
+                            background: dir.bg,
+                            padding: "2px 8px",
+                            borderRadius: "var(--radius-sm)",
+                          }}
+                        >
                           {dir.text}
                         </span>
                       )}
@@ -189,27 +154,12 @@ export default function Learn() {
                         <ConfidenceBadge grade={p.confidence_grade} />
                       </span>
                     </div>
-                    <p style={{
-                      fontSize: 13,
-                      color: "var(--color-text-secondary)",
-                      lineHeight: 1.6,
-                      margin: "0 0 var(--space-3) 0",
-                      fontFamily: "Inter, var(--font-sans)",
-                      flex: 1,
-                    }}>
+                    <p style={{ fontSize: 13, color: "var(--color-text-secondary)", lineHeight: 1.6, margin: 0 }}>
                       {p.description.length > 80 ? p.description.slice(0, 80) + "..." : p.description}
                     </p>
                     {p.related_count > 0 && (
-                      <div style={{
-                        fontSize: 11,
-                        fontFamily: "var(--font-mono)",
-                        color: "var(--color-muted)",
-                        padding: "var(--space-1) var(--space-2)",
-                        background: "var(--color-bg)",
-                        borderRadius: "var(--radius-sm)",
-                        alignSelf: "flex-start",
-                      }}>
-                        {p.related_count} 关联
+                      <div style={{ fontSize: 12, color: "var(--color-text-muted)", marginTop: "var(--space-3)" }}>
+                        {p.related_count} 个关联形态
                       </div>
                     )}
                   </Link>
@@ -221,43 +171,38 @@ export default function Learn() {
       })}
 
       {/* Glossary link */}
-      <div style={{
-        marginTop: "var(--space-2)",
-        padding: "var(--space-6)",
-        background: "var(--color-surface)",
-        border: "1px solid var(--color-border)",
-        borderRadius: "var(--radius-md)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        flexWrap: "wrap",
-        gap: "var(--space-4)",
-      }}>
+      <div
+        style={{
+          marginTop: "var(--space-6)",
+          padding: "var(--space-5)",
+          background: "var(--color-surface)",
+          border: "1px solid var(--color-border)",
+          borderRadius: "var(--radius-md)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: "var(--space-4)",
+        }}
+      >
         <div>
-          <div style={{ fontSize: 16, fontWeight: 600, color: "var(--color-text)", marginBottom: 4, fontFamily: "Inter, var(--font-sans)" }}>
-            术语词典
-          </div>
-          <div style={{ fontSize: 13, color: "var(--color-text-secondary)", fontFamily: "Inter, var(--font-sans)" }}>
-            K线、均线、MACD…… 查阅术语的通俗解释
-          </div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: "var(--color-text)", marginBottom: 4 }}>术语词典</div>
+          <div style={{ fontSize: 13, color: "var(--color-text-secondary)" }}>K线、均线、MACD…… 查阅术语的通俗解释</div>
         </div>
         <Link
           to="/learn/glossary"
           style={{
             fontSize: 14,
-            fontWeight: 600,
-            fontFamily: "Inter, var(--font-sans)",
-            color: "var(--color-bg)",
-            background: "var(--color-primary)",
-            padding: "10px 20px",
-            borderRadius: "var(--radius-md)",
-            textDecoration: "none",
-            transition: "opacity 0.15s",
+            fontWeight: 500,
+            color: "var(--color-primary)",
+            padding: "8px 16px",
+            border: "1px solid var(--color-primary)",
+            borderRadius: "var(--radius-sm)",
             display: "inline-flex",
             alignItems: "center",
+            minHeight: 44,
+            transition: "background 0.15s",
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
-          onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
         >
           查看词典 →
         </Link>

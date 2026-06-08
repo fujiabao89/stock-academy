@@ -47,64 +47,41 @@ export default function StrategyCard({ strategy, onRun, running }: Props) {
   return (
     <div
       style={{
-        padding: "var(--space-5)",
+        padding: "var(--space-4)",
         border: "1px solid var(--color-border)",
         borderRadius: "var(--radius-md)",
         background: "var(--color-surface)",
         opacity: strategy.enabled ? 1 : 0.5,
-        transition: "border-color 0.15s, background 0.15s",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.borderColor = "var(--color-primary)";
-        e.currentTarget.style.background = "var(--color-surface-hover)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.borderColor = "var(--color-border)";
-        e.currentTarget.style.background = "var(--color-surface)";
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "var(--space-2)" }}>
         <div>
-          <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0, color: "var(--color-text)", fontFamily: "Inter, var(--font-sans)" }}>
+          <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0, color: "var(--color-text)" }}>
             {strategy.name}
             {strategy.is_builtin && (
-              <span style={{
-                fontSize: 11,
-                fontFamily: "Inter, var(--font-sans)",
-                color: "var(--color-primary)",
-                marginLeft: "var(--space-2)",
-                fontWeight: 400,
-                padding: "1px 6px",
-                border: "1px solid var(--color-primary)",
-                borderRadius: "var(--radius-sm)",
-              }}>
+              <span style={{ fontSize: 11, color: "var(--color-primary)", marginLeft: "var(--space-2)", fontWeight: 400 }}>
                 内置
               </span>
             )}
             {!strategy.enabled && (
-              <span style={{ fontSize: 11, color: "var(--color-muted)", marginLeft: "var(--space-2)", fontWeight: 400, fontFamily: "Inter, var(--font-sans)" }}>
+              <span style={{ fontSize: 11, color: "var(--color-text-muted)", marginLeft: "var(--space-2)", fontWeight: 400 }}>
                 已禁用
               </span>
             )}
           </h3>
-          <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "var(--space-1) 0 0 0", fontFamily: "Inter, var(--font-sans)" }}>
+          <p style={{ fontSize: 13, color: "var(--color-text-secondary)", margin: "var(--space-1) 0 0 0" }}>
             {strategy.description}
           </p>
         </div>
         {onRun && (
           <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onRun(strategy.id);
-            }}
+            onClick={() => onRun(strategy.id)}
             disabled={running || !strategy.enabled}
             style={{
-              padding: "4px 14px",
+              padding: "4px 12px",
               fontSize: 13,
-              fontWeight: 600,
-              fontFamily: "Inter, var(--font-sans)",
-              color: "var(--color-bg)",
+              fontWeight: 500,
+              color: "#fff",
               background: "var(--color-primary)",
               border: "none",
               borderRadius: "var(--radius-sm)",
@@ -124,12 +101,11 @@ export default function StrategyCard({ strategy, onRun, running }: Props) {
             key={i}
             style={{
               fontSize: 12,
-              fontFamily: "var(--font-mono)",
               color: "var(--color-text-secondary)",
               background: "var(--color-bg)",
               padding: "2px 8px",
-              borderRadius: "var(--radius-sm)",
-              border: "1px solid var(--color-border)",
+              borderRadius: 4,
+              fontFamily: "monospace",
             }}
           >
             {condText(c)}

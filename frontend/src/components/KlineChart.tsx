@@ -100,22 +100,22 @@ function calcBOLL(closes: number[], period = 20, mult = 2) {
 /* ========== 配色 ========== */
 
 const C = {
-  bg: "#0F172A",
-  surface: "#1E293B",
-  border: "#334155",
-  grid: "#1E293B",
-  muted: "#94A3B8",
-  text: "#F1F5F9",
-  text2: "#CBD5E1",
-  bullish: "#EF4444",
-  bearish: "#22C55E",
+  bg: "#050608",
+  surface: "#0a0c10",
+  border: "#1f2937",
+  grid: "rgba(255,255,255,0.05)",
+  muted: "#6b7280",
+  text: "#e0e0e0",
+  text2: "#9ca3af",
+  bullish: "#00ff9d",
+  bearish: "#ff4d4d",
   ma5: "#F59E0B",
   ma20: "#EC4899",
   ma60: "#8B5CF6",
   ma120: "#06B6D4",
-  bollUpper: "#F87171",
-  bollMid: "#FBBF24",
-  bollLower: "#34D399",
+  bollUpper: "#00ff9d",
+  bollMid: "#F59E0B",
+  bollLower: "#ff4d4d",
   dif: "#F59E0B",
   dea: "#8B5CF6",
 } as const;
@@ -138,8 +138,8 @@ function DataWindow({
         position: "absolute",
         top: 10,
         right: 10,
-        background: "rgba(15, 23, 42, 0.95)",
-        border: "1px solid #334155",
+        background: "rgba(5, 6, 8, 0.95)",
+        border: "1px solid #1f2937",
         borderRadius: 6,
         padding: "10px 14px",
         fontSize: 12,
@@ -180,7 +180,7 @@ function DataWindow({
           </span>
         </div>
       )}
-      <div style={{ marginTop: 2, borderTop: "1px solid #1E293B" }} />
+      <div style={{ marginTop: 2, borderTop: "1px solid #1f2937" }} />
       <div style={{ display: "flex", justifyContent: "space-between", gap: 14 }}>
         <span style={{ color: C.muted }}>量</span>
         <span style={{ color: C.text }}>
@@ -240,7 +240,7 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
           symbolOffset: offset,
           itemStyle: {
             color,
-            borderColor: "#F1F5F9",
+            borderColor: C.text,
             borderWidth: 1.5,
             shadowBlur: 4,
             shadowColor: "rgba(0,0,0,0.5)",
@@ -334,8 +334,8 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
           lineStyle: { width: 1, color: C.bollLower, type: "dashed" },
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: "rgba(248, 113, 113, 0.04)" },
-              { offset: 1, color: "rgba(52, 211, 153, 0.04)" },
+              { offset: 0, color: "rgba(0, 255, 157, 0.04)" },
+              { offset: 1, color: "rgba(255, 77, 77, 0.04)" },
             ]),
           },
         },
@@ -351,7 +351,7 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
         return {
           value: v,
           itemStyle: {
-            color: up ? "rgba(239, 68, 68, 0.45)" : "rgba(34, 197, 94, 0.45)",
+            color: up ? "rgba(0, 255, 157, 0.45)" : "rgba(255, 77, 77, 0.45)",
           },
         };
       }),
@@ -375,13 +375,13 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
         type: "bar", name: "MACD+",
         data: macd.histogram.map((v) => (v != null && v >= 0 ? v : null)),
         xAxisIndex: 2, yAxisIndex: 2,
-        itemStyle: { color: "rgba(239, 68, 68, 0.55)" },
+        itemStyle: { color: "rgba(0, 255, 157, 0.55)" },
       },
       {
         type: "bar", name: "MACD-",
         data: macd.histogram.map((v) => (v != null && v < 0 ? v : null)),
         xAxisIndex: 2, yAxisIndex: 2,
-        itemStyle: { color: "rgba(34, 197, 94, 0.55)" },
+        itemStyle: { color: "rgba(255, 77, 77, 0.55)" },
       },
     );
 
@@ -392,11 +392,11 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
         trigger: "axis",
         axisPointer: {
           type: "cross",
-          crossStyle: { color: "#64748B" },
-          lineStyle: { color: "#475569", type: "dashed", width: 1 },
+          crossStyle: { color: C.muted },
+          lineStyle: { color: "rgba(255,255,255,0.08)", type: "dashed", width: 1 },
         },
-        backgroundColor: "rgba(15, 23, 42, 0.95)",
-        borderColor: C.border,
+        backgroundColor: "rgba(5, 6, 8, 0.95)",
+        borderColor: "#1f2937",
         textStyle: { color: C.text, fontSize: 12 },
       },
       axisPointer: { link: [{ xAxisIndex: "all" }] },
@@ -449,13 +449,13 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
       dataZoom: [
         {
           type: "inside", xAxisIndex: [0, 1, 2],
-          zoomOnMouseWheel: true, moveOnMouseWheel: false, moveOnMouseMove: false,
+          zoomOnMouseWheel: true, moveOnMouseWheel: false, moveOnMouseMove: true,
         },
         {
           type: "slider", xAxisIndex: [0, 1, 2], bottom: 2, height: 28,
           borderColor: "transparent", backgroundColor: C.surface,
-          fillerColor: "rgba(59, 130, 246, 0.12)",
-          handleStyle: { color: "#3B82F6" },
+          fillerColor: "rgba(245, 158, 11, 0.1)",
+          handleStyle: { color: "#D97706" },
           textStyle: { color: C.muted, fontSize: 10 },
           start: Math.max(0, 100 - (80 / n) * 100), end: 100,
         },
@@ -469,34 +469,7 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
     if (!instanceRef.current) {
       instanceRef.current = echarts.init(chartRef.current, null, { renderer: "svg" });
     }
-
-    const inst = instanceRef.current;
-    // 保存当前缩放位置，避免 setOption(notMerge) 重置视图
-    let savedStart: number | undefined;
-    let savedEnd: number | undefined;
-    try {
-      const prev = inst.getOption() as Record<string, unknown>;
-      const dz = prev.dataZoom as Array<Record<string, unknown>> | undefined;
-      if (dz?.[0]) {
-        savedStart = dz[0].start as number;
-        savedEnd = dz[0].end as number;
-      }
-    } catch { /* ECharts getOption 在首次渲染可能返回 null */ }
-
-    const option = buildOption();
-
-    if (
-      savedStart != null &&
-      savedEnd != null &&
-      !(savedStart === 0 && savedEnd === 100)
-    ) {
-      if (Array.isArray(option.dataZoom)) {
-        option.dataZoom[0] = { ...option.dataZoom[0], start: savedStart, end: savedEnd };
-        option.dataZoom[1] = { ...option.dataZoom[1], start: savedStart, end: savedEnd };
-      }
-    }
-
-    inst.setOption(option, true);
+    instanceRef.current.setOption(buildOption(), true);
   }, [buildOption, data]);
 
   useEffect(() => {
@@ -586,7 +559,7 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
           ref={chartRef}
           style={{
             width: "100%",
-            height: "var(--chart-height)",
+            height: 500,
             background: C.bg,
             borderRadius: "var(--radius-md)",
             border: "1px solid var(--color-border)",

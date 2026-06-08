@@ -65,7 +65,7 @@ export default class ErrorBoundary extends Component<Props, State> {
           <details style={{
             marginTop: "var(--space-6)",
             fontSize: 12,
-            color: "var(--color-muted)",
+            color: "var(--color-text-muted)",
             fontFamily: "var(--font-mono)",
             maxWidth: 500,
             textAlign: "left",

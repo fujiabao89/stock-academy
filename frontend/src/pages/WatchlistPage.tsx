@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useAuth, getAccessToken } from "../contexts/AuthContext";
-import { SkeletonCard } from "../components/Skeleton";
+import { useAuth } from "../contexts/AuthContext";
 
 interface WatchlistItem {
   code: string;
@@ -24,8 +23,9 @@ export default function WatchlistPage() {
   }, []);
 
   const load = useCallback(async () => {
+    const tokens = JSON.parse(localStorage.getItem("stock_academy_tokens") ?? "{}");
     const r = await fetch("/api/user/watchlist", {
-      headers: { Authorization: `Bearer ${getAccessToken()}` },
+      headers: { Authorization: `Bearer ${tokens.access}` },
     });
     const data = await r.json();
     if (!cancelled.current) {
@@ -44,9 +44,10 @@ export default function WatchlistPage() {
     setError("");
     setAdding(true);
     try {
+      const tokens = JSON.parse(localStorage.getItem("stock_academy_tokens") ?? "{}");
       const r = await fetch(`/api/user/watchlist/${codeInput.trim()}`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${getAccessToken()}` },
+        headers: { Authorization: `Bearer ${tokens.access}` },
       });
       if (!r.ok) {
         const err = await r.json();
@@ -62,41 +63,22 @@ export default function WatchlistPage() {
   };
 
   const handleRemove = async (code: string) => {
+    const tokens = JSON.parse(localStorage.getItem("stock_academy_tokens") ?? "{}");
     const r = await fetch(`/api/user/watchlist/${code}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${getAccessToken()}` },
+      headers: { Authorization: `Bearer ${tokens.access}` },
     });
     if (r.ok || r.status === 404) {
       await load();
     }
   };
 
-  if (loading) return (
-    <div style={{ maxWidth: 600, margin: "0 auto", display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
-      {Array.from({ length: 3 }).map((_, i) => (
-        <SkeletonCard key={i} lines={1} />
-      ))}
-    </div>
-  );
+  if (loading) return <div style={{ padding: "var(--space-8)", textAlign: "center", color: "var(--color-text-secondary)" }}>加载中...</div>;
 
   return (
     <div style={{ maxWidth: 600, margin: "0 auto" }}>
-      <h1 style={{
-        fontSize: "clamp(22px, 3vw, 32px)",
-        fontWeight: 700,
-        margin: "0 0 var(--space-2) 0",
-        color: "var(--color-text)",
-        fontFamily: "Inter, var(--font-sans)",
-        letterSpacing: "-0.01em",
-      }}>
-        我的自选股
-      </h1>
-      <p style={{
-        fontSize: 14,
-        color: "var(--color-text-secondary)",
-        margin: "0 0 var(--space-6) 0",
-        fontFamily: "Inter, var(--font-sans)",
-      }}>
+      <h1 style={{ fontSize: 24, fontWeight: 700, margin: "0 0 var(--space-2) 0" }}>我的自选股</h1>
+      <p style={{ fontSize: 14, color: "var(--color-text-secondary)", margin: "0 0 var(--space-6) 0" }}>
         添加关注的股票，追踪它们的新闻动态
       </p>
 
@@ -113,17 +95,12 @@ export default function WatchlistPage() {
             flex: 1,
             padding: "10px 12px",
             fontSize: 14,
-            fontFamily: "var(--font-mono)",
             border: "1px solid var(--color-border)",
-            borderRadius: "var(--radius-md)",
+            borderRadius: "var(--radius-sm)",
             background: "var(--color-surface)",
             color: "var(--color-text)",
             boxSizing: "border-box",
-            outline: "none",
-            transition: "border-color 0.15s",
           }}
-          onFocus={(e) => (e.currentTarget.style.borderColor = "var(--color-primary)")}
-          onBlur={(e) => (e.currentTarget.style.borderColor = "var(--color-border)")}
         />
         <button
           type="submit"
@@ -132,14 +109,12 @@ export default function WatchlistPage() {
             padding: "10px 20px",
             fontSize: 14,
             fontWeight: 600,
-            fontFamily: "Inter, var(--font-sans)",
-            color: "var(--color-bg)",
-            background: adding ? "var(--color-muted)" : "var(--color-primary)",
+            color: "#fff",
+            background: adding ? "var(--color-text-muted)" : "var(--color-primary)",
             border: "none",
-            borderRadius: "var(--radius-md)",
+            borderRadius: "var(--radius-sm)",
             cursor: adding ? "not-allowed" : "pointer",
             whiteSpace: "nowrap",
-            transition: "background 0.15s",
           }}
         >
           {adding ? "添加中..." : "添加"}
@@ -148,13 +123,11 @@ export default function WatchlistPage() {
 
       {error && (
         <div style={{
-          padding: "var(--space-4)",
-          background: "var(--color-surface)",
-          border: "1px solid var(--color-destructive)",
-          color: "var(--color-destructive)",
-          borderRadius: "var(--radius-md)",
+          padding: "var(--space-3)",
+          background: "var(--color-bearish-bg)",
+          color: "var(--color-bearish)",
+          borderRadius: "var(--radius-sm)",
           fontSize: 14,
-          fontFamily: "Inter, var(--font-sans)",
           marginBottom: "var(--space-4)",
         }}>
           {error}
@@ -162,20 +135,11 @@ export default function WatchlistPage() {
       )}
 
       {items.length === 0 ? (
-        <div style={{
-          textAlign: "center",
-          padding: "var(--space-8)",
-          color: "var(--color-text-secondary)",
-          fontFamily: "Inter, var(--font-sans)",
-          fontSize: 14,
-          background: "var(--color-surface)",
-          border: "1px solid var(--color-border)",
-          borderRadius: "var(--radius-md)",
-        }}>
+        <div style={{ textAlign: "center", padding: "var(--space-8)", color: "var(--color-text-secondary)" }}>
           还没有添加自选股
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-2)" }}>
           {items.map((item) => (
             <div
               key={item.code}
@@ -183,35 +147,18 @@ export default function WatchlistPage() {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                padding: "var(--space-4) var(--space-5)",
+                padding: "var(--space-3) var(--space-4)",
                 border: "1px solid var(--color-border)",
-                borderRadius: "var(--radius-md)",
+                borderRadius: "var(--radius-sm)",
                 background: "var(--color-surface)",
-                transition: "border-color 0.15s, background 0.15s",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = "var(--color-primary)";
-                e.currentTarget.style.background = "var(--color-surface-hover)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = "var(--color-border)";
-                e.currentTarget.style.background = "var(--color-surface)";
               }}
             >
               <div>
-                <span style={{ fontWeight: 600, fontSize: 15, fontFamily: "Inter, var(--font-sans)", color: "var(--color-text)" }}>{item.name}</span>
-                <span style={{ fontSize: 13, fontFamily: "var(--font-mono)", color: "var(--color-text-secondary)", marginLeft: "var(--space-2)" }}>
+                <span style={{ fontWeight: 600, fontSize: 15 }}>{item.name}</span>
+                <span style={{ fontSize: 13, color: "var(--color-text-secondary)", marginLeft: "var(--space-2)" }}>
                   {item.code}
                 </span>
-                <span style={{
-                  fontSize: 11,
-                  fontFamily: "Inter, var(--font-sans)",
-                  color: "var(--color-primary)",
-                  marginLeft: "var(--space-2)",
-                  padding: "1px 6px",
-                  border: "1px solid var(--color-primary)",
-                  borderRadius: "var(--radius-sm)",
-                }}>
+                <span style={{ fontSize: 12, color: "var(--color-text-muted)", marginLeft: "var(--space-2)" }}>
                   {item.market === "sh" ? "沪" : item.market === "sz" ? "深" : ""}
                 </span>
               </div>
@@ -220,21 +167,11 @@ export default function WatchlistPage() {
                 style={{
                   padding: "4px 12px",
                   fontSize: 13,
-                  fontFamily: "Inter, var(--font-sans)",
-                  color: "var(--color-text-secondary)",
+                  color: "var(--color-bearish)",
                   background: "transparent",
                   border: "1px solid var(--color-border)",
                   borderRadius: "var(--radius-sm)",
                   cursor: "pointer",
-                  transition: "color 0.15s, border-color 0.15s",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "var(--color-destructive)";
-                  e.currentTarget.style.borderColor = "var(--color-destructive)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = "var(--color-text-secondary)";
-                  e.currentTarget.style.borderColor = "var(--color-border)";
                 }}
               >
                 移除

@@ -17,15 +17,15 @@ interface Props {
 }
 
 const C = {
-  bg: "#0b1326",
-  surface: "#171f33",
-  border: "#534434",
-  muted: "#a08e7a",
-  text: "#dae2fd",
-  text2: "#d8c3ad",
-  primary: "#f59e0b",
-  primaryBright: "#ffc174",
-  baseline: "#a08e7a",
+  bg: "#050608",
+  surface: "#0a0c10",
+  border: "#1f2937",
+  muted: "#6b7280",
+  text: "#e0e0e0",
+  text2: "#9ca3af",
+  primary: "#D97706",
+  primaryBright: "#F59E0B",
+  baseline: "#9ca3af",
 };
 
 export default function DistributionBar({ bins, randomBaseline }: Props) {
@@ -103,10 +103,10 @@ export default function DistributionBar({ bins, randomBaseline }: Props) {
                 ]),
                 borderRadius: [4, 4, 0, 0],
                 borderColor: bin.bin_start >= 0.03
-                  ? "rgba(16, 185, 129, 0.6)"
+                  ? "rgba(0, 255, 157, 0.6)"
                   : bin.bin_end <= 0.03
-                    ? "rgba(239, 68, 68, 0.5)"
-                    : "rgba(148, 163, 184, 0.4)",
+                    ? "rgba(255, 77, 77, 0.5)"
+                    : "rgba(107, 114, 128, 0.4)",
                 borderWidth: 0.5,
               },
               _bin: bin,
@@ -162,7 +162,7 @@ export default function DistributionBar({ bins, randomBaseline }: Props) {
     <div style={{ marginTop: "var(--space-4)" }}>
       <div style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text)", marginBottom: "var(--space-3)" }}>
         收益分布
-        <span style={{ fontSize: 12, fontWeight: 400, color: "var(--color-muted)", marginLeft: "var(--space-2)" }}>
+        <span style={{ fontSize: 12, fontWeight: 400, color: "var(--color-text-muted)", marginLeft: "var(--space-2)" }}>
           （信号发出后 20 个交易日的实际收益统计）
         </span>
       </div>

@@ -13,7 +13,7 @@ export default function NotFound() {
         padding: "var(--space-6)",
       }}
     >
-      <h1 style={{ fontSize: 72, fontWeight: 700, color: "var(--color-muted)", margin: 0 }}>
+      <h1 style={{ fontSize: 72, fontWeight: 700, color: "var(--color-text-muted)", margin: 0 }}>
         404
       </h1>
       <p style={{ fontSize: 18, color: "var(--color-text-secondary)", marginTop: "var(--space-3)" }}>
