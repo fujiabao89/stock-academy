@@ -26,10 +26,8 @@ export default function Layout() {
       const q = searchQuery.trim();
       if (/^\d{6}$/.test(q)) {
         navigate(`/stock/${q}`);
-      } else {
-        navigate(`/stock?q=${encodeURIComponent(q)}`);
+        setSearchQuery("");
       }
-      setSearchQuery("");
     }
   };
 
