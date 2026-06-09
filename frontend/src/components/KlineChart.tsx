@@ -201,6 +201,9 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
   const [showBOLL, setShowBOLL] = useState(false);
   const [pinnedIndex, setPinnedIndex] = useState<number | null>(null);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [dataZoomStart, setDataZoomStart] = useState<number | null>(null);
+  const [dataZoomEnd, setDataZoomEnd] = useState<number | null>(null);
+  const prevDataLen = useRef(data.length);
 
   const closes = useMemo(() => data.map((d) => d.close), [data]);
   const macd = useMemo(() => calcMACD(closes), [closes]);
@@ -259,6 +262,17 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
     const ohlc = data.map((d) => [d.open, d.close, d.low, d.high]);
     const volumes = data.map((d) => d.volume);
     const n = data.length;
+
+    // 重置缩放：数据长度变化 >20 说明切换了股票或时间范围
+    if (Math.abs(n - prevDataLen.current) > 20) {
+      prevDataLen.current = n;
+      setDataZoomStart(null);
+      setDataZoomEnd(null);
+    }
+    prevDataLen.current = n;
+
+    const zoomStart = dataZoomStart ?? Math.max(0, 100 - (80 / n) * 100);
+    const zoomEnd = dataZoomEnd ?? 100;
 
     const series: echarts.EChartsOption["series"] = [];
 
@@ -457,7 +471,7 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
           fillerColor: "rgba(245, 158, 11, 0.1)",
           handleStyle: { color: "#D97706" },
           textStyle: { color: C.muted, fontSize: 10 },
-          start: Math.max(0, 100 - (80 / n) * 100), end: 100,
+          start: zoomStart, end: zoomEnd,
         },
       ],
       series,
@@ -495,10 +509,19 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") setPinnedIndex(null);
     };
+    const onDataZoom = (...args: unknown[]) => {
+      const params = args[0] as Record<string, unknown>;
+      const batch = (params.batch as Array<{ start: number; end: number }>) || [params];
+      for (const z of batch) {
+        if (z.start != null) setDataZoomStart(z.start as number);
+        if (z.end != null) setDataZoomEnd(z.end as number);
+      }
+    };
 
     inst.on("mouseover", onMouseOver);
     inst.on("mouseout", onMouseOut);
     inst.on("click", onClick);
+    inst.on("dataZoom", onDataZoom);
     window.addEventListener("keydown", onKeyDown);
 
     const onResize = () => inst.resize();
@@ -508,6 +531,7 @@ export default function KlineChart({ data, signals = [] }: { data: KlineItem[]; 
       inst.off("mouseover", onMouseOver);
       inst.off("mouseout", onMouseOut);
       inst.off("click", onClick);
+      inst.off("dataZoom", onDataZoom);
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("resize", onResize);
     };
