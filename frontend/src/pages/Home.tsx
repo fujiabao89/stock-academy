@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { TrendingUp, BarChart2, Newspaper, BookOpen, Search, Lock, ExternalLink } from "lucide-react";
+import { useAuth } from "../contexts/AuthContext";
 
 interface PatternBrief {
   pattern_id: string;
@@ -41,8 +42,8 @@ const MarketIndex = ({ label, value, change, isPositive }: {
   </div>
 );
 
-const WatchlistItem = ({ symbol, code, price, change, isPositive }: {
-  symbol: string; code: string; price: string; change: string; isPositive: boolean;
+const WatchlistItem = ({ name, code, price, change, isPositive }: {
+  name: string; code: string; price?: string; change?: string; isPositive?: boolean;
 }) => (
   <Link
     to={`/stock/${code}`}
@@ -52,13 +53,17 @@ const WatchlistItem = ({ symbol, code, price, change, isPositive }: {
       <span style={{ fontSize: 12, fontWeight: 700, color: "var(--color-text)", transition: "color 0.15s" }}
         onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-primary)")}
         onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-text)")}
-      >{symbol}</span>
+      >{name}</span>
       <span className="data-mono" style={{ fontSize: 10, color: "var(--color-text-muted)" }}>{code}</span>
     </div>
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-      <span className="data-mono" style={{ fontSize: 12, color: isPositive ? "var(--color-bullish)" : "var(--color-bearish)" }}>{price}</span>
-      <span className="data-mono" style={{ fontSize: 9, color: isPositive ? "var(--color-bullish)" : "var(--color-bearish)" }}>{change}</span>
-    </div>
+    {price ? (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
+        <span className="data-mono" style={{ fontSize: 12, color: isPositive ? "var(--color-bullish)" : "var(--color-bearish)" }}>{price}</span>
+        <span className="data-mono" style={{ fontSize: 9, color: isPositive ? "var(--color-bullish)" : "var(--color-bearish)" }}>{change}</span>
+      </div>
+    ) : (
+      <span style={{ fontSize: 10, color: "var(--color-text-muted)" }}>查看</span>
+    )}
   </Link>
 );
 
@@ -145,11 +150,23 @@ interface StrategyItem {
   enabled: boolean;
 }
 
-const NEWS_ITEMS = [
-  { time: "15:45", text: "央行开展2000亿元中期借贷便利(MLF)操作，利率维持不变。" },
-  { time: "15:32", text: "北向资金今日净买入超50亿元，连续三日净流入。" },
-  { time: "15:10", text: "多地出台新一轮促消费政策，汽车家电板块异动拉升。" },
-];
+interface NewsItem {
+  id: number;
+  title: string;
+  published_at: string;
+  source: string;
+}
+
+interface WatchlistData {
+  code: string;
+  name: string;
+  market: string;
+}
+
+function formatNewsTime(iso: string): string {
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
 
 const REPORTS = [
   { title: "AI算力需求持续爆发，光模块核心标的深度解析", source: "中信证券", views: "1.2w" },
@@ -163,12 +180,6 @@ const INDICES = [
   { label: "创业板指", value: "1795.33", change: "-0.45%", isPositive: false },
 ];
 
-const WATCHLIST = [
-  { symbol: "药明康德", code: "603259", price: "45.22", change: "+2.10%", isPositive: true },
-  { symbol: "工业富联", code: "601138", price: "22.45", change: "-1.05%", isPositive: false },
-  { symbol: "北方华创", code: "002371", price: "298.50", change: "+4.56%", isPositive: true },
-];
-
 /* ============================================================
    Main Page
    ============================================================ */
@@ -176,14 +187,18 @@ const WATCHLIST = [
 const STRENGTHS = ["STRONG", "MEDIUM", "WEAK", "STRONG", "MEDIUM", "WEAK", "STRONG", "MEDIUM", "WEAK", "STRONG"] as const;
 
 export default function Home() {
+  const { user } = useAuth();
   const [signals, setSignals] = useState<LatestStockSignal[]>([]);
   const [strategies, setStrategies] = useState<StrategyItem[]>([]);
+  const [newsItems, setNewsItems] = useState<NewsItem[]>([]);
+  const [watchlist, setWatchlist] = useState<WatchlistData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([
+
+    const fetches: Promise<any>[] = [
       fetch("/api/signals/latest").then((r) => {
         if (!r.ok) throw new Error(`服务器错误 (${r.status})`);
         return r.json();
@@ -192,17 +207,54 @@ export default function Home() {
         if (!r.ok) throw new Error(`服务器错误 (${r.status})`);
         return r.json();
       }),
-    ])
-      .then(([signalData, strategyData]) => {
+      fetch("/api/news?limit=5").then((r) => {
+        if (!r.ok) throw new Error(`新闻加载失败 (${r.status})`);
+        return r.json();
+      }),
+    ];
+
+    // 自选股需要登录态
+    const tokensRaw = localStorage.getItem("stock_academy_tokens");
+    if (tokensRaw) {
+      try {
+        const tokens = JSON.parse(tokensRaw);
+        fetches.push(
+          fetch("/api/user/watchlist", {
+            headers: { Authorization: `Bearer ${tokens.access}` },
+          }).then((r) => {
+            if (!r.ok) return { items: [] };
+            return r.json();
+          })
+        );
+      } catch {
+        fetches.push(Promise.resolve({ items: [] }));
+      }
+    } else {
+      fetches.push(Promise.resolve({ items: [] }));
+    }
+
+    Promise.all(fetches)
+      .then(([signalData, strategyData, newsData, watchlistData]) => {
         if (!cancelled) {
           setSignals(signalData);
           setStrategies(strategyData.items ?? []);
+          setNewsItems((newsData.items ?? []).map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            published_at: item.published_at,
+            source: item.source,
+          })));
+          setWatchlist((watchlistData.items ?? []).map((item: any) => ({
+            code: item.code,
+            name: item.name,
+            market: item.market,
+          })));
         }
       })
       .catch((e) => { if (!cancelled) setError(e.message || "加载失败"); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, []);
+  }, [user]);
 
   const renderSignalRows = () => {
     if (signals.length > 0) {
@@ -266,9 +318,16 @@ export default function Home() {
               自选股
             </h3>
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {WATCHLIST.map((item) => (
-                <WatchlistItem key={item.code} {...item} />
-              ))}
+              {watchlist.length > 0 ? (
+                watchlist.map((item) => (
+                  <WatchlistItem key={item.code} name={item.name} code={item.code} />
+                ))
+              ) : (
+                <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", padding: "12px 0" }}>
+                  {user ? "暂无自选股" : "登录后查看自选股"}
+                </p>
+              )}
+
             </div>
           </section>
         </aside>
@@ -403,25 +462,32 @@ export default function Home() {
                 width: 1, background: "rgba(255,255,255,0.05)",
               }} />
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {NEWS_ITEMS.map((item, i) => (
-                  <Link to="/news" key={i} style={{ position: "relative", paddingLeft: 24, paddingBottom: 8, textDecoration: "none", display: "block" }}>
-                    <div style={{
-                      position: "absolute", left: 0, top: 6,
-                      width: 12, height: 12, borderRadius: "50%",
-                      background: "var(--color-primary)",
-                      border: "2px solid var(--color-surface)", zIndex: 10,
-                    }} />
-                    <div className="data-mono" style={{ fontSize: 10, color: "var(--color-text-muted)", marginBottom: 4 }}>
-                      {item.time}
-                    </div>
-                    <p style={{ fontSize: 12, color: "#d1d5db", lineHeight: 1.6, margin: 0, transition: "color 0.15s", cursor: "pointer" }}
-                      onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
-                      onMouseLeave={(e) => (e.currentTarget.style.color = "#d1d5db")}
-                    >
-                      {item.text}
-                    </p>
-                  </Link>
-                ))}
+                {newsItems.length > 0 ? (
+                  newsItems.map((item) => (
+                    <Link to="/news" key={item.id} style={{ position: "relative", paddingLeft: 24, paddingBottom: 8, textDecoration: "none", display: "block" }}>
+                      <div style={{
+                        position: "absolute", left: 0, top: 6,
+                        width: 12, height: 12, borderRadius: "50%",
+                        background: "var(--color-primary)",
+                        border: "2px solid var(--color-surface)", zIndex: 10,
+                      }} />
+                      <div className="data-mono" style={{ fontSize: 10, color: "var(--color-text-muted)", marginBottom: 4 }}>
+                        {formatNewsTime(item.published_at)}
+                      </div>
+                      <p style={{ fontSize: 12, color: "#d1d5db", lineHeight: 1.6, margin: 0, transition: "color 0.15s", cursor: "pointer" }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = "#d1d5db")}
+                      >
+                        {item.title}
+                      </p>
+                    </Link>
+                  ))
+                ) : (
+                  <p style={{ fontSize: 12, color: "var(--color-text-muted)", textAlign: "center", padding: "12px 0" }}>
+                    暂无新闻资讯
+                  </p>
+                )}
+
               </div>
             </div>
           </section>
