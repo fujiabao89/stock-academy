@@ -292,7 +292,7 @@ export default function Layout() {
           </div>
         )}
       </header>
-      <main style={{ flex: 1 }}>
+      <main style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", maxWidth: "var(--container-max)", margin: "0 auto", padding: "var(--main-padding-y) var(--main-padding-x)", width: "100%" }}>
         <Outlet />
       </main>
 

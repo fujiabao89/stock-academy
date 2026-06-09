@@ -18,8 +18,8 @@ export default function StockOverview({ data }: { data: OverviewData | null }) {
     <div
       style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-        gap: "var(--space-3)",
+        gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
+        gap: "var(--space-2)",
       }}
     >
       <Card label="最新价" value={data.latest_price.toFixed(2)} />
@@ -41,13 +41,13 @@ function Card({ label, value, color }: { label: string; value: string; color?: s
         background: "var(--color-surface)",
         border: "1px solid var(--color-border)",
         borderRadius: "var(--radius-md)",
-        padding: "var(--space-4)",
+        padding: "4px 10px",
       }}
     >
-      <div style={{ fontSize: 13, color: "var(--color-text-secondary)", marginBottom: "var(--space-1)" }}>
+      <div style={{ fontSize: 11, color: "var(--color-text-secondary)", marginBottom: 2 }}>
         {label}
       </div>
-      <div style={{ fontSize: 22, fontWeight: 700, color: color ?? "var(--color-text)", fontVariantNumeric: "tabular-nums" }}>
+      <div style={{ fontSize: 16, fontWeight: 700, color: color ?? "var(--color-text)", fontVariantNumeric: "tabular-nums" }}>
         {value}
       </div>
     </div>

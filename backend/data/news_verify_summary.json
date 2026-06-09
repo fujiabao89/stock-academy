@@ -1,20 +1,20 @@
 {
-  "computed_at": "2026-06-08T17:08:35.508380",
-  "total_requests": 28,
-  "successful": 28,
+  "computed_at": "2026-06-09T17:09:43.156008",
+  "total_requests": 36,
+  "successful": 36,
   "errors": 0,
   "empty": 0,
   "success_rate": 100.0,
   "by_source": {
     "sina_finance": {
-      "total": 7,
-      "success": 7,
-      "articles": 350
+      "total": 9,
+      "success": 9,
+      "articles": 450
     },
     "tushare": {
-      "total": 21,
-      "success": 21,
-      "articles": 210
+      "total": 27,
+      "success": 27,
+      "articles": 270
     }
   }
 }

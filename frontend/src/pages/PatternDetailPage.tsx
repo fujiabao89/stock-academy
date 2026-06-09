@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import PatternCard from "../components/PatternCard";
 import KlineChart from "../components/KlineChart";
 import ConfidenceBadge from "../components/ConfidenceBadge";
 import DistributionBar from "../components/DistributionBar";
@@ -98,6 +97,7 @@ export default function PatternDetailPage() {
   const [exampleKline, setExampleKline] = useState<KlineItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showAllStocks, setShowAllStocks] = useState(false);
 
   useEffect(() => {
     if (!patternId) return;
@@ -237,10 +237,12 @@ export default function PatternDetailPage() {
               </Link>
             )}
           </h2>
-          <KlineChart
-            data={exampleKline}
-            signals={stocks.filter((s) => s.code === exampleCode)}
-          />
+          <div style={{ display: "flex", flexDirection: "column", height: 620 }}>
+            <KlineChart
+              data={exampleKline}
+              signals={stocks.filter((s) => s.code === exampleCode)}
+            />
+          </div>
         </section>
       )}
 
@@ -452,26 +454,70 @@ export default function PatternDetailPage() {
             当前没有股票触发该形态
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
-            {stocks.map((s) => (
-              <div key={s.code}>
-                <PatternCard signal={s} />
-                <Link
-                  to={`/stock/${s.code}`}
-                  style={{
-                    fontSize: 12, color: "var(--color-primary)", padding: "6px 12px",
-                    marginTop: "var(--space-2)",
-                    background: "var(--color-surface)", border: "1px solid var(--color-border)",
-                    borderRadius: "var(--radius-sm)", display: "inline-flex", alignItems: "center",
-                    minHeight: 32, transition: "border-color 0.15s",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = "var(--color-primary)")}
-                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = "var(--color-border)")}
-                >
-                  查看K线 →
-                </Link>
-              </div>
-            ))}
+          <div style={{
+            background: "var(--color-surface)", border: "1px solid var(--color-border)",
+            borderRadius: "var(--radius-md)", overflow: "hidden",
+          }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid var(--color-border)" }}>
+                  <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 500, color: "var(--color-text-muted)", fontSize: 12 }}>代码</th>
+                  <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 500, color: "var(--color-text-muted)", fontSize: 12 }}>日期</th>
+                  <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 500, color: "var(--color-text-muted)", fontSize: 12 }}>方向</th>
+                  <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 500, color: "var(--color-text-muted)", fontSize: 12 }}>置信度</th>
+                  <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: 500, color: "var(--color-text-muted)", fontSize: 12 }}>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(showAllStocks ? stocks : stocks.slice(0, 10)).map((s, i) => (
+                  <tr
+                    key={s.code}
+                    style={{ borderBottom: i < Math.min(stocks.length, showAllStocks ? stocks.length : 10) - 1 ? "1px solid var(--color-border)" : "none" }}
+                  >
+                    <td style={{ padding: "8px 14px" }}>
+                      <Link to={`/stock/${s.code}`} style={{ fontFamily: "var(--font-mono)", fontWeight: 600, color: "var(--color-primary)", fontSize: 13 }}>
+                        {s.code}
+                      </Link>
+                    </td>
+                    <td style={{ padding: "8px 14px", color: "var(--color-text-secondary)", fontFamily: "var(--font-mono)" }}>{s.date}</td>
+                    <td style={{ padding: "8px 14px" }}>
+                      <span style={{
+                        fontSize: 11, fontWeight: 500,
+                        color: s.direction === "bullish" ? "var(--color-bullish)" : "var(--color-bearish)",
+                        background: s.direction === "bullish" ? "var(--color-bullish-bg)" : "var(--color-bearish-bg)",
+                        padding: "2px 8px", borderRadius: "var(--radius-sm)",
+                      }}>
+                        {s.direction === "bullish" ? "看涨" : "看跌"}
+                      </span>
+                    </td>
+                    <td style={{ padding: "8px 14px", color: "var(--color-text-secondary)", fontFamily: "var(--font-mono)" }}>
+                      {s.confidence != null ? `${(s.confidence * 100).toFixed(0)}%` : "-"}
+                    </td>
+                    <td style={{ padding: "8px 14px" }}>
+                      <Link
+                        to={`/stock/${s.code}`}
+                        style={{ fontSize: 12, color: "var(--color-primary)" }}
+                      >
+                        查看K线 →
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {stocks.length > 10 && (
+              <button
+                onClick={() => setShowAllStocks((v) => !v)}
+                style={{
+                  width: "100%", padding: "10px 16px", fontSize: 13, fontWeight: 500,
+                  color: "var(--color-primary)", background: "var(--color-primary-container)",
+                  border: "none", borderTop: "1px solid var(--color-border)",
+                  cursor: "pointer", transition: "background 0.15s", textAlign: "center",
+                }}
+              >
+                {showAllStocks ? "收起" : `查看全部 (${stocks.length} 只)`}
+              </button>
+            )}
           </div>
         )}
       </section>

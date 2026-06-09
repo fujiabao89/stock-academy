@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import KlineChart from "../components/KlineChart";
 import PatternSignalList from "../components/PatternSignalList";
@@ -52,6 +52,7 @@ export default function StockDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>("kline");
+  const tabContentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!code) return;
@@ -106,30 +107,27 @@ export default function StockDetail() {
   }
 
   return (
-    <div>
+    <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
       {/* Breadcrumb */}
-      <div style={{ marginBottom: "var(--space-5)", fontSize: 14, color: "var(--color-text-secondary)" }}>
-        <Link to="/" style={{ color: "var(--color-text-secondary)", display: "inline-flex", alignItems: "center", minHeight: 44 }}>
-          首页
-        </Link>
-        <span style={{ margin: "0 var(--space-2)" }}>/</span>
+      <div style={{ fontSize: 12, color: "var(--color-text-secondary)", display: "flex", alignItems: "center", gap: 4, marginBottom: 2, flexShrink: 0 }}>
+        <Link to="/" style={{ color: "var(--color-text-secondary)" }}>首页</Link>
+        <span>/</span>
         <span style={{ color: "var(--color-text)" }}>
           {overview?.name ?? code} ({code})
         </span>
       </div>
 
       {/* Overview */}
-      <div style={{ marginBottom: "var(--space-6)" }}>
+      <div style={{ marginBottom: 2, flexShrink: 0 }}>
         <StockOverview data={overview} />
       </div>
 
       {/* Tabs */}
       <div
         style={{
-          display: "flex",
-          gap: 0,
+          display: "flex", gap: 0,
           borderBottom: "1px solid var(--color-border)",
-          marginBottom: "var(--space-5)",
+          marginBottom: 2, flexShrink: 0,
         }}
       >
         {([
@@ -140,13 +138,11 @@ export default function StockDetail() {
             key={key}
             onClick={() => setTab(key)}
             style={{
-              padding: "12px 20px",
-              fontSize: 14,
-              minHeight: 44,
-              fontWeight: 500,
+              padding: "4px 14px", fontSize: 13, fontWeight: 500,
               color: tab === key ? "var(--color-primary)" : "var(--color-text-secondary)",
               borderBottom: tab === key ? "2px solid var(--color-primary)" : "2px solid transparent",
               transition: "color 0.15s, border-color 0.15s",
+              background: "none", border: "none", cursor: "pointer",
             }}
           >
             {label}
@@ -155,8 +151,10 @@ export default function StockDetail() {
       </div>
 
       {/* Tab Content */}
-      {tab === "kline" && <KlineChart data={kline} />}
-      {tab === "signals" && <PatternSignalList signals={signals} />}
+      <div ref={tabContentRef} style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
+        {tab === "kline" && <KlineChart data={kline} />}
+        {tab === "signals" && <PatternSignalList signals={signals} />}
+      </div>
     </div>
   );
 }

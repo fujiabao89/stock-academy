@@ -286,7 +286,7 @@ export default function Home() {
   };
 
   return (
-    <div style={{ maxWidth: "var(--container-max)", margin: "0 auto", padding: "24px" }}>
+    <div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", gap: 24 }}>
         {/* ============================================================
             Left Column (2/12): Market Summary + Watchlist
