@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import KlineChart from "../components/KlineChart";
+import StockChart, { type KlineData, type Period, type SignalInfo } from "../components/StockChart";
 import PatternSignalList from "../components/PatternSignalList";
 import StockOverview from "../components/StockOverview";
 
@@ -42,17 +42,56 @@ export interface PatternSignal {
   related_patterns: string[];
 }
 
+export interface RealtimeQuote {
+  name: string;
+  open: number;
+  prev_close: number;
+  current: number;
+  high: number;
+  low: number;
+  volume: number;
+  amount: number;
+  date: string;
+  time: string;
+  change: number;
+  change_pct: number;
+}
+
 type TabKey = "kline" | "signals";
+
+function isTradingHours(): boolean {
+  const now = new Date();
+  const day = now.getDay();
+  if (day === 0 || day === 6) return false;
+  const t = now.getHours() * 100 + now.getMinutes();
+  return t >= 930 && t <= 1505;
+}
 
 export default function StockDetail() {
   const { code } = useParams<{ code: string }>();
   const [overview, setOverview] = useState<OverviewData | null>(null);
   const [kline, setKline] = useState<KlineItem[]>([]);
   const [signals, setSignals] = useState<PatternSignal[]>([]);
+  const [realtime, setRealtime] = useState<RealtimeQuote | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>("kline");
+  const [period, setPeriod] = useState<Period>("d");
   const tabContentRef = useRef<HTMLDivElement>(null);
+
+  // 将 API KlineItem[] 映射为 StockChart 的 KlineData[]
+  const chartData: KlineData[] = useMemo(
+    () =>
+      kline.map((b) => ({
+        time: b.date,
+        open: b.open,
+        high: b.high,
+        low: b.low,
+        close: b.close,
+        volume: b.volume,
+      })),
+    [kline],
+  );
 
   useEffect(() => {
     if (!code) return;
@@ -68,7 +107,7 @@ export default function StockDetail() {
 
     Promise.allSettled([
       fetchJson(`/api/stocks/${code}/overview`),
-      fetchJson(`/api/stocks/${code}/kline?period=d&limit=180`),
+      fetchJson(`/api/stocks/${code}/kline?period=${period}&limit=500`),
       fetchJson(`/api/stocks/${code}/signals`),
     ]).then(([ov, kl, sg]) => {
       if (cancelled) return;
@@ -85,7 +124,33 @@ export default function StockDetail() {
     }).finally(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
-  }, [code]);
+  }, [code, period]);
+
+  // 实时行情轮询
+  useEffect(() => {
+    if (!code || period !== "d") return;
+
+    let timer: ReturnType<typeof setInterval> | null = null;
+
+    const poll = async () => {
+      if (!isTradingHours()) {
+        setRealtime(null);
+        return;
+      }
+      try {
+        const resp = await fetch(`/api/stocks/${code}/realtime`);
+        if (resp.ok) {
+          const data: RealtimeQuote = await resp.json();
+          if (data.current > 0) setRealtime(data);
+        }
+      } catch { /* 轮询失败静默忽略 */ }
+    };
+
+    poll();
+    timer = setInterval(poll, 5000);
+
+    return () => { if (timer) clearInterval(timer); };
+  }, [code, period]);
 
   if (loading) {
     return (
@@ -119,13 +184,13 @@ export default function StockDetail() {
 
       {/* Overview */}
       <div style={{ marginBottom: 2, flexShrink: 0 }}>
-        <StockOverview data={overview} />
+        <StockOverview data={realtime ? { ...overview!, latest_price: realtime.current, change_pct: realtime.change_pct, volume: realtime.volume, amount: realtime.amount, update_time: `${realtime.date} ${realtime.time}` } : overview} />
       </div>
 
       {/* Tabs */}
       <div
         style={{
-          display: "flex", gap: 0,
+          display: "flex", alignItems: "center",
           borderBottom: "1px solid var(--color-border)",
           marginBottom: 2, flexShrink: 0,
         }}
@@ -152,7 +217,16 @@ export default function StockDetail() {
 
       {/* Tab Content */}
       <div ref={tabContentRef} style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
-        {tab === "kline" && <KlineChart data={kline} />}
+        {tab === "kline" && (
+          <StockChart
+            data={chartData}
+            realtime={realtime}
+            period={period}
+            onPeriodChange={setPeriod}
+            signals={signals as SignalInfo[]}
+            code={code!}
+          />
+        )}
         {tab === "signals" && <PatternSignalList signals={signals} />}
       </div>
     </div>

@@ -1,7 +1,7 @@
-import { useEffect, useLayoutEffect, useMemo, useRef } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { init, dispose } from "klinecharts";
-import type { Chart, KLineData as KLData, DataLoader, DeepPartial, Styles } from "klinecharts";
+import type { Chart, KLineData as KLData, DataLoader, DeepPartial, Styles, Crosshair } from "klinecharts";
 
 // ============================================================
 // 类型定义
@@ -54,6 +54,7 @@ interface StockChartProps {
   onPeriodChange?: (period: Period) => void;
   signals?: SignalInfo[];
   showPeriodSwitch?: boolean;
+  code: string;
 }
 
 // ============================================================
@@ -92,8 +93,14 @@ const PERIOD_LABELS: [Period, string][] = [
   ["m", "月K"],
 ];
 
+const PERIOD_TYPE: Record<Period, "day" | "week" | "month"> = {
+  d: "day",
+  w: "week",
+  m: "month",
+};
+
 // ============================================================
-// KLineChart 深色主题（绕过 DeepPartial 严格类型检查）
+// KLineChart 深色主题
 // ============================================================
 
 const DARK_STYLES = {
@@ -230,10 +237,18 @@ export default function StockChart({
   onPeriodChange,
   signals = [],
   showPeriodSwitch = true,
+  code,
 }: StockChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<Chart | null>(null);
   const navigate = useNavigate();
+
+  // ---- 指标切换状态 ----
+  const [showMA, setShowMA] = useState(true);
+  const [showBOLL, setShowBOLL] = useState(true);
+
+  // ---- DataWindow 状态 ----
+  const [crosshairData, setCrosshairData] = useState<{ timestamp: number; open: number; high: number; low: number; close: number; volume: number } | null>(null);
 
   // ---- 合并实时行情 ----
   const merged = useMemo(() => {
@@ -292,12 +307,14 @@ export default function StockChart({
       .filter((x): x is NonNullable<typeof x> => x != null);
   }, [signals, merged]);
 
+  // ---- Crosshair handler (通过 ref 保持引用稳定) ----
+  const crosshairHandlerRef = useRef<((data: unknown) => void) | null>(null);
+
   // ---- 初始化 KLineChart ----
   useLayoutEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    // 检查容器是否有有效尺寸
     const { width, height } = container.getBoundingClientRect();
     if (width === 0 && height === 0) return;
 
@@ -311,14 +328,11 @@ export default function StockChart({
 
     chartRef.current = chart;
 
-    // 创建指标 — MA 和 BOLL 叠加在主图蜡烛 pane 上
-    const candlePane = { id: "candle_pane" };
-    chart.createIndicator({ name: "MA", calcParams: [5, 10, 20, 60, 120] }, { isStack: true, pane: candlePane });
-    chart.createIndicator({ name: "BOLL", calcParams: [20, 2] }, { isStack: true, pane: candlePane });
-    chart.createIndicator({ name: "VOL", calcParams: [5, 10, 20] });
-    chart.createIndicator({ name: "MACD", calcParams: [12, 26, 9] });
+    // ---- 必须先设置 symbol + period，DataLoader 才能触发 ----
+    chart.setSymbol({ ticker: code, pricePrecision: 2, volumePrecision: 0 });
+    chart.setPeriod({ type: PERIOD_TYPE[period] || "day", span: 1 });
 
-    // DataLoader
+    // ---- DataLoader ----
     const dataLoader: DataLoader = {
       getBars: (params) => {
         params.callback(klDataRef.current, false);
@@ -326,11 +340,26 @@ export default function StockChart({
     };
     chart.setDataLoader(dataLoader);
 
+    // ---- 始终显示的指标 (VOL + MACD) ----
+    chart.createIndicator({ name: "VOL", calcParams: [5, 10, 20] });
+    chart.createIndicator({ name: "MACD", calcParams: [12, 26, 9] });
+    // 注意: MA 和 BOLL 由独立 useEffect 管理 (showMA/showBOLL)
+
+    // ---- Crosshair DataWindow 订阅 ----
+    crosshairHandlerRef.current = (d: unknown) => {
+      const cr = d as Crosshair | undefined;
+      setCrosshairData(cr?.kLineData ?? null);
+    };
+    chart.subscribeAction("onCrosshairChange" as never, crosshairHandlerRef.current as never);
+
     return () => {
+      if (crosshairHandlerRef.current) {
+        chart.unsubscribeAction("onCrosshairChange" as never, crosshairHandlerRef.current as never);
+      }
       dispose(chart);
       chartRef.current = null;
     };
-  }, []);
+  }, [code]); // code 变化时重建图表
 
   // ---- 数据变化时通知图表重新加载 ----
   useEffect(() => {
@@ -338,6 +367,41 @@ export default function StockChart({
     if (!chart || klData.length === 0) return;
     chart.resetData();
   }, [klData]);
+
+  // ---- 周期切换 ----
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+    chart.setPeriod({ type: PERIOD_TYPE[period] || "day", span: 1 });
+  }, [period]);
+
+  // ---- MA 切换 ----
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+    if (showMA) {
+      chart.createIndicator(
+        { name: "MA", calcParams: [5, 10, 20, 60, 120] },
+        { isStack: true, pane: { id: "candle_pane" } },
+      );
+    } else {
+      chart.removeIndicator({ name: "MA" });
+    }
+  }, [showMA]);
+
+  // ---- BOLL 切换 ----
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+    if (showBOLL) {
+      chart.createIndicator(
+        { name: "BOLL", calcParams: [20, 2] },
+        { isStack: true, pane: { id: "candle_pane" } },
+      );
+    } else {
+      chart.removeIndicator({ name: "BOLL" });
+    }
+  }, [showBOLL]);
 
   // ---- ResizeObserver ----
   useEffect(() => {
@@ -350,7 +414,7 @@ export default function StockChart({
     return () => ro.disconnect();
   }, []);
 
-  // ---- 信号标记作为 KLineChart Overlay ----
+  // ---- 信号标记作为 KLineChart Overlay (simpleTag) ----
   useEffect(() => {
     const chart = chartRef.current;
     if (!chart || signalList.length === 0) return;
@@ -359,23 +423,18 @@ export default function StockChart({
     for (const sp of signalList) {
       const color = sp.isBull ? C.up : C.down;
       const id = chart.createOverlay({
-        name: sp.name,
+        name: "simpleTag",
         groupId: `sig_${sp.patternId}`,
         lock: true,
         mode: "normal",
         visible: true,
         points: [{ timestamp: sp.timestamp, value: sp.value }],
-        extendData: sp.patternId,
+        extendData: sp.name,
         styles: {
-          point: {
+          line: {
             color,
-            borderColor: "#fff",
-            borderSize: 1.5,
-            radius: 5,
-            activeColor: color,
-            activeBorderColor: "#fff",
-            activeBorderSize: 2,
-            activeRadius: 6,
+            size: 1,
+            style: "dashed",
           },
         },
       });
@@ -419,7 +478,7 @@ export default function StockChart({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
-      {/* ---- 价格头栏 + 周期切换 ---- */}
+      {/* ---- 价格头栏 + 周期切换 + 指标切换 ---- */}
       {lastBar && (
         <div style={{
           display: "flex", justifyContent: "space-between", alignItems: "center",
@@ -463,12 +522,48 @@ export default function StockChart({
               ))}
             </span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+
+          {/* 指标切换 + 周期切换 */}
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+            {/* 指标切换按钮 */}
+            <div style={{ display: "flex", gap: 2 }}>
+              <button
+                type="button"
+                onClick={() => setShowMA((v) => !v)}
+                style={{
+                  padding: "2px 8px", fontSize: 11, fontWeight: showMA ? 600 : 400,
+                  borderRadius: 3,
+                  border: `1px solid ${showMA ? C.ma5 : "transparent"}`,
+                  background: showMA ? `${C.ma5}20` : "transparent",
+                  color: showMA ? C.ma5 : C.textDim,
+                  cursor: "pointer", transition: "all 0.15s",
+                }}
+              >
+                MA
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowBOLL((v) => !v)}
+                style={{
+                  padding: "2px 8px", fontSize: 11, fontWeight: showBOLL ? 600 : 400,
+                  borderRadius: 3,
+                  border: `1px solid ${showBOLL ? C.bollMid : "transparent"}`,
+                  background: showBOLL ? `${C.bollMid}20` : "transparent",
+                  color: showBOLL ? C.bollMid : C.textDim,
+                  cursor: "pointer", transition: "all 0.15s",
+                }}
+              >
+                BOLL
+              </button>
+            </div>
+
+            {/* 周期切换 */}
             {showPeriodSwitch && (
               <div style={{ display: "flex", gap: 2 }}>
                 {PERIOD_LABELS.map(([key, label]) => (
                   <button
                     key={key}
+                    type="button"
                     onClick={() => onPeriodChange?.(key)}
                     style={{
                       padding: "2px 10px",
@@ -493,6 +588,42 @@ export default function StockChart({
 
       {/* ---- 图表区 ---- */}
       <div style={{ flex: 1, minHeight: 0, position: "relative" }}>
+        {/* DataWindow 悬浮面板 */}
+        {crosshairData && (
+          <div
+            style={{
+              position: "absolute", top: 6, left: 6, zIndex: 10,
+              display: "flex", gap: 10, padding: "5px 12px",
+              background: "rgba(5,6,8,0.94)",
+              border: "1px solid rgba(255,255,255,0.14)",
+              borderRadius: 4, fontSize: 11, fontFamily: "var(--font-mono)",
+              pointerEvents: "none",
+              lineHeight: "1.6",
+            }}
+          >
+            <span style={{ color: C.textDim, marginRight: 4 }}>
+              {new Date(crosshairData.timestamp).toLocaleDateString("zh-CN")}
+            </span>
+            {([
+              ["O", crosshairData.open, C.text],
+              ["H", crosshairData.high, C.up],
+              ["L", crosshairData.low, C.down],
+              ["C", crosshairData.close, crosshairData.close >= crosshairData.open ? C.up : C.down],
+            ] as [string, number, string][]).map(([label, val, color]) => (
+              <span key={label}>
+                <span style={{ color: C.textDim }}>{label} </span>
+                <span style={{ color, fontWeight: 600 }}>{val.toFixed(2)}</span>
+              </span>
+            ))}
+            <span>
+              <span style={{ color: C.textDim }}>VOL </span>
+              <span style={{ color: C.text, fontWeight: 500 }}>
+                {(crosshairData.volume / 1e4).toFixed(0)}万
+              </span>
+            </span>
+          </div>
+        )}
+
         <div
           ref={containerRef}
           style={{
