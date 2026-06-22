@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import StockChart, { type KlineData, type Period, type SignalInfo } from "../components/StockChart";
+import StockChart, { type KlineData, type Period } from "../components/StockChart";
 import PatternSignalList from "../components/PatternSignalList";
 import StockOverview from "../components/StockOverview";
 
@@ -223,7 +223,6 @@ export default function StockDetail() {
             realtime={realtime}
             period={period}
             onPeriodChange={setPeriod}
-            signals={signals as SignalInfo[]}
             code={code!}
           />
         )}
