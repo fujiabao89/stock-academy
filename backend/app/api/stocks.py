@@ -7,12 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from .errors import NotFoundError
 from ..stock_names import _STOCK_NAMES, stock_info as _stock_info
-from ..engine import list_all
+from ..services.realtime_quote import fetch_realtime
 from ..models.daily_bar import DailyBar
 from ..models.pattern_signal import PatternSignal
 from .patterns import _BACKTEST_DATA
 from ..schemas.pattern import BacktestWindow, PatternSignalOut
-from ..schemas.stock import KlineItem, StockOverview, StockSearchResult
+from ..schemas.stock import KlineItem, RealtimeQuoteOut, StockOverview, StockSearchResult
 
 router = APIRouter(prefix="/stocks", tags=["stocks"])
 
@@ -87,11 +87,38 @@ async def get_stock_overview(code: str, db: AsyncSession = Depends(get_db)):
     )
 
 
+@router.get("/{code}/realtime", response_model=RealtimeQuoteOut)
+async def get_stock_realtime(code: str):
+    """实时行情（新浪财经代理）"""
+    if not code.isdigit() or len(code) != 6:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="股票代码格式错误，请输入6位数字代码")
+
+    quote = await fetch_realtime(code)
+    if quote is None:
+        raise NotFoundError(detail=f"获取 {code} 实时行情失败，可能非交易时段")
+
+    return RealtimeQuoteOut(
+        name=quote.name,
+        open=quote.open,
+        prev_close=quote.prev_close,
+        current=quote.current,
+        high=quote.high,
+        low=quote.low,
+        volume=quote.volume,
+        amount=quote.amount,
+        date=quote.date,
+        time=quote.time,
+        change=quote.change,
+        change_pct=quote.change_pct,
+    )
+
+
 @router.get("/{code}/kline", response_model=list[KlineItem])
 async def get_stock_kline(
     code: str,
     period: str = Query("d", pattern="^(d|w|m)$"),
-    limit: int = Query(250, ge=1, le=500),
+    limit: int = Query(250, ge=1, le=2500),
     db: AsyncSession = Depends(get_db),
 ):
     """K线数据（含均线），period: d=日K, w=周K, m=月K"""

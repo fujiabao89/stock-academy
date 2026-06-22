@@ -107,7 +107,7 @@ export default function StockDetail() {
 
     Promise.allSettled([
       fetchJson(`/api/stocks/${code}/overview`),
-      fetchJson(`/api/stocks/${code}/kline?period=${period}&limit=500`),
+      fetchJson(`/api/stocks/${code}/kline?period=${period}&limit=2500`),
       fetchJson(`/api/stocks/${code}/signals`),
     ]).then(([ov, kl, sg]) => {
       if (cancelled) return;
