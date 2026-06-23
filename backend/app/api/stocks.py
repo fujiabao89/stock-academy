@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_db
 from .errors import NotFoundError
-from ..stock_names import _STOCK_NAMES, _load as _load_stock_names, stock_info as _stock_info
+from ..stock_names import _STOCK_NAMES, load_stock_names, stock_info as _stock_info
 from ..services.realtime_quote import fetch_realtime
 from ..models.daily_bar import DailyBar
 from ..models.pattern_signal import PatternSignal
@@ -23,7 +23,7 @@ async def search_stocks(
     db: AsyncSession = Depends(get_db),
 ):
     """搜索股票，支持代码和名称模糊匹配（限定数据库中已有数据的股票）"""
-    _load_stock_names()
+    load_stock_names()
     q_upper = q.upper().strip()
 
     # 先在本地名称映射中匹配

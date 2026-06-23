@@ -12,7 +12,7 @@ def _market(code: str) -> str:
     return "sh" if code.startswith(("6", "5", "9")) else "sz"
 
 
-def _load():
+def load_stock_names():
     global _STOCK_NAMES
     if _STOCK_NAMES:
         return
@@ -63,7 +63,7 @@ def _load():
 
 
 def stock_info(code: str) -> tuple[str, str] | None:
-    _load()
+    load_stock_names()
     return _STOCK_NAMES.get(code)
 
 
@@ -71,7 +71,7 @@ _NAME_TO_CODE: dict[str, str] = {}
 
 
 def _init_name_to_code():
-    _load()
+    load_stock_names()
     global _NAME_TO_CODE
     _NAME_TO_CODE = {name: code for code, (name, _) in _STOCK_NAMES.items()}
 
