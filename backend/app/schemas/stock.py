@@ -22,6 +22,21 @@ class StockOverview(BaseModel):
     update_time: str
 
 
+class RealtimeQuoteOut(BaseModel):
+    name: str
+    open: float
+    prev_close: float
+    current: float
+    high: float
+    low: float
+    volume: int
+    amount: float
+    date: str
+    time: str
+    change: float
+    change_pct: float
+
+
 class KlineItem(BaseModel):
     date: date
     open: float

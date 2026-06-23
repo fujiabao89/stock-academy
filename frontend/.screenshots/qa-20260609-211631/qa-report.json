@@ -1,0 +1,103 @@
+{
+  "qa_type": "Standard",
+  "timestamp": "2026-06-09 21:17:11",
+  "viewport": "1440x900",
+  "pages_tested": 5,
+  "pages_passed": 5,
+  "pages_failed": 0,
+  "total_issues": 2,
+  "results": [
+    {
+      "page": "首页",
+      "url": "http://localhost:5173/",
+      "status": "OK",
+      "console_errors": 0,
+      "console_warnings": 0,
+      "title": "炒股学堂 — 不推荐股票，只教判断方法"
+    },
+    {
+      "page": "股票详情-K线",
+      "url": "http://localhost:5173/stock/600519",
+      "status": "OK",
+      "console_errors": 0,
+      "console_warnings": 0,
+      "title": "炒股学堂 — 不推荐股票，只教判断方法"
+    },
+    {
+      "page": "学堂",
+      "url": "http://localhost:5173/learn",
+      "status": "OK",
+      "console_errors": 0,
+      "console_warnings": 0,
+      "title": "炒股学堂 — 不推荐股票，只教判断方法"
+    },
+    {
+      "page": "形态详情",
+      "url": "http://localhost:5173/learn/patterns/hammer",
+      "status": "OK",
+      "console_errors": 0,
+      "console_warnings": 0,
+      "title": "炒股学堂 — 不推荐股票，只教判断方法"
+    },
+    {
+      "page": "新闻",
+      "url": "http://localhost:5173/news",
+      "status": "OK",
+      "console_errors": 0,
+      "console_warnings": 0,
+      "title": "炒股学堂 — 不推荐股票，只教判断方法"
+    }
+  ],
+  "issues": [
+    {
+      "page": "股票详情-K线",
+      "severity": "high",
+      "type": "error_text_visible",
+      "detail": "A\nBOLL\n1,209.1842\n1,250\n1,300\n1,350\n1,400\n1,450\n1,500\n1,518.3258\n3万\n6万\n9万\n12万\n15万\n18万\n-20\n0\n20\n40\n2025-09-03\n2025-09-19\n2025-10-15\n2025-10-31\n2025-11-"
+    },
+    {
+      "page": "新闻",
+      "severity": "high",
+      "type": "error_text_visible",
+      "detail": "案。\nAI 解读：欧盟称苹果未满足互操作性要求，但未禁止新品。[中性]\nsina\n斩获“宁王”大单，500亿电解液龙头却遭“冷遇”？\n6-09 20:58\n来源：雷达Finance 雷达财经出品 文|周慧 编|孟帅 业绩回暖后，500亿电解液龙头新宙邦又迎“喜报”，公司成功拿下宁德时代30万吨大单。"
+    }
+  ],
+  "health_score": 80,
+  "severity_breakdown": {
+    "high": 2,
+    "medium": 0,
+    "low": 0
+  },
+  "interactive_tests": {
+    "desktop_navigation": "OK",
+    "mobile_pages": 4,
+    "search": "tested",
+    "breadcrumb": "OK"
+  },
+  "mobile_issues": [
+    {
+      "page": "首页",
+      "type": "mobile_horizontal_scroll",
+      "severity": "medium",
+      "detail": "scrollWidth=574 > clientWidth=375"
+    },
+    {
+      "page": "股票详情",
+      "type": "mobile_horizontal_scroll",
+      "severity": "medium",
+      "detail": "scrollWidth=574 > clientWidth=375"
+    },
+    {
+      "page": "学堂",
+      "type": "mobile_horizontal_scroll",
+      "severity": "medium",
+      "detail": "scrollWidth=574 > clientWidth=375"
+    },
+    {
+      "page": "新闻",
+      "type": "mobile_horizontal_scroll",
+      "severity": "medium",
+      "detail": "scrollWidth=574 > clientWidth=375"
+    }
+  ]
+}

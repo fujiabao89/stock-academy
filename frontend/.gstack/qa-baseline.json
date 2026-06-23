@@ -1,0 +1,17 @@
+{
+  "date": "2026-06-06",
+  "commit": "b83c831",
+  "health_score": 85,
+  "typescript_errors": 0,
+  "findings": {
+    "critical": 0,
+    "high": 0,
+    "medium": 0,
+    "low": 5
+  },
+  "api": {
+    "signals": 19,
+    "strategies": 5,
+    "patterns": 14
+  }
+}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import KlineChart from "../components/KlineChart";
+import StockChart, { type KlineData } from "../components/StockChart";
 import ConfidenceBadge from "../components/ConfidenceBadge";
 import DistributionBar from "../components/DistributionBar";
 import type { PatternSignal } from "./StockDetail";
@@ -237,10 +237,12 @@ export default function PatternDetailPage() {
               </Link>
             )}
           </h2>
-          <div style={{ display: "flex", flexDirection: "column", height: 620 }}>
-            <KlineChart
-              data={exampleKline}
+          <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 500 }}>
+            <StockChart
+              data={exampleKline.map((b) => ({ time: b.date, open: b.open, high: b.high, low: b.low, close: b.close, volume: b.volume }) as KlineData)}
               signals={stocks.filter((s) => s.code === exampleCode)}
+              showPeriodSwitch={false}
+              code={exampleCode ?? "000001"}
             />
           </div>
         </section>

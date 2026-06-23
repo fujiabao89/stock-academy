@@ -1,0 +1,1434 @@
+[
+  {
+    "pattern_id": "ma-bullish-alignment",
+    "pattern_name": "均线多头排列",
+    "total_occurrences": 4082,
+    "stocks_checked": 30,
+    "regime_dates_available": 1598,
+    "valid_entry_pool": 45324,
+    "forward_5d": {
+      "win_rate": 0.501,
+      "avg_return": 0.0432,
+      "max_return": 0.5543,
+      "max_loss": -0.1458,
+      "occurrences": 4082,
+      "distribution": {
+        "bins": [
+          -0.1458,
+          -0.0758,
+          -0.0058,
+          0.0642,
+          0.1343,
+          0.2043,
+          0.2743,
+          0.3443,
+          0.4143,
+          0.4843,
+          0.5543
+        ],
+        "counts": [
+          2,
+          82,
+          3116,
+          669,
+          147,
+          53,
+          8,
+          1,
+          3,
+          1
+        ],
+        "n": 4082
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.522,
+          "avg_return": 0.0465,
+          "occurrences": 2759
+        },
+        "bear": {
+          "win_rate": 0.458,
+          "avg_return": 0.0363,
+          "occurrences": 1323
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.397,
+        "avg_return": 0.0341,
+        "occurrences": 4082
+      }
+    },
+    "forward_10d": {
+      "win_rate": 0.624,
+      "avg_return": 0.064,
+      "max_return": 0.7337,
+      "max_loss": -0.1414,
+      "occurrences": 4082,
+      "distribution": {
+        "bins": [
+          -0.1414,
+          -0.0539,
+          0.0336,
+          0.1211,
+          0.2086,
+          0.2961,
+          0.3837,
+          0.4712,
+          0.5587,
+          0.6462,
+          0.7337
+        ],
+        "counts": [
+          5,
+          1687,
+          1800,
+          376,
+          148,
+          47,
+          13,
+          2,
+          1,
+          3
+        ],
+        "n": 4082
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.641,
+          "avg_return": 0.0702,
+          "occurrences": 2759
+        },
+        "bear": {
+          "win_rate": 0.589,
+          "avg_return": 0.0513,
+          "occurrences": 1323
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.536,
+        "avg_return": 0.0504,
+        "occurrences": 4082
+      }
+    },
+    "forward_20d": {
+      "win_rate": 0.715,
+      "avg_return": 0.0933,
+      "max_return": 1.0583,
+      "max_loss": -0.0819,
+      "occurrences": 4071,
+      "distribution": {
+        "bins": [
+          -0.0819,
+          0.0321,
+          0.1461,
+          0.2602,
+          0.3742,
+          0.4882,
+          0.6022,
+          0.7162,
+          0.8303,
+          0.9443,
+          1.0583
+        ],
+        "counts": [
+          1237,
+          2028,
+          532,
+          174,
+          58,
+          29,
+          5,
+          5,
+          0,
+          3
+        ],
+        "n": 4071
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.724,
+          "avg_return": 0.1034,
+          "occurrences": 2754
+        },
+        "bear": {
+          "win_rate": 0.697,
+          "avg_return": 0.0721,
+          "occurrences": 1317
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.655,
+        "avg_return": 0.0735,
+        "occurrences": 4082
+      }
+    }
+  },
+  {
+    "pattern_id": "ma-bearish-alignment",
+    "pattern_name": "均线空头排列",
+    "total_occurrences": 5877,
+    "stocks_checked": 30,
+    "regime_dates_available": 1598,
+    "valid_entry_pool": 45324,
+    "forward_5d": {
+      "win_rate": 0.409,
+      "avg_return": 0.0313,
+      "max_return": 0.1943,
+      "max_loss": -0.0375,
+      "occurrences": 5827,
+      "distribution": {
+        "bins": [
+          -0.0375,
+          -0.0143,
+          0.0089,
+          0.032,
+          0.0552,
+          0.0784,
+          0.1016,
+          0.1247,
+          0.1479,
+          0.1711,
+          0.1943
+        ],
+        "counts": [
+          29,
+          1260,
+          2309,
+          1240,
+          552,
+          229,
+          125,
+          61,
+          18,
+          4
+        ],
+        "n": 5827
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.344,
+          "avg_return": 0.0277,
+          "occurrences": 1691
+        },
+        "bear": {
+          "win_rate": 0.435,
+          "avg_return": 0.0327,
+          "occurrences": 4136
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.395,
+        "avg_return": 0.0309,
+        "occurrences": 5877
+      }
+    },
+    "forward_10d": {
+      "win_rate": 0.544,
+      "avg_return": 0.0445,
+      "max_return": 0.2458,
+      "max_loss": -0.0375,
+      "occurrences": 5753,
+      "distribution": {
+        "bins": [
+          -0.0375,
+          -0.0092,
+          0.0192,
+          0.0475,
+          0.0758,
+          0.1042,
+          0.1325,
+          0.1608,
+          0.1892,
+          0.2175,
+          0.2458
+        ],
+        "counts": [
+          51,
+          1817,
+          1694,
+          1078,
+          598,
+          295,
+          150,
+          46,
+          19,
+          5
+        ],
+        "n": 5753
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.507,
+          "avg_return": 0.0419,
+          "occurrences": 1691
+        },
+        "bear": {
+          "win_rate": 0.559,
+          "avg_return": 0.0455,
+          "occurrences": 4062
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.554,
+        "avg_return": 0.0439,
+        "occurrences": 5877
+      }
+    },
+    "forward_20d": {
+      "win_rate": 0.664,
+      "avg_return": 0.0627,
+      "max_return": 0.3062,
+      "max_loss": -0.0356,
+      "occurrences": 5662,
+      "distribution": {
+        "bins": [
+          -0.0356,
+          -0.0014,
+          0.0328,
+          0.0669,
+          0.1011,
+          0.1353,
+          0.1695,
+          0.2037,
+          0.2378,
+          0.272,
+          0.3062
+        ],
+        "counts": [
+          124,
+          1915,
+          1430,
+          972,
+          644,
+          321,
+          173,
+          57,
+          18,
+          8
+        ],
+        "n": 5662
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.651,
+          "avg_return": 0.0639,
+          "occurrences": 1684
+        },
+        "bear": {
+          "win_rate": 0.67,
+          "avg_return": 0.0622,
+          "occurrences": 3978
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.686,
+        "avg_return": 0.0628,
+        "occurrences": 5877
+      }
+    }
+  },
+  {
+    "pattern_id": "golden-cross",
+    "pattern_name": "金叉",
+    "total_occurrences": 1420,
+    "stocks_checked": 30,
+    "regime_dates_available": 1598,
+    "valid_entry_pool": 45324,
+    "forward_5d": {
+      "win_rate": 0.392,
+      "avg_return": 0.0338,
+      "max_return": 0.3651,
+      "max_loss": -0.1,
+      "occurrences": 1415,
+      "distribution": {
+        "bins": [
+          -0.1,
+          -0.0535,
+          -0.007,
+          0.0395,
+          0.086,
+          0.1325,
+          0.1791,
+          0.2256,
+          0.2721,
+          0.3186,
+          0.3651
+        ],
+        "counts": [
+          3,
+          26,
+          963,
+          310,
+          67,
+          25,
+          8,
+          7,
+          2,
+          4
+        ],
+        "n": 1415
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.406,
+          "avg_return": 0.0342,
+          "occurrences": 680
+        },
+        "bear": {
+          "win_rate": 0.378,
+          "avg_return": 0.0334,
+          "occurrences": 735
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.401,
+        "avg_return": 0.0342,
+        "occurrences": 1420
+      }
+    },
+    "forward_10d": {
+      "win_rate": 0.543,
+      "avg_return": 0.0494,
+      "max_return": 0.5515,
+      "max_loss": -0.1,
+      "occurrences": 1415,
+      "distribution": {
+        "bins": [
+          -0.1,
+          -0.0348,
+          0.0303,
+          0.0955,
+          0.1606,
+          0.2258,
+          0.2909,
+          0.3561,
+          0.4212,
+          0.4864,
+          0.5515
+        ],
+        "counts": [
+          2,
+          653,
+          553,
+          149,
+          33,
+          15,
+          4,
+          3,
+          1,
+          2
+        ],
+        "n": 1415
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.524,
+          "avg_return": 0.0477,
+          "occurrences": 680
+        },
+        "bear": {
+          "win_rate": 0.561,
+          "avg_return": 0.0508,
+          "occurrences": 735
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.554,
+        "avg_return": 0.0517,
+        "occurrences": 1420
+      }
+    },
+    "forward_20d": {
+      "win_rate": 0.653,
+      "avg_return": 0.0734,
+      "max_return": 0.7202,
+      "max_loss": -0.1,
+      "occurrences": 1413,
+      "distribution": {
+        "bins": [
+          -0.1,
+          -0.018,
+          0.064,
+          0.1461,
+          0.2281,
+          0.3101,
+          0.3921,
+          0.4741,
+          0.5562,
+          0.6382,
+          0.7202
+        ],
+        "counts": [
+          6,
+          829,
+          384,
+          127,
+          31,
+          21,
+          9,
+          4,
+          1,
+          1
+        ],
+        "n": 1413
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.626,
+          "avg_return": 0.0702,
+          "occurrences": 680
+        },
+        "bear": {
+          "win_rate": 0.678,
+          "avg_return": 0.0764,
+          "occurrences": 733
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.647,
+        "avg_return": 0.0736,
+        "occurrences": 1420
+      }
+    }
+  },
+  {
+    "pattern_id": "death-cross",
+    "pattern_name": "死叉",
+    "total_occurrences": 1433,
+    "stocks_checked": 30,
+    "regime_dates_available": 1598,
+    "valid_entry_pool": 45324,
+    "forward_5d": {
+      "win_rate": 0.386,
+      "avg_return": 0.0302,
+      "max_return": 0.1789,
+      "max_loss": -0.034,
+      "occurrences": 1433,
+      "distribution": {
+        "bins": [
+          -0.034,
+          -0.0127,
+          0.0086,
+          0.0299,
+          0.0512,
+          0.0725,
+          0.0938,
+          0.1151,
+          0.1364,
+          0.1577,
+          0.1789
+        ],
+        "counts": [
+          13,
+          288,
+          578,
+          298,
+          140,
+          62,
+          26,
+          18,
+          8,
+          2
+        ],
+        "n": 1433
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.378,
+          "avg_return": 0.0294,
+          "occurrences": 722
+        },
+        "bear": {
+          "win_rate": 0.394,
+          "avg_return": 0.031,
+          "occurrences": 711
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.401,
+        "avg_return": 0.031,
+        "occurrences": 1433
+      }
+    },
+    "forward_10d": {
+      "win_rate": 0.563,
+      "avg_return": 0.0447,
+      "max_return": 0.3057,
+      "max_loss": -0.034,
+      "occurrences": 1427,
+      "distribution": {
+        "bins": [
+          -0.034,
+          -0.0,
+          0.034,
+          0.0679,
+          0.1019,
+          0.1359,
+          0.1698,
+          0.2038,
+          0.2378,
+          0.2717,
+          0.3057
+        ],
+        "counts": [
+          54,
+          633,
+          427,
+          190,
+          79,
+          25,
+          10,
+          6,
+          1,
+          2
+        ],
+        "n": 1427
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.569,
+          "avg_return": 0.0444,
+          "occurrences": 722
+        },
+        "bear": {
+          "win_rate": 0.556,
+          "avg_return": 0.0451,
+          "occurrences": 705
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.572,
+        "avg_return": 0.0458,
+        "occurrences": 1433
+      }
+    },
+    "forward_20d": {
+      "win_rate": 0.689,
+      "avg_return": 0.0642,
+      "max_return": 0.3368,
+      "max_loss": -0.034,
+      "occurrences": 1415,
+      "distribution": {
+        "bins": [
+          -0.034,
+          0.0031,
+          0.0402,
+          0.0773,
+          0.1143,
+          0.1514,
+          0.1885,
+          0.2256,
+          0.2626,
+          0.2997,
+          0.3368
+        ],
+        "counts": [
+          76,
+          496,
+          387,
+          237,
+          109,
+          61,
+          27,
+          16,
+          4,
+          2
+        ],
+        "n": 1415
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.697,
+          "avg_return": 0.063,
+          "occurrences": 722
+        },
+        "bear": {
+          "win_rate": 0.681,
+          "avg_return": 0.0654,
+          "occurrences": 693
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.654,
+        "avg_return": 0.0598,
+        "occurrences": 1433
+      }
+    }
+  },
+  {
+    "pattern_id": "volume-up-price-up",
+    "pattern_name": "放量上涨",
+    "total_occurrences": 2752,
+    "stocks_checked": 30,
+    "regime_dates_available": 1598,
+    "valid_entry_pool": 45324,
+    "forward_5d": {
+      "win_rate": 0.478,
+      "avg_return": 0.0471,
+      "max_return": 0.5543,
+      "max_loss": -0.1,
+      "occurrences": 2735,
+      "distribution": {
+        "bins": [
+          -0.1,
+          -0.0346,
+          0.0309,
+          0.0963,
+          0.1617,
+          0.2272,
+          0.2926,
+          0.358,
+          0.4235,
+          0.4889,
+          0.5543
+        ],
+        "counts": [
+          10,
+          1445,
+          955,
+          187,
+          71,
+          26,
+          16,
+          8,
+          14,
+          3
+        ],
+        "n": 2735
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.483,
+          "avg_return": 0.0462,
+          "occurrences": 1364
+        },
+        "bear": {
+          "win_rate": 0.473,
+          "avg_return": 0.048,
+          "occurrences": 1371
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.404,
+        "avg_return": 0.0335,
+        "occurrences": 2752
+      }
+    },
+    "forward_10d": {
+      "win_rate": 0.596,
+      "avg_return": 0.0632,
+      "max_return": 0.7006,
+      "max_loss": -0.1,
+      "occurrences": 2733,
+      "distribution": {
+        "bins": [
+          -0.1,
+          -0.0199,
+          0.0601,
+          0.1402,
+          0.2202,
+          0.3003,
+          0.3804,
+          0.4604,
+          0.5405,
+          0.6206,
+          0.7006
+        ],
+        "counts": [
+          21,
+          1742,
+          679,
+          171,
+          63,
+          24,
+          8,
+          17,
+          6,
+          2
+        ],
+        "n": 2733
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.587,
+          "avg_return": 0.0612,
+          "occurrences": 1364
+        },
+        "bear": {
+          "win_rate": 0.605,
+          "avg_return": 0.0651,
+          "occurrences": 1369
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.551,
+        "avg_return": 0.0517,
+        "occurrences": 2752
+      }
+    },
+    "forward_20d": {
+      "win_rate": 0.7,
+      "avg_return": 0.0875,
+      "max_return": 0.7006,
+      "max_loss": -0.1,
+      "occurrences": 2720,
+      "distribution": {
+        "bins": [
+          -0.1,
+          -0.0199,
+          0.0601,
+          0.1402,
+          0.2202,
+          0.3003,
+          0.3804,
+          0.4604,
+          0.5405,
+          0.6206,
+          0.7006
+        ],
+        "counts": [
+          17,
+          1352,
+          859,
+          261,
+          103,
+          65,
+          24,
+          24,
+          11,
+          4
+        ],
+        "n": 2720
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.673,
+          "avg_return": 0.0823,
+          "occurrences": 1362
+        },
+        "bear": {
+          "win_rate": 0.728,
+          "avg_return": 0.0927,
+          "occurrences": 1358
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.657,
+        "avg_return": 0.074,
+        "occurrences": 2752
+      }
+    }
+  },
+  {
+    "pattern_id": "volume-up-price-down",
+    "pattern_name": "放量下跌",
+    "total_occurrences": 1617,
+    "stocks_checked": 30,
+    "regime_dates_available": 1598,
+    "valid_entry_pool": 45324,
+    "forward_5d": {
+      "win_rate": 0.459,
+      "avg_return": 0.035,
+      "max_return": 0.1707,
+      "max_loss": -0.05,
+      "occurrences": 1613,
+      "distribution": {
+        "bins": [
+          -0.05,
+          -0.0279,
+          -0.0058,
+          0.0162,
+          0.0383,
+          0.0604,
+          0.0824,
+          0.1045,
+          0.1266,
+          0.1486,
+          0.1707
+        ],
+        "counts": [
+          2,
+          37,
+          484,
+          508,
+          282,
+          156,
+          75,
+          34,
+          23,
+          12
+        ],
+        "n": 1613
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.441,
+          "avg_return": 0.033,
+          "occurrences": 674
+        },
+        "bear": {
+          "win_rate": 0.472,
+          "avg_return": 0.0365,
+          "occurrences": 939
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.403,
+        "avg_return": 0.0314,
+        "occurrences": 1617
+      }
+    },
+    "forward_10d": {
+      "win_rate": 0.575,
+      "avg_return": 0.0477,
+      "max_return": 0.2904,
+      "max_loss": -0.05,
+      "occurrences": 1613,
+      "distribution": {
+        "bins": [
+          -0.05,
+          -0.0159,
+          0.0181,
+          0.0521,
+          0.0862,
+          0.1202,
+          0.1542,
+          0.1883,
+          0.2223,
+          0.2564,
+          0.2904
+        ],
+        "counts": [
+          5,
+          455,
+          547,
+          352,
+          138,
+          74,
+          26,
+          11,
+          3,
+          2
+        ],
+        "n": 1613
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.58,
+          "avg_return": 0.0477,
+          "occurrences": 674
+        },
+        "bear": {
+          "win_rate": 0.571,
+          "avg_return": 0.0477,
+          "occurrences": 939
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.554,
+        "avg_return": 0.0438,
+        "occurrences": 1617
+      }
+    },
+    "forward_20d": {
+      "win_rate": 0.669,
+      "avg_return": 0.0639,
+      "max_return": 0.6807,
+      "max_loss": -0.05,
+      "occurrences": 1601,
+      "distribution": {
+        "bins": [
+          -0.05,
+          0.0231,
+          0.0962,
+          0.1692,
+          0.2423,
+          0.3154,
+          0.3884,
+          0.4615,
+          0.5346,
+          0.6076,
+          0.6807
+        ],
+        "counts": [
+          413,
+          822,
+          286,
+          69,
+          8,
+          2,
+          0,
+          0,
+          0,
+          1
+        ],
+        "n": 1601
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.688,
+          "avg_return": 0.0678,
+          "occurrences": 670
+        },
+        "bear": {
+          "win_rate": 0.655,
+          "avg_return": 0.061,
+          "occurrences": 931
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.675,
+        "avg_return": 0.0622,
+        "occurrences": 1617
+      }
+    }
+  },
+  {
+    "pattern_id": "ma-convergence-breakout",
+    "pattern_name": "均线粘合向上发散",
+    "total_occurrences": 11505,
+    "stocks_checked": 30,
+    "regime_dates_available": 1598,
+    "valid_entry_pool": 45324,
+    "forward_5d": {
+      "win_rate": 0.35,
+      "avg_return": 0.0293,
+      "max_return": 0.5543,
+      "max_loss": -0.1458,
+      "occurrences": 11454,
+      "distribution": {
+        "bins": [
+          -0.1458,
+          -0.0758,
+          -0.0058,
+          0.0642,
+          0.1343,
+          0.2043,
+          0.2743,
+          0.3443,
+          0.4143,
+          0.4843,
+          0.5543
+        ],
+        "counts": [
+          4,
+          145,
+          10102,
+          997,
+          144,
+          38,
+          11,
+          5,
+          4,
+          4
+        ],
+        "n": 11454
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.353,
+          "avg_return": 0.0294,
+          "occurrences": 5844
+        },
+        "bear": {
+          "win_rate": 0.346,
+          "avg_return": 0.0293,
+          "occurrences": 5610
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.395,
+        "avg_return": 0.0341,
+        "occurrences": 11505
+      }
+    },
+    "forward_10d": {
+      "win_rate": 0.497,
+      "avg_return": 0.0431,
+      "max_return": 0.705,
+      "max_loss": -0.1414,
+      "occurrences": 11445,
+      "distribution": {
+        "bins": [
+          -0.1414,
+          -0.0568,
+          0.0279,
+          0.1125,
+          0.1972,
+          0.2818,
+          0.3664,
+          0.4511,
+          0.5357,
+          0.6204,
+          0.705
+        ],
+        "counts": [
+          7,
+          5506,
+          5148,
+          570,
+          143,
+          42,
+          11,
+          7,
+          7,
+          4
+        ],
+        "n": 11445
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.491,
+          "avg_return": 0.0421,
+          "occurrences": 5844
+        },
+        "bear": {
+          "win_rate": 0.504,
+          "avg_return": 0.0442,
+          "occurrences": 5601
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.536,
+        "avg_return": 0.0499,
+        "occurrences": 11505
+      }
+    },
+    "forward_20d": {
+      "win_rate": 0.621,
+      "avg_return": 0.0638,
+      "max_return": 0.7384,
+      "max_loss": -0.1,
+      "occurrences": 11394,
+      "distribution": {
+        "bins": [
+          -0.1,
+          -0.0162,
+          0.0677,
+          0.1515,
+          0.2353,
+          0.3192,
+          0.403,
+          0.4869,
+          0.5707,
+          0.6545,
+          0.7384
+        ],
+        "counts": [
+          27,
+          7494,
+          2881,
+          634,
+          224,
+          60,
+          31,
+          21,
+          14,
+          8
+        ],
+        "n": 11394
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.61,
+          "avg_return": 0.0609,
+          "occurrences": 5835
+        },
+        "bear": {
+          "win_rate": 0.632,
+          "avg_return": 0.067,
+          "occurrences": 5559
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.65,
+        "avg_return": 0.073,
+        "occurrences": 11505
+      }
+    }
+  },
+  {
+    "pattern_id": "volume-price-divergence",
+    "pattern_name": "量价背离",
+    "total_occurrences": 307,
+    "stocks_checked": 30,
+    "regime_dates_available": 1598,
+    "valid_entry_pool": 45324,
+    "forward_5d": {
+      "win_rate": 0.42,
+      "avg_return": 0.0333,
+      "max_return": 0.2873,
+      "max_loss": -0.0292,
+      "occurrences": 307,
+      "distribution": {
+        "bins": [
+          -0.0292,
+          0.0025,
+          0.0341,
+          0.0658,
+          0.0974,
+          0.1291,
+          0.1607,
+          0.1924,
+          0.224,
+          0.2557,
+          0.2873
+        ],
+        "counts": [
+          29,
+          166,
+          79,
+          18,
+          9,
+          2,
+          0,
+          1,
+          1,
+          2
+        ],
+        "n": 307
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.421,
+          "avg_return": 0.0323,
+          "occurrences": 178
+        },
+        "bear": {
+          "win_rate": 0.419,
+          "avg_return": 0.0347,
+          "occurrences": 129
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.446,
+        "avg_return": 0.0328,
+        "occurrences": 307
+      }
+    },
+    "forward_10d": {
+      "win_rate": 0.554,
+      "avg_return": 0.0455,
+      "max_return": 0.2873,
+      "max_loss": -0.0214,
+      "occurrences": 307,
+      "distribution": {
+        "bins": [
+          -0.0214,
+          0.0095,
+          0.0403,
+          0.0712,
+          0.1021,
+          0.133,
+          0.1638,
+          0.1947,
+          0.2256,
+          0.2564,
+          0.2873
+        ],
+        "counts": [
+          53,
+          123,
+          77,
+          22,
+          17,
+          7,
+          1,
+          2,
+          3,
+          2
+        ],
+        "n": 307
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.528,
+          "avg_return": 0.0461,
+          "occurrences": 178
+        },
+        "bear": {
+          "win_rate": 0.589,
+          "avg_return": 0.0445,
+          "occurrences": 129
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.577,
+        "avg_return": 0.0451,
+        "occurrences": 307
+      }
+    },
+    "forward_20d": {
+      "win_rate": 0.694,
+      "avg_return": 0.064,
+      "max_return": 0.3891,
+      "max_loss": -0.0214,
+      "occurrences": 307,
+      "distribution": {
+        "bins": [
+          -0.0214,
+          0.0196,
+          0.0607,
+          0.1017,
+          0.1428,
+          0.1838,
+          0.2249,
+          0.2659,
+          0.307,
+          0.348,
+          0.3891
+        ],
+        "counts": [
+          62,
+          119,
+          68,
+          34,
+          10,
+          5,
+          3,
+          3,
+          1,
+          2
+        ],
+        "n": 307
+      },
+      "regime_splits": {
+        "bull": {
+          "win_rate": 0.657,
+          "avg_return": 0.0651,
+          "occurrences": 178
+        },
+        "bear": {
+          "win_rate": 0.744,
+          "avg_return": 0.0624,
+          "occurrences": 129
+        },
+        "shock": {
+          "win_rate": null,
+          "avg_return": null,
+          "occurrences": 0
+        }
+      },
+      "random_baseline": {
+        "win_rate": 0.71,
+        "avg_return": 0.0687,
+        "occurrences": 307
+      }
+    }
+  }
+]

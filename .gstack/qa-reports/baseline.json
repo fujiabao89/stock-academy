@@ -1,0 +1,86 @@
+[
+  {
+    "page": "首页",
+    "url": "http://localhost:5173/",
+    "loaded": true,
+    "has_content": true,
+    "body_text_length": 1171,
+    "elements_found": [
+      "a(44)",
+      "button(3)",
+      "nav(1)",
+      "main(1)",
+      "h1(1)"
+    ],
+    "elements_missing": [
+      "h2"
+    ],
+    "js_errors": [],
+    "js_warnings": [],
+    "page_errors": [],
+    "screenshot": ".gstack/qa-reports/screenshots\\home.png"
+  },
+  {
+    "page": "股票详情页",
+    "url": "http://localhost:5173/stock/000001",
+    "loaded": true,
+    "has_content": true,
+    "body_text_length": 305,
+    "elements_found": [
+      "a(11)",
+      "button(7)",
+      "nav(1)",
+      "main(1)"
+    ],
+    "elements_missing": [
+      "h1",
+      "h2"
+    ],
+    "js_errors": [],
+    "js_warnings": [],
+    "page_errors": [],
+    "screenshot": ".gstack/qa-reports/screenshots\\stock-detail.png"
+  },
+  {
+    "page": "K线形态页",
+    "url": "http://localhost:5173/patterns",
+    "loaded": true,
+    "has_content": true,
+    "body_text_length": 184,
+    "elements_found": [
+      "a(11)",
+      "button(2)",
+      "nav(1)",
+      "main(1)",
+      "h1(1)"
+    ],
+    "elements_missing": [
+      "h2"
+    ],
+    "js_errors": [],
+    "js_warnings": [],
+    "page_errors": [],
+    "screenshot": ".gstack/qa-reports/screenshots\\patterns.png"
+  },
+  {
+    "page": "自选页",
+    "url": "http://localhost:5173/watchlist",
+    "loaded": true,
+    "has_content": true,
+    "body_text_length": 199,
+    "elements_found": [
+      "a(12)",
+      "button(3)",
+      "nav(1)",
+      "main(1)",
+      "h1(1)"
+    ],
+    "elements_missing": [
+      "h2"
+    ],
+    "js_errors": [],
+    "js_warnings": [],
+    "page_errors": [],
+    "screenshot": ".gstack/qa-reports/screenshots\\watchlist.png"
+  }
+]

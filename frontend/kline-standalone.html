@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KLineChart 独立测试</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #050608; color: #e0e0e0; font-family: 'JetBrains Mono', monospace; display: flex; flex-direction: column; height: 100vh; }
+  #header { padding: 4px 8px; background: #0a0c10; border-bottom: 1px solid #1f2937; display: flex; align-items: center; gap: 8px; }
+  #container { flex: 1; min-height: 0; }
+</style>
+</head>
+<body>
+<div id="header">
+  <span style="color:#FF4D4D;font-weight:700;font-size:16px;">99.52</span>
+  <span style="color:#FF4D4D;font-size:12px;">+0.52</span>
+  <span style="color:#FF4D4D;font-size:12px;">+0.53%</span>
+  <span style="color:#6b7280;font-size:10px;">开 99.12 高 100.45 低 98.76 昨收 99.00</span>
+</div>
+<div id="container"></div>
+<script src="https://cdn.jsdelivr.net/npm/klinecharts@latest/dist/klinecharts.min.js"></script>
+<script>
+(function() {
+  var init = klinecharts.init;
+  var dispose = klinecharts.dispose;
+
+  // Mock 数据
+  function generateMockData(count) {
+    count = count || 200;
+    var data = [];
+    var price = 100;
+    var now = new Date();
+    for (var i = count - 1; i >= 0; i--) {
+      var date = new Date(now);
+      date.setDate(date.getDate() - i);
+      if (date.getDay() === 0 || date.getDay() === 6) continue;
+      var change = (Math.random() - 0.48) * 3;
+      var open = price;
+      var close = price + change;
+      var high = Math.max(open, close) + Math.random() * 2;
+      var low = Math.min(open, close) - Math.random() * 2;
+      var volume = Math.floor(Math.random() * 1000000) + 200000;
+      data.push({
+        timestamp: date.getTime(),
+        open: +open.toFixed(2),
+        high: +high.toFixed(2),
+        low: +low.toFixed(2),
+        close: +close.toFixed(2),
+        volume: volume,
+      });
+      price = close;
+    }
+    return data;
+  }
+
+  var data = generateMockData(200);
+
+  var chart = init("container", {
+    locale: "zh-CN",
+    timezone: "Asia/Shanghai",
+    styles: {
+      grid: {
+        show: true,
+        horizontal: { show: true, color: "rgba(255,255,255,0.08)", style: "solid", size: 0.5 },
+        vertical: { show: false },
+      },
+      candle: {
+        type: "candle_solid",
+        bar: {
+          compareRule: "current_open",
+          upColor: "#FF4D4D",
+          downColor: "#00FF9D",
+          noChangeColor: "#9ca3af",
+          upBorderColor: "#CC0000",
+          downBorderColor: "#00CC7D",
+          noChangeBorderColor: "#9ca3af",
+          upWickColor: "#FF4D4D",
+          downWickColor: "#00FF9D",
+          noChangeWickColor: "#9ca3af",
+        },
+        priceMark: { show: true, high: { show: true, color: "#6b7280" }, low: { show: true, color: "#6b7280" }, last: { show: true, upColor: "#e0e0e0", downColor: "#e0e0e0", noChangeColor: "#e0e0e0" } },
+        tooltip: { showRule: "always", showType: "standard" },
+      },
+      indicator: {
+        ohlc: { compareRule: "current_open", upColor: "#FF4D4D", downColor: "#00FF9D", noChangeColor: "#9ca3af" },
+        bars: [
+          { upColor: "rgba(255,77,77,0.45)", downColor: "rgba(0,255,157,0.45)", noChangeColor: "#6b7280" },
+          { upColor: "rgba(255,77,77,0.55)", downColor: "rgba(0,255,157,0.55)", noChangeColor: "#6b7280" },
+        ],
+        lines: [
+          { color: "#FFD700", size: 1 },
+          { color: "#FF6B9D", size: 1 },
+          { color: "#00BFFF", size: 1 },
+          { color: "#9B59B6", size: 1 },
+          { color: "#06B6D4", size: 1 },
+          { color: "#FF4D4D", size: 1, style: "dashed" },
+          { color: "#F59E0B", size: 1, style: "dashed" },
+          { color: "#00FF9D", size: 1, style: "dashed" },
+          { color: "#F59E0B", size: 1 },
+          { color: "#8B5CF6", size: 1 },
+        ],
+        lastValueMark: { show: false },
+      },
+      xAxis: { show: true, axisLine: { show: true, color: "#1f2937", size: 1 }, tickLine: { show: false }, tickText: { show: true, color: "#6b7280", size: 10 } },
+      yAxis: { show: true, axisLine: { show: false }, tickLine: { show: false }, tickText: { show: true, color: "#9ca3af", size: 10 } },
+      separator: { size: 1, color: "#1f2937", fill: true, activeBackgroundColor: "rgba(255,255,255,0.03)" },
+      crosshair: {
+        show: true,
+        horizontal: { show: true, line: { show: true, color: "rgba(255,255,255,0.15)", style: "dashed", size: 1 }, text: { show: true, color: "#e0e0e0", size: 10, backgroundColor: "rgba(5,6,8,0.92)", borderColor: "rgba(255,255,255,0.12)", borderSize: 1, borderRadius: 4, paddingLeft: 6, paddingRight: 6, paddingTop: 2, paddingBottom: 2 } },
+        vertical: { show: true, line: { show: true, color: "rgba(255,255,255,0.15)", style: "dashed", size: 1 }, text: { show: false } },
+      },
+    },
+  });
+
+  if (!chart) {
+    document.getElementById("container").textContent = "KLineChart init 返回 null";
+  } else {
+    // MA + BOLL 共享 candle pane, VOL + MACD 各自独立
+    var candlePane = { id: "candle_pane" };
+    chart.createIndicator({ name: "MA", calcParams: [5, 10, 20, 60, 120] }, { isStack: true, pane: candlePane });
+    chart.createIndicator({ name: "BOLL", calcParams: [20, 2] }, { isStack: true, pane: candlePane });
+    chart.createIndicator({ name: "VOL", calcParams: [5, 10, 20] });
+    chart.createIndicator({ name: "MACD", calcParams: [12, 26, 9] });
+
+    chart.setDataLoader({
+      getBars: function(params) {
+        params.callback(data, false);
+      },
+    });
+
+    console.log("KLineChart 初始化成功！数据:" + data.length + "条");
+
+    // Overlay 测试
+    var mid = Math.floor(data.length / 2);
+    chart.createOverlay({
+      name: "看涨信号",
+      groupId: "test_bull",
+      lock: true, mode: "normal", visible: true,
+      points: [{ timestamp: data[mid].timestamp, value: data[mid].low }],
+      styles: { point: { color: "#FF4D4D", borderColor: "#fff", borderSize: 1.5, radius: 6, activeColor: "#FF4D4D", activeBorderColor: "#fff", activeBorderSize: 2, activeRadius: 8 } },
+    });
+    chart.createOverlay({
+      name: "看跌信号",
+      groupId: "test_bear",
+      lock: true, mode: "normal", visible: true,
+      points: [{ timestamp: data[mid + 5].timestamp, value: data[mid + 5].high }],
+      styles: { point: { color: "#00FF9D", borderColor: "#fff", borderSize: 1.5, radius: 6, activeColor: "#00FF9D", activeBorderColor: "#fff", activeBorderSize: 2, activeRadius: 8 } },
+    });
+  }
+
+  window.addEventListener("resize", function() { chart && chart.resize(); });
+})();
+</script>
+</body>
+</html>

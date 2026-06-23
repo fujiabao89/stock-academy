@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>炒股学堂 - 专业股票形态教学平台</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-high": "#222a3d",
+                    "surface-container-highest": "#2d3449",
+                    "surface": "#0b1326",
+                    "on-secondary": "#68000a",
+                    "primary-fixed": "#ffddb8",
+                    "surface-container-lowest": "#060e20",
+                    "on-primary-container": "#613b00",
+                    "on-secondary-container": "#ffaea8",
+                    "secondary": "#ffb3ad",
+                    "secondary-fixed-dim": "#ffb3ad",
+                    "on-surface-variant": "#d8c3ad",
+                    "on-tertiary-container": "#004e34",
+                    "inverse-surface": "#dae2fd",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "on-error-container": "#ffdad6",
+                    "surface-container": "#171f33",
+                    "tertiary-fixed": "#6ffbbe",
+                    "outline": "#a08e7a",
+                    "on-primary-fixed": "#2a1700",
+                    "surface-dim": "#0b1326",
+                    "tertiary": "#56e5a9",
+                    "on-error": "#690005",
+                    "on-secondary-fixed": "#410004",
+                    "surface-tint": "#ffb95f",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "primary": "#ffc174",
+                    "error": "#ffb4ab",
+                    "outline-variant": "#534434",
+                    "inverse-on-surface": "#283044",
+                    "secondary-fixed": "#ffdad7",
+                    "on-primary-fixed-variant": "#653e00",
+                    "secondary-container": "#a40217",
+                    "inverse-primary": "#855300",
+                    "primary-container": "#f59e0b",
+                    "on-primary": "#472a00",
+                    "surface-container-low": "#131b2e",
+                    "on-tertiary": "#003824",
+                    "error-container": "#93000a",
+                    "on-secondary-fixed-variant": "#930013",
+                    "background": "#0b1326",
+                    "surface-variant": "#2d3449",
+                    "surface-bright": "#31394d",
+                    "tertiary-container": "#30c88f",
+                    "on-tertiary-fixed": "#002113",
+                    "on-background": "#dae2fd",
+                    "on-surface": "#dae2fd",
+                    "primary-fixed-dim": "#ffb95f"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "xl": "32px",
+                    "margin-mobile": "16px",
+                    "xs": "4px",
+                    "md": "16px",
+                    "margin-desktop": "40px",
+                    "sm": "8px",
+                    "gutter": "16px",
+                    "lg": "24px",
+                    "base": "4px"
+            },
+            "fontFamily": {
+                    "display-lg": ["Inter"],
+                    "label-caps": ["Inter"],
+                    "data-mono": ["JetBrains Mono"],
+                    "title-md": ["Inter"],
+                    "headline-lg-mobile": ["Inter"],
+                    "headline-lg": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "body-sm": ["Inter"]
+            },
+            "fontSize": {
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "label-caps": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "data-mono": ["14px", {"lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "500"}],
+                    "title-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0b1326;
+            color: #dae2fd;
+            -webkit-font-smoothing: antialiased;
+        }
+        .terminal-glow:hover {
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.1);
+            border-color: #f59e0b;
+        }
+        .pattern-tag-bullish {
+            background-color: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+        .pattern-tag-bearish {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+        }
+        .shimmer {
+            background: linear-gradient(90deg, #171f33 25%, #222a3d 50%, #171f33 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-body-lg text-body-lg selection:bg-primary selection:text-on-primary">
+<!-- TopNavBar -->
+<nav class="bg-surface dark:bg-surface border-b border-outline-variant flex justify-between items-center w-full px-margin-desktop py-sm max-w-full sticky top-0 z-50">
+<div class="font-display-lg text-display-lg font-bold text-primary dark:text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">analytics</span>
+<span>炒股学堂</span>
+</div>
+<div class="hidden md:flex gap-xl items-center">
+<a class="text-primary font-bold border-b-2 border-primary pb-1 hover:text-primary transition-colors duration-200" href="#">Market Signals</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Patterns Library</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary transition-colors duration-200" href="#">Learning Path</a>
+</div>
+<div class="flex items-center gap-md">
+<div class="relative hidden lg:block">
+<input class="bg-surface-container-low border border-outline-variant text-body-sm px-md py-xs rounded w-64 font-data-mono focus:ring-1 focus:ring-primary focus:outline-none" placeholder="Search signals... /" type="text"/>
+</div>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">account_circle</button>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-grow">
+<!-- Hero Section -->
+<section class="relative overflow-hidden py-24 px-margin-desktop bg-surface-container-lowest">
+<div class="absolute inset-0 pointer-events-none overflow-hidden opacity-10">
+<div class="absolute top-0 right-0 w-[500px] h-[500px] bg-primary rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2"></div>
+</div>
+<div class="max-w-4xl mx-auto text-center relative z-10">
+<h1 class="font-display-lg text-display-lg md:text-[64px] mb-4">
+<span class="text-primary-container">炒股</span>学堂
+                </h1>
+<p class="text-on-surface-variant text-title-md mb-xl">不推荐股票，只教判断方法</p>
+<!-- Large Search Bar -->
+<div class="relative max-w-2xl mx-auto mb-xl">
+<span class="material-symbols-outlined absolute left-md top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full bg-surface-container-high border-2 border-outline-variant rounded-xl py-lg pl-14 pr-md font-data-mono text-body-lg focus:border-primary focus:ring-0 transition-all placeholder:text-outline" placeholder="输入股票代码或名称搜索..." type="text"/>
+</div>
+<!-- Fast Access Cards -->
+<div class="grid grid-cols-2 md:grid-cols-5 gap-md max-w-5xl mx-auto">
+<button class="bg-surface border border-outline-variant p-md rounded terminal-glow transition-all text-left">
+<div class="font-bold text-on-surface">贵州茅台</div>
+<div class="font-data-mono text-body-sm text-on-surface-variant">600519</div>
+</button>
+<button class="bg-surface border border-outline-variant p-md rounded terminal-glow transition-all text-left">
+<div class="font-bold text-on-surface">平安银行</div>
+<div class="font-data-mono text-body-sm text-on-surface-variant">000001</div>
+</button>
+<button class="bg-surface border border-outline-variant p-md rounded terminal-glow transition-all text-left">
+<div class="font-bold text-on-surface">美的集团</div>
+<div class="font-data-mono text-body-sm text-on-surface-variant">000333</div>
+</button>
+<button class="bg-surface border border-outline-variant p-md rounded terminal-glow transition-all text-left">
+<div class="font-bold text-on-surface">长江电力</div>
+<div class="font-data-mono text-body-sm text-on-surface-variant">600900</div>
+</button>
+<button class="bg-surface border border-outline-variant p-md rounded terminal-glow transition-all text-left">
+<div class="font-bold text-on-surface">比亚迪</div>
+<div class="font-data-mono text-body-sm text-on-surface-variant">002594</div>
+</button>
+</div>
+</div>
+</section>
+<!-- Main Dashboard Layout -->
+<section class="px-margin-desktop py-xl max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-xl">
+<!-- Signals Feed -->
+<div class="lg:col-span-8">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-md mb-xl">
+<div>
+<h2 class="font-headline-lg text-headline-lg">今日值得关注</h2>
+<div class="flex items-center gap-sm mt-xs">
+<span class="font-data-mono text-on-surface-variant">2026-06-05</span>
+<span class="w-1 h-1 bg-outline-variant rounded-full"></span>
+<span class="text-primary font-bold">8个形态信号</span>
+</div>
+</div>
+<div class="flex gap-sm">
+<button class="px-md py-xs bg-surface-container border border-outline-variant rounded font-label-caps hover:bg-surface-container-highest transition-colors">ALL SIGNALS</button>
+<button class="px-md py-xs bg-surface-container border border-outline-variant rounded font-label-caps text-on-surface-variant hover:bg-surface-container-highest transition-colors">BULLISH ONLY</button>
+</div>
+</div>
+<!-- Signal Cards List -->
+<div class="space-y-md">
+<!-- Signal Item 1 -->
+<div class="bg-surface-container-low border border-outline-variant p-lg rounded-lg flex items-center justify-between terminal-glow transition-all cursor-pointer">
+<div class="flex items-center gap-lg">
+<div class="w-12 h-12 rounded bg-surface-container-highest flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-primary">monitoring</span>
+</div>
+<div>
+<div class="font-bold text-title-md text-on-surface">贵州茅台</div>
+<div class="font-data-mono text-body-sm text-on-surface-variant">SH 600519</div>
+</div>
+</div>
+<div class="flex gap-sm">
+<span class="px-md py-sm rounded pattern-tag-bullish font-bold text-body-sm flex items-center gap-1">
+                                锤子线 ↑
+                            </span>
+<span class="px-md py-sm rounded pattern-tag-bullish font-bold text-body-sm flex items-center gap-1">
+                                看涨吞没 ↑
+                            </span>
+</div>
+</div>
+<!-- Signal Item 2 -->
+<div class="bg-surface-container-low border border-outline-variant p-lg rounded-lg flex items-center justify-between terminal-glow transition-all cursor-pointer">
+<div class="flex items-center gap-lg">
+<div class="w-12 h-12 rounded bg-surface-container-highest flex items-center justify-center border border-outline-variant">
+<span class="material-symbols-outlined text-primary">monitoring</span>
+</div>
+<div>
+<div class="font-bold text-title-md text-on-surface">比亚迪</div>
+<div class="font-data-mono text-body-sm text-on-surface-variant">SZ 002594</div>
+</div>
+</div>
+<div class="flex gap-sm">
+<span class="px-md py-sm rounded pattern-tag-bearish font-bold text-body-sm flex items-center gap-1">
+                                射击之星 ↓
+                            </span>
+</div>
+</div>
+<!-- Loading State -->
+<div class="bg-surface-container-low border border-outline-variant p-lg rounded-lg flex items-center gap-lg opacity-60">
+<div class="w-12 h-12 rounded shimmer border border-outline-variant"></div>
+<div class="flex-grow space-y-2">
+<div class="h-6 w-32 shimmer rounded"></div>
+<div class="h-4 w-20 shimmer rounded"></div>
+</div>
+<div class="flex items-center gap-md">
+<span class="text-body-sm font-data-mono animate-pulse">加载中...</span>
+</div>
+</div>
+<!-- Error State -->
+<div class="bg-surface-container-low border-2 border-error-container p-lg rounded-lg flex flex-col md:flex-row items-center justify-between gap-md">
+<div class="flex items-center gap-lg">
+<div class="w-12 h-12 rounded bg-error-container/20 flex items-center justify-center border border-error-container">
+<span class="material-symbols-outlined text-error">error</span>
+</div>
+<div>
+<div class="font-bold text-title-md text-error">数据获取失败</div>
+<div class="text-body-sm text-on-surface-variant">API响应超时，请检查您的网络连接</div>
+</div>
+</div>
+<button class="bg-primary-container text-on-primary font-bold px-lg py-sm rounded-lg hover:scale-105 active:scale-95 transition-transform">
+                            重试
+                        </button>
+</div>
+<!-- Empty State -->
+<div class="border-2 border-dashed border-outline-variant rounded-xl py-xl px-lg text-center bg-surface-container-lowest/50">
+<span class="material-symbols-outlined text-[48px] text-outline-variant mb-md">inventory_2</span>
+<div class="text-title-md font-bold text-outline">暂无明显形态信号</div>
+<div class="text-body-sm text-outline-variant mt-sm">当前筛选条件下未发现符合教学标准的形态组合</div>
+</div>
+</div>
+</div>
+<!-- Sidebar / Terminal Data -->
+<div class="lg:col-span-4 space-y-xl">
+<!-- Learning Card -->
+<div class="bg-surface border border-outline-variant p-lg rounded-lg overflow-hidden relative">
+<div class="absolute top-0 right-0 p-lg opacity-20 rotate-12">
+<span class="material-symbols-outlined text-[80px]">school</span>
+</div>
+<h3 class="font-bold text-title-md mb-md">每日一学</h3>
+<p class="text-on-surface-variant text-body-sm mb-lg leading-relaxed">什么是“看涨吞没”？形态由两根蜡烛线组成，第二根阳线实体完全覆盖第一根阴线实体，通常预示趋势反转。</p>
+<div class="w-full h-2 bg-surface-container-highest rounded-full mb-xs">
+<div class="bg-primary h-full rounded-full" style="width: 45%;"></div>
+</div>
+<div class="flex justify-between text-body-sm font-data-mono">
+<span class="text-on-surface-variant">Level 2: Intermediate</span>
+<span class="text-primary">45%</span>
+</div>
+</div>
+<!-- Market Overview -->
+<div class="bg-surface-container-low border border-outline-variant rounded-lg overflow-hidden">
+<div class="p-md border-b border-outline-variant bg-surface-container-high font-label-caps text-on-surface-variant">
+                        MARKET HEATMAP
+                    </div>
+<div class="p-lg grid grid-cols-2 gap-sm">
+<div class="bg-error-container/20 border border-error/30 p-md rounded">
+<div class="text-error font-data-mono font-bold">上证指数</div>
+<div class="text-headline-lg-mobile text-error">3,085.24</div>
+<div class="text-body-sm text-error">+1.24% ↑</div>
+</div>
+<div class="bg-secondary-container/20 border border-secondary/30 p-md rounded">
+<div class="text-secondary font-data-mono font-bold">深证成指</div>
+<div class="text-headline-lg-mobile text-secondary">9,410.12</div>
+<div class="text-body-sm text-secondary">-0.82% ↓</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-low dark:bg-surface-container-low border-t border-outline-variant w-full flex flex-col md:flex-row justify-between items-start px-margin-desktop py-lg gap-gutter">
+<div class="space-y-md max-w-xl">
+<div class="font-title-md text-title-md text-primary flex items-center gap-2">
+<span class="material-symbols-outlined">analytics</span>
+<span>炒股学堂</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+                © 2024 炒股学堂. Investing involves risk. Past performance is not indicative of future results. 所有教学内容仅供学习参考，不构成任何投资建议。
+            </p>
+</div>
+<div class="grid grid-cols-2 gap-xl">
+<div class="flex flex-col gap-sm">
+<h4 class="font-label-caps text-on-surface">LEGAL</h4>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">Risk Disclosure</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">Terms of Service</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">Privacy Policy</a>
+</div>
+<div class="flex flex-col gap-sm">
+<h4 class="font-label-caps text-on-surface">SUPPORT</h4>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">Contact Support</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">FAQ</a>
+<a class="font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface transition-colors" href="#">Community</a>
+</div>
+</div>
+</footer>
+<!-- Interactive Script for micro-interactions -->
+<script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Simple hover effect for signal cards
+            const cards = document.querySelectorAll('.terminal-glow');
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    card.style.transform = 'translateY(-2px)';
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'translateY(0)';
+                });
+            });
+            
+            // Search shortcut hint
+            document.addEventListener('keydown', (e) => {
+                if (e.key === '/') {
+                    const searchInput = document.querySelector('input[placeholder*="/"]');
+                    if (searchInput && document.activeElement !== searchInput) {
+                        e.preventDefault();
+                        searchInput.focus();
+                    }
+                }
+            });
+        });
+    </script>
+</body></html>

@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node screenshot.mjs)",
+      "Bash(docker compose *)",
+      "Bash(node check.mjs)",
+      "Bash(curl -s http://localhost:8001/api/stocks/600519/overview)",
+      "Bash(curl -s http://localhost:8001/api/stocks/600519/kline?period=d\\\\&limit=180)",
+      "Bash(node debug.mjs)",
+      "Bash(python -c ' *)",
+      "Bash(curl -s http://localhost:4180/)",
+      "Bash(curl -s http://localhost:5173/)",
+      "Bash(taskkill *)",
+      "Bash(npx tsc *)",
+      "Bash(start msedge *)",
+      "Bash(curl *)",
+      "Bash(powershell *)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(node *)"
+    ]
+  }
+}

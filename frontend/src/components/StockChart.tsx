@@ -248,7 +248,7 @@ export default function StockChart({
   const [showBOLL, setShowBOLL] = useState(true);
 
   // ---- DataWindow 状态 ----
-  const [crosshairData, setCrosshairData] = useState<{ timestamp: number; open: number; high: number; low: number; close: number; volume: number } | null>(null);
+  const [crosshairData, setCrosshairData] = useState<{ timestamp: number; open: number; high: number; low: number; close: number; volume?: number } | null>(null);
 
   // ---- 合并实时行情 ----
   const merged = useMemo(() => {
@@ -618,7 +618,7 @@ export default function StockChart({
             <span>
               <span style={{ color: C.textDim }}>VOL </span>
               <span style={{ color: C.text, fontWeight: 500 }}>
-                {(crosshairData.volume / 1e4).toFixed(0)}万
+                {((crosshairData.volume ?? 0) / 1e4).toFixed(0)}万
               </span>
             </span>
           </div>

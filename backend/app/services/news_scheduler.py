@@ -32,12 +32,24 @@ async def _run_pipeline() -> None:
 
 async def start_scheduler() -> None:
     global scheduler
+    from .daily_bar_updater import _update_all_stocks
+
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
         _run_pipeline,
         "interval",
         minutes=settings.news_crawl_interval_minutes,
         id="news_pipeline",
+        replace_existing=True,
+    )
+    # 每个交易日下午 17:00 更新日线数据
+    scheduler.add_job(
+        _update_all_stocks,
+        "cron",
+        day_of_week="mon-fri",
+        hour=17,
+        minute=0,
+        id="daily_kline_update",
         replace_existing=True,
     )
     scheduler.start()
