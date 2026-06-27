@@ -1,37 +1,29 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/).
-
 ## [Unreleased]
 
 ### Added
-- 项目骨架搭建：FastAPI 后端 + React 前端 + PostgreSQL + Docker Compose
-- 8 种 MVP Phase 1 形态检测器（均线排列、金叉死叉、量价关系）
-- 行情数据抓取模块（新浪/腾讯免费接口 + fallback 链）
-- Alembic 数据库迁移
-- structlog 结构化日志 + correlation_id 中间件
-- 标准化 API 错误响应格式 `{ error: { code, message, detail } }`
-- Makefile 开发命令（setup/dev/test/migrate/rollback/reset-db/new-pattern/seed）
-- 文档体系（架构/形态开发/回测指南/故障排查）
-- 接入 Tushare 真实行情数据
-- 首页"今日值得关注"板块，展示最新触发形态的股票
-- Playwright 浏览器测试依赖
-- 回测脚本支持 `--seed` 参数固定随机基线
-- 形态详情页示例 K线图
-- 37 个自动化测试（API + 检测器单元测试）
-- GitHub Actions CI（lint + typecheck + test）
-- MIT LICENSE
+- **Baostock 数据源**（默认）：免费、无需注册、无限流，全市场 5207 只 A 股
+- 数据源工厂模式（`stock_client.py`），Baostock/Tushare 一键切换
+- 每日 K 线自动更新调度器（APScheduler，交易日 17:00）
+- 修复 `seed_hs300.py` 跳过逻辑：同时检查最早和最晚数据日期
+- 策略引擎：条件组合评估 + 全市场扫描（`strategy_engine.py`）
+- 5 个内置策略：均线多头+放量、金叉买入、放量突破前高、底部反转、均线粘合突破
+- 用户系统：JWT 注册/登录、自选股管理
+- 新闻聚合：新浪财经抓取（30 分钟间隔）+ AI 摘要 + 情感分析（DeepSeek）
+- 6 个新形态检测器：锤子线、倒锤子、看涨吞没、看跌吞没、十字星、射击之星
+- 形态详情页（PatternDetailPage）+ 示例 K 线图
+- 策略页面（StrategiesPage）
+- 新闻页面（NewsPage）
+- 策略因子实验室设计文档
 
 ### Changed
-- K线形态标注样式改进（arrow 替代 pin，添加标签和边框）
-- 胜率模块重构（T1-T10 全部完成）
-- API 错误格式统一为 `{ error: { code, message, detail } }`（所有端点）
-- 股票代码 404 改进：提示"请输入6位数字代码，如 000001"
+- 数据源从 Tushare 迁移到 Baostock（Tushare 保留为备用）
+- K 线图 limit 从 500 扩大到 2500，支持完整 10 年数据
+- K 线图移除形态信号标记（366 个标记过于密集）
+- 搜索 API 修复：启动时加载股票名称缓存
 
 ### Fixed
-- A股红涨绿跌颜色修正
-- 看跌形态回测逻辑修正 + 数据库回测数据同步
-- 回测数据加载添加异常处理
+- `_load()` 重命名为 `load_stock_names()` 修复跨模块 ImportError
+- K 线图内容溢出容器边框
+- 前端编译错误（crosshairData volume 可选类型 + PatternDetailPage code prop）
