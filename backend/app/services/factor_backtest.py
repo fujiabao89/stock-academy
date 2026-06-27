@@ -6,7 +6,7 @@ from datetime import date, datetime, timezone
 from collections import defaultdict
 
 import numpy as np
-from sqlalchemy import select, text
+from sqlalchemy import func, select, text
 
 from ..database import async_session
 from ..logging import get_logger
@@ -20,6 +20,8 @@ logger = get_logger(__name__)
 MAX_CONCURRENT_TASKS = 3
 FORWARD_WINDOWS = [5, 10, 20]
 STOCKS_PER_BATCH = 500
+MAX_BACKTEST_STOCKS = 500  # 回测最多扫描 500 只股票（保证响应时间）
+BACKTEST_YEARS = 1  # 回测最多回溯 1 年
 
 
 async def submit_backtest(
@@ -94,9 +96,9 @@ async def _run_backtest(task_id: int):
 
 
 async def _execute_backtest(conditions: list[dict], forward_days: int) -> dict:
-    """执行条件回测 — 遍历全市场股票"""
+    """执行条件回测 — 最多扫描 500 只股票，回溯 1 年"""
     end_date = date.today()
-    start_date = end_date.replace(year=end_date.year - 3)
+    start_date = end_date.replace(year=end_date.year - BACKTEST_YEARS)
 
     results = {
         f"forward_{w}d": {
@@ -125,11 +127,25 @@ async def _execute_backtest(conditions: list[dict], forward_days: int) -> dict:
                 except Exception as e:
                     raise ValueError(f"条件校验失败: {e}") from e
 
-        # 获取所有股票
+        # 获取最近有交易的前 N 只股票（按最新日期排序）
         codes_result = await db.execute(
-            select(DailyBar.code).distinct().order_by(DailyBar.code)
+            select(DailyBar.code, func.max(DailyBar.date).label("max_date"))
+            .group_by(DailyBar.code)
+            .order_by(text("max_date DESC"))
+            .limit(MAX_BACKTEST_STOCKS)
         )
         codes = [r[0] for r in codes_result.fetchall()]
+
+        # 批量预加载 pattern_signals
+        has_pattern_cond = any(c.get("field") == "pattern" for c in conditions)
+        pattern_cache: dict[tuple[str, str, object], bool] = {}
+        if has_pattern_cond:
+            sig_rows = await db.execute(
+                select(PatternSignal.code, PatternSignal.pattern_id, PatternSignal.date)
+                .where(PatternSignal.date >= start_date)
+            )
+            for row in sig_rows.fetchall():
+                pattern_cache[(row[0], row[1], row[2])] = True
 
         # 加载指数环境
         index_regime = await _load_index_regime(db, start_date, end_date)
@@ -164,13 +180,19 @@ async def _execute_backtest(conditions: list[dict], forward_days: int) -> dict:
                     if i + max_fwd < len(bars):
                         all_entries.append((bars, i))
 
-                    # 条件评估
+                    # 条件评估（形态条件走缓存）
                     try:
                         for cond_dict in conditions:
                             from ..services.strategy_engine import _Condition
                             cond = _Condition(**cond_dict)
-                            if not await engine._check_condition(bars, code, cond):
-                                break
+                            if cond.field == "pattern":
+                                if not cond.pattern_id:
+                                    break
+                                if not pattern_cache.get((code, cond.pattern_id, today.date), False):
+                                    break
+                            else:
+                                if not await engine._check_condition(bars, code, cond):
+                                    break
                         else:
                             # 所有条件都通过
                             total_matched += 1

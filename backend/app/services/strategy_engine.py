@@ -153,6 +153,45 @@ class StrategyEngine:
 
     # ── 评估与扫描 ──
 
+    async def _evaluate_cached(
+        self, strategy: Strategy, code: str,
+        pattern_cache: dict[tuple[str, str], bool],
+        latest_date,
+    ) -> tuple[bool, list[dict]]:
+        """使用预加载 pattern_cache 的条件评估，避免 N+1 查询"""
+        bars = await self._load_bars(code)
+        if len(bars) < 2:
+            return False, []
+
+        conditions = [_Condition(**c) for c in strategy.conditions]
+        details: list[dict] = []
+
+        for cond in conditions:
+            # 形态条件走缓存
+            if cond.field == "pattern":
+                if not cond.pattern_id:
+                    details.append({"field": cond.field, "operator": cond.operator,
+                                    "pattern_id": cond.pattern_id, "matched": False})
+                    return False, details
+                ok = pattern_cache.get((code, cond.pattern_id), False)
+                details.append({"field": cond.field, "operator": cond.operator,
+                                "pattern_id": cond.pattern_id, "matched": ok})
+                if not ok:
+                    return False, details
+                continue
+
+            # 数值条件
+            ok = await self._check_condition(bars, code, cond)
+            details.append({
+                "field": cond.field, "operator": cond.operator,
+                "value": cond.value, "field2": cond.field2,
+                "pattern_id": cond.pattern_id, "matched": ok,
+            })
+            if not ok:
+                return False, details
+
+        return True, details
+
     async def evaluate(self, strategy: Strategy, code: str) -> tuple[bool, list[dict]]:
         bars = await self._load_bars(code)
         if len(bars) < 2:
@@ -182,11 +221,28 @@ class StrategyEngine:
         )
         codes = [r[0] for r in codes_row.fetchall()]
 
+        # 批量预加载最新日期的 pattern_signals
+        latest_date_row = await self.db.execute(
+            select(PatternSignal.date).order_by(PatternSignal.date.desc()).limit(1)
+        )
+        latest_date = latest_date_row.scalar_one_or_none()
+
+        pattern_cache: dict[tuple[str, str], bool] = {}
+        if latest_date:
+            sigs_row = await self.db.execute(
+                select(PatternSignal.code, PatternSignal.pattern_id)
+                .where(PatternSignal.date == latest_date)
+            )
+            for row in sigs_row.fetchall():
+                pattern_cache[(row[0], row[1])] = True
+
         now = datetime.now(timezone.utc)
         runs: list[StrategyRun] = []
 
         for code in codes:
-            matched, details = await self.evaluate(strategy, code)
+            matched, details = await self._evaluate_cached(
+                strategy, code, pattern_cache, latest_date
+            )
             if matched:
                 info = _STOCK_NAMES.get(code)
                 name = info[0] if info else code
