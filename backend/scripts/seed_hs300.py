@@ -27,6 +27,8 @@ from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
+from app.data.baostock_client import BaostockClient, BaostockError
+from app.data.stock_client import get_stock_client
 from app.data.tushare_client import TushareClient, TushareError
 from app.database import async_session
 from app.engine import list_all
@@ -131,10 +133,10 @@ def save_progress(completed: set[str]):
     )
 
 
-async def fetch_stock_list(client: TushareClient, codes: list[str] | None = None) -> list[tuple[str, str]]:
+async def fetch_stock_list(client, codes: list[str] | None = None) -> list[tuple[str, str]]:
     """获取股票列表
 
-    优先级: 指定的 codes > 本地缓存 > 全市场（Tushare stock_basic） > HS300 兜底
+    优先级: 指定的 codes > 本地缓存 > 数据源 stock_basic > HS300 兜底
     """
     if codes:
         return [(c, "") for c in codes]
@@ -150,12 +152,18 @@ async def fetch_stock_list(client: TushareClient, codes: list[str] | None = None
         except (json.JSONDecodeError, KeyError):
             pass
 
-    # 2. 调用 Tushare API
+    # 2. 调用数据源 API
     try:
         df = await client.fetch_stock_basic()
         if df is not None and not df.empty:
-            stocks = [(str(row["symbol"]), str(row["name"])) for _, row in df.iterrows()]
-            print(f"从 Tushare 获取到 {len(stocks)} 只上市股票")
+            source_name = "Baostock" if isinstance(client, BaostockClient) else "Tushare"
+            if isinstance(client, BaostockClient):
+                # Baostock: columns are [code, name, ipo_date], code is already local format
+                stocks = [(str(row["code"]), str(row["name"])) for _, row in df.iterrows()]
+            else:
+                # Tushare: columns are [ts_code, symbol, name, ...]
+                stocks = [(str(row["symbol"]), str(row["name"])) for _, row in df.iterrows()]
+            print(f"从 {source_name} 获取到 {len(stocks)} 只上市股票")
             # 缓存到本地
             STOCK_LIST_CACHE.write_text(
                 json.dumps({"stocks": stocks, "updated_at": datetime.now().isoformat()},
@@ -163,7 +171,7 @@ async def fetch_stock_list(client: TushareClient, codes: list[str] | None = None
                 encoding="utf-8",
             )
             return stocks
-    except TushareError as e:
+    except (TushareError, BaostockError) as e:
         print(f"获取股票列表失败: {e}")
 
     print(f"使用 HS300 样本 ({len(HS300_SAMPLE)} 只) 作为兜底")
@@ -188,30 +196,34 @@ async def clear_existing(db: AsyncSession):
     logger.info("cleared_existing_data")
 
 
-async def import_from_tushare(
+async def import_stock_data(
     db: AsyncSession, days: int, *,
     skip_existing: bool = True,
     stocks: list[tuple[str, str]] | None = None,
     max_stocks: int = 0,
     resume: bool = False,
+    source: str | None = None,
 ) -> tuple[int, int, int]:
-    """从 Tushare 导入真实日线数据，计算 MA，运行形态检测
+    """从数据源导入日线数据，计算 MA，运行形态检测
 
-    skip_existing: 跳过已有数据的股票（增量导入模式）
+    skip_existing: 跳过已有完整历史+最近数据的股票（增量导入模式）
     stocks: 股票列表，None 则使用 HS300_SAMPLE
     max_stocks: 本轮最多导入股票数（0 = 无限制）
     resume: 是否从进度文件恢复
+    source: 数据源 (baostock | tushare)，默认使用 config.stock_data_source
 
     Returns: (日线条数, 信号条数, 已跳过的股票数)
     """
-    token = settings.tushare_token
-    if not token:
-        raise TushareError("TUSHARE_TOKEN 未配置")
+    if source:
+        settings.stock_data_source = source
+
+    client = get_stock_client()
+    is_baostock = isinstance(client, BaostockClient)
 
     end_date = date.today().strftime("%Y%m%d")
     start_date = (date.today() - timedelta(days=days)).strftime("%Y%m%d")
-
-    client = TushareClient(token)
+    # 用于"历史完整但缺最近数据"的短期回补
+    recent_start_date = (date.today() - timedelta(days=30)).strftime("%Y%m%d")
 
     # 获取股票列表
     if stocks is None:
@@ -238,27 +250,53 @@ async def import_from_tushare(
         # 显示进度
         progress = f"[{idx + 1}/{total_count}]"
         name_display = f"{name}" if name else ""
-        ts_code = TushareClient.to_ts_code(code)
+        if is_baostock:
+            source_code = BaostockClient.to_bs_code(code)
+        else:
+            source_code = TushareClient.to_ts_code(code)
 
-        # 增量模式：跳过已有数据的股票
+        # 增量模式：已有完整历史 + 最近数据的股票才跳过
         if skip_existing:
-            existing = await db.execute(
-                select(DailyBar).where(DailyBar.code == code).limit(1)
+            existing_earliest = await db.execute(
+                select(DailyBar.date).where(DailyBar.code == code)
+                .order_by(DailyBar.date.asc()).limit(1)
             )
-            if existing.scalar_one_or_none() is not None:
+            earliest = existing_earliest.scalar_one_or_none()
+            # 同时检查最新数据日期
+            existing_latest = await db.execute(
+                select(DailyBar.date).where(DailyBar.code == code)
+                .order_by(DailyBar.date.desc()).limit(1)
+            )
+            latest = existing_latest.scalar_one_or_none()
+
+            has_full_history = earliest is not None and earliest <= date(2020, 1, 1)
+            has_recent_data = latest is not None and latest >= (date.today() - timedelta(days=4))
+
+            if has_full_history and has_recent_data:
                 skipped += 1
                 if resume:
                     completed.add(code)
                     save_progress(completed)
                 else:
-                    print(f"{progress} {code} {name_display} — 已有数据，跳过")
+                    print(f"{progress} {code} {name_display} — 已有完整数据({earliest}起~{latest})，跳过")
                 continue
+            elif has_full_history and not has_recent_data:
+                # 有老数据但缺最近几天 → 只拉取最近 30 天的增量
+                fetch_start = recent_start_date
+                print(f"{progress} {code} {name_display} (历史完整但缺最近数据, latest={latest})",
+                      end=" ", flush=True)
+            elif earliest is not None:
+                fetch_start = start_date
+                print(f"{progress} {code} {name_display} (现有数据从{earliest}起，回补历史...)",
+                      end=" ", flush=True)
+            else:
+                fetch_start = start_date
 
         print(f"{progress} {code} {name_display} ...", end=" ", flush=True)
 
         try:
             bars_inserted, signals_inserted = await _import_one_stock(
-                db, client, code, name, ts_code, start_date, end_date
+                db, client, code, name, source_code, fetch_start, end_date
             )
             total_bars += bars_inserted
             total_signals += signals_inserted
@@ -268,14 +306,18 @@ async def import_from_tushare(
                 completed.add(code)
                 save_progress(completed)
 
-        except TushareError as e:
+        except (TushareError, BaostockError) as e:
             print(f"失败: {e}")
-            logger.warning("tushare_error_for_%s: %s", code, e)
+            logger.warning("data_error_for_%s: %s", code, e)
             if "每分钟" in str(e) or "limit" in str(e).lower():
                 print("遇到限流，已保存进度。稍后使用 --resume 继续。")
                 if resume:
                     save_progress(completed)
             break
+        except Exception as e:
+            print(f"失败: {e}")
+            logger.warning("unexpected_error_for_%s: %s", code, e)
+            continue
 
         # 数量限制
         if max_stocks > 0:
@@ -291,12 +333,12 @@ async def import_from_tushare(
 
 async def _import_one_stock(
     db: AsyncSession, client, code: str, name: str,
-    ts_code: str, start_date: str, end_date: str,
+    source_code: str, start_date: str, end_date: str,
 ) -> tuple[int, int]:
     """导入单只股票数据，返回 (日线条数, 信号条数)"""
 
     # 1. 获取日线数据
-    df = await client.fetch_daily(ts_code, start_date, end_date)
+    df = await client.fetch_daily(source_code, start_date, end_date)
     if df is None or df.empty:
         return 0, 0
 
@@ -306,16 +348,18 @@ async def _import_one_stock(
         {"code": code},
     )
 
-    # 3. 写入 daily_bars（upsert）
+    # 3. 写入 daily_bars（upsert），先批量加载已有日期避免逐条查询
+    existing_result = await db.execute(
+        select(DailyBar.date).where(DailyBar.code == code)
+    )
+    existing_dates = {row[0] for row in existing_result.fetchall()}
+
     bars_inserted = 0
     batch: list[DailyBar] = []
     for _, row in df.iterrows():
         bar_date = datetime.strptime(str(row["trade_date"]), "%Y%m%d").date()
 
-        exists = await db.execute(
-            select(DailyBar).where(DailyBar.code == code, DailyBar.date == bar_date)
-        )
-        if exists.scalar_one_or_none() is not None:
+        if bar_date in existing_dates:
             continue
 
         bar = DailyBar(
@@ -435,6 +479,8 @@ async def main():
                         help="从进度文件恢复，跳过已完成的股票")
     parser.add_argument("--codes", nargs="*", default=None,
                         help="仅导入指定股票代码，如: --codes 000001 600519")
+    parser.add_argument("--source", type=str, default=None,
+                        help="数据源: baostock | tushare (默认使用 config.stock_data_source)")
     args = parser.parse_args()
 
     print("=== 炒股学堂 数据导入 ===\n")
@@ -464,14 +510,23 @@ async def main():
                 print("(使用 --clear 参数可清空重建)")
 
         # 确定股票列表
-        token = settings.tushare_token
+        source = args.source or settings.stock_data_source
         stocks = None
-        if token:
+
+        # Baostock 无需 token，直接获取；Tushare 需要 token
+        if source == "tushare" and not settings.tushare_token:
+            print("未配置 TUSHARE_TOKEN，回退到 Baostock")
+            source = "baostock"
+            settings.stock_data_source = "baostock"
+
+        if source == "baostock" or (source == "tushare" and settings.tushare_token):
             try:
-                client = TushareClient(token)
-                stocks = await fetch_stock_list(client, codes=args.codes)
-            except TushareError as e:
-                print(f"Tushare 初始化失败: {e}")
+                temp_client = get_stock_client()
+                stocks = await fetch_stock_list(temp_client, codes=args.codes)
+                if isinstance(temp_client, BaostockClient):
+                    await temp_client.close()
+            except (TushareError, BaostockError) as e:
+                print(f"获取股票列表失败: {e}")
                 if existing_bars == 0 and not args.codes:
                     await import_synthetic(db)
                     summary = await data_summary()
@@ -480,7 +535,7 @@ async def main():
         elif args.codes:
             stocks = [(c, "") for c in args.codes]
         elif existing_bars == 0:
-            print("未配置 TUSHARE_TOKEN，使用合成数据...")
+            print("无可用数据源，使用合成数据...")
             await import_synthetic(db)
             summary = await data_summary()
             print(f"\n完成: {summary}")
@@ -489,21 +544,22 @@ async def main():
         if stocks is None:
             stocks = list(HS300_SAMPLE)
 
-        print(f"待处理: {len(stocks)} 只股票\n")
+        print(f"待处理: {len(stocks)} 只股票 (数据源: {source})\n")
 
         # 导入
         try:
-            bars, sigs, skipped = await import_from_tushare(
+            bars, sigs, skipped = await import_stock_data(
                 db, args.days,
                 skip_existing=not args.clear,
                 stocks=stocks,
                 max_stocks=args.max_stocks,
                 resume=args.resume,
+                source=source,
             )
             print(f"\n[完成] 新增: {bars} 条日线, {sigs} 个信号"
                   + (f", 跳过 {skipped} 只已有数据" if skipped else ""))
-        except TushareError as e:
-            print(f"\nTushare 不可用: {e}")
+        except (TushareError, BaostockError) as e:
+            print(f"\n数据源不可用: {e}")
             if existing_bars == 0:
                 await import_synthetic(db)
             else:

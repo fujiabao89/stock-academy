@@ -1,12 +1,17 @@
-"""K线数据每日更新 — 收盘后通过 Tushare 批量拉取最新日线"""
+"""K线数据每日更新 — 收盘后通过数据源批量拉取最新日线
+
+支持 Baostock（默认）和 Tushare，通过 config.stock_data_source 切换。
+"""
 
 import asyncio
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 
 from sqlalchemy import select, text
 
 from ..config import settings
-from ..data.tushare_client import TushareClient
+from ..data.baostock_client import BaostockClient, BaostockError
+from ..data.stock_client import get_stock_client
+from ..data.tushare_client import TushareClient, TushareError
 from ..database import async_session
 from ..logging import get_logger
 from ..models.daily_bar import DailyBar
@@ -16,7 +21,16 @@ from scripts.seed_hs300 import _BarsView, _BACKTEST_DATA, _DETERMINATIONS, _RELA
 
 logger = get_logger(__name__)
 
-BATCH_SIZE = 50  # 每批股票数
+# Baostock 无限流，单只串行即可；Tushare 需控制频率
+_TUSHARE_BATCH_SIZE = 50
+_TUSHARE_REQUEST_DELAY = 1.5
+
+
+def _to_source_code(code: str) -> str:
+    """本地代码转数据源代码格式"""
+    if settings.stock_data_source == "tushare":
+        return TushareClient.to_ts_code(code)
+    return BaostockClient.to_bs_code(code)
 
 
 async def _insert_bars_and_recalc(db, code: str, bars_data: list[dict]) -> int:
@@ -104,77 +118,70 @@ async def _insert_bars_and_recalc(db, code: str, bars_data: list[dict]) -> int:
 
 async def _update_all_stocks() -> None:
     """批量拉取全市场最新日线数据"""
-    token = settings.tushare_token
-    if not token:
-        logger.warning("TUSHARE_TOKEN 未配置，跳过 K 线更新")
-        return
-
-    client = TushareClient(token)
+    source = settings.stock_data_source
     today_str = date.today().strftime("%Y%m%d")
 
-    async with async_session() as db:
-        # 获取所有股票及其最新日期
-        rows = await db.execute(
-            text("SELECT code, MAX(date) FROM daily_bars GROUP BY code")
-        )
-        stock_info: dict[str, str] = {}
-        for r in rows.fetchall():
-            code, max_date = r[0], r[1]
-            if max_date is not None:
-                stock_info[code] = max_date.strftime("%Y%m%d")
+    client = get_stock_client()
+    is_baostock = isinstance(client, BaostockClient)
 
-        codes = sorted(stock_info.keys())
-        logger.info("K线每日更新开始", stocks=len(codes))
+    try:
+        async with async_session() as db:
+            # 获取所有股票及其最新日期
+            rows = await db.execute(
+                text("SELECT code, MAX(date) FROM daily_bars GROUP BY code")
+            )
+            stock_info: dict[str, str] = {}
+            for r in rows.fetchall():
+                code, max_date = r[0], r[1]
+                if max_date is not None:
+                    stock_info[code] = max_date.strftime("%Y%m%d")
 
-        total_inserted = 0
-        updated = 0
+            codes = sorted(stock_info.keys())
+            logger.info("K线每日更新开始", source=source, stocks=len(codes))
 
-        # 按批次处理
-        for batch_start in range(0, len(codes), BATCH_SIZE):
-            batch_codes = codes[batch_start:batch_start + BATCH_SIZE]
-            batch_parts = []
-            for code in batch_codes:
-                ts_code = TushareClient.to_ts_code(code)
+            total_inserted = 0
+            updated = 0
+            skipped = 0
+
+            for idx, code in enumerate(codes):
+                source_code = _to_source_code(code)
                 start_date = stock_info[code]
+
                 # 如果最新日期已经是今天，跳过
                 if start_date >= today_str:
+                    skipped += 1
                     continue
-                batch_parts.append((code, ts_code, start_date))
 
-            if not batch_parts:
-                continue
-
-            # 本批次中最早的 start_date 和所有 ts_codes
-            min_start = min(p[2] for p in batch_parts)
-            ts_codes_str = ",".join(p[1] for p in batch_parts)
-
-            try:
-                df = await client.fetch_daily(ts_codes_str, min_start, today_str)
-            except Exception as exc:
-                logger.warning("K线批量拉取失败", batch=batch_start, error=str(exc)[:150])
-                await asyncio.sleep(1.5)
-                continue
-
-            if df is None or df.empty:
-                await asyncio.sleep(1.5)
-                continue
-
-            # 按股票分组写入
-            for code, ts_code, start_date in batch_parts:
-                stock_df = df[df["ts_code"] == ts_code]
-                if stock_df.empty:
+                try:
+                    if is_baostock:
+                        # Baostock: 逐只调用，无限流
+                        df = await client.fetch_daily(source_code, start_date, today_str)
+                    else:
+                        # Tushare: 单只调用
+                        df = await client.fetch_daily(source_code, start_date, today_str)
+                        await asyncio.sleep(_TUSHARE_REQUEST_DELAY)
+                except (TushareError, BaostockError) as exc:
+                    logger.warning("K线拉取失败", code=code, error=str(exc)[:150])
                     continue
+                except Exception as exc:
+                    logger.warning("K线拉取异常", code=code, error=str(exc)[:150])
+                    continue
+
+                if df is None or df.empty:
+                    continue
+
                 bars_data = []
-                for _, row in stock_df.iterrows():
+                for _, row in df.iterrows():
                     bars_data.append({
                         "trade_date": str(row["trade_date"]),
                         "open": float(row["open"]),
                         "high": float(row["high"]),
                         "low": float(row["low"]),
                         "close": float(row["close"]),
-                        "vol": int(float(row["vol"])),
+                        "vol": int(float(row["volume"])),
                         "amount": float(row.get("amount", 0) or 0),
                     })
+
                 try:
                     n = await _insert_bars_and_recalc(db, code, bars_data)
                     if n > 0:
@@ -183,11 +190,14 @@ async def _update_all_stocks() -> None:
                 except Exception as exc:
                     logger.warning("K线写入失败", code=code, error=str(exc)[:150])
 
-            # 进度日志
-            done = batch_start + len(batch_codes)
-            if done % 500 == 0 or done >= len(codes):
-                logger.info("K线更新进度", done=min(done, len(codes)), total=len(codes), updated=updated, inserted=total_inserted)
+                # 进度日志（每 500 只输出一次）
+                if (idx + 1) % 500 == 0:
+                    logger.info("K线更新进度", done=idx + 1, total=len(codes),
+                                updated=updated, inserted=total_inserted)
 
-            await asyncio.sleep(1.5)  # Tushare 频率限制
+            logger.info("K线每日更新完成", updated=updated, total_inserted=total_inserted,
+                        skipped=skipped, source=source)
 
-        logger.info("K线每日更新完成", updated=updated, total_inserted=total_inserted)
+    finally:
+        if is_baostock:
+            await client.close()
