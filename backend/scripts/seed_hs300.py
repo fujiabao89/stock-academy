@@ -328,6 +328,9 @@ async def import_stock_data(
                     save_progress(completed)
                 break
 
+    if is_baostock:
+        await client.close()
+
     return total_bars, total_signals, skipped
 
 

@@ -22,7 +22,6 @@ from scripts.seed_hs300 import _BarsView, _BACKTEST_DATA, _DETERMINATIONS, _RELA
 logger = get_logger(__name__)
 
 # Baostock 无限流，单只串行即可；Tushare 需控制频率
-_TUSHARE_BATCH_SIZE = 50
 _TUSHARE_REQUEST_DELAY = 1.5
 
 
