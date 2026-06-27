@@ -10,7 +10,7 @@ export default function StrategiesPage() {
   const [error, setError] = useState("");
   const { user } = useAuth();
 
-  useEffect(() => {
+  const loadStrategies = () => {
     fetch("/api/strategies")
       .then((r) => {
         if (!r.ok) throw new Error("加载失败");
@@ -24,7 +24,28 @@ export default function StrategiesPage() {
         setError(err instanceof Error ? err.message : "加载失败");
         setLoading(false);
       });
-  }, []);
+  };
+
+  useEffect(() => { loadStrategies(); }, []);
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("确定删除此策略？")) return;
+    const token = localStorage.getItem("stock_academy_tokens");
+    const access = token ? JSON.parse(token).access : "";
+    try {
+      const r = await fetch(`/api/strategies/${id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${access}` },
+      });
+      if (!r.ok) {
+        const d = await r.json();
+        throw new Error(d.error?.detail ?? "删除失败");
+      }
+      loadStrategies();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "删除失败");
+    }
+  };
 
   if (loading) {
     return (
@@ -99,9 +120,23 @@ export default function StrategiesPage() {
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)" }}>
             {custom.map((s) => (
-              <Link key={s.id} to={`/strategies/${s.id}`} style={{ textDecoration: "none", color: "inherit" }}>
-                <StrategyCard strategy={s} />
-              </Link>
+              <div key={s.id} style={{ position: "relative" }}>
+                <Link to={`/strategies/${s.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+                  <StrategyCard strategy={s} />
+                </Link>
+                {user && (
+                  <button
+                    onClick={(e) => { e.preventDefault(); handleDelete(s.id); }}
+                    style={{
+                      position: "absolute", top: 8, right: 8,
+                      background: "none", border: "none", color: "var(--color-bearish)",
+                      cursor: "pointer", fontSize: 12, padding: "2px 6px",
+                    }}
+                  >
+                    删除
+                  </button>
+                )}
+              </div>
             ))}
           </div>
         </section>

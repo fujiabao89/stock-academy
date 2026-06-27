@@ -61,6 +61,8 @@ class StrategyEngine:
             return bar.volume / avg if avg > 0 else None
         if field == "high_20":
             return self._n_day_high(bars, 20)
+        if field == "price_range_20":
+            return self._n_day_price_range(bars, 20)
 
         return None
 
@@ -78,6 +80,14 @@ class StrategyEngine:
         if len(bars) < n:
             return 0.0
         return max(b.high for b in bars[-n:])
+
+    @staticmethod
+    def _n_day_price_range(bars: list[DailyBar], n: int) -> float:
+        """20 日平均日内振幅：(high - low) / close 的均值"""
+        if len(bars) < n:
+            return 0.0
+        ranges = [(b.high - b.low) / b.close for b in bars[-n:] if b.close > 0]
+        return sum(ranges) / len(ranges) if ranges else 0.0
 
     # ── 条件检查 ──
 

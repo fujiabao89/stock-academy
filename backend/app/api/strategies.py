@@ -2,7 +2,8 @@
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,10 +20,33 @@ from ..schemas.strategy import (
     StrategyScanResponse,
     StrategyUpdate,
 )
+from ..services.factor_backtest import submit_backtest, get_backtest_status
+from ..services.factor_parser import parse_natural_language, ParseError
 from ..services.strategy_engine import StrategyEngine
 from .errors import AuthError
 
 router = APIRouter(prefix="/strategies", tags=["strategies"])
+
+
+# ── 因子解析 / 回测 schemas ──
+
+class ParseRequest(BaseModel):
+    text: str = Field(..., min_length=1, max_length=500, description="自然语言描述")
+
+
+class ParseResponse(BaseModel):
+    conditions: list[dict]
+    explanation: str
+
+
+class BacktestRequest(BaseModel):
+    conditions: list[dict] = Field(..., min_length=1)
+    forward_days: int = Field(default=20, ge=5, le=60)
+
+
+class BacktestSubmitResponse(BaseModel):
+    task_id: int
+    status: str
 
 
 @router.get("", response_model=StrategyListResponse)
@@ -154,3 +178,67 @@ async def get_strategy_runs(
         items=[StrategyRunOut.model_validate(r) for r in items],
         total=len(items),
     )
+
+
+# ── 因子解析 + 回测端点 ──
+
+@router.post("/parse", response_model=ParseResponse)
+async def parse_strategy(body: ParseRequest):
+    """将自然语言描述解析为 conditions JSON（few-shot DeepSeek）"""
+    try:
+        conditions, explanation = await parse_natural_language(body.text)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except ParseError as e:
+        raise HTTPException(status_code=503, detail=str(e))
+    return ParseResponse(conditions=conditions, explanation=explanation)
+
+
+@router.post("/backtest", response_model=BacktestSubmitResponse, status_code=202)
+async def submit_backtest_endpoint(
+    body: BacktestRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """提交异步回测任务，返回 task_id 用于轮询"""
+    # 单股预检：验证条件合法性
+    from ..models.daily_bar import DailyBar
+    from ..services.factor_parser import AVAILABLE_FIELDS, AVAILABLE_OPERATORS
+
+    for cond_dict in body.conditions:
+        field = cond_dict.get("field", "")
+        operator = cond_dict.get("operator", "")
+        if field not in AVAILABLE_FIELDS and field != "pattern":
+            raise HTTPException(status_code=422, detail=f"不支持的字段: {field}")
+        if operator not in AVAILABLE_OPERATORS:
+            raise HTTPException(status_code=422, detail=f"不支持的运算符: {operator}")
+
+    test_code_row = await db.execute(
+        select(DailyBar.code).distinct().order_by(DailyBar.code).limit(1)
+    )
+    test_code = test_code_row.scalar_one_or_none()
+    if test_code:
+        engine = StrategyEngine(db)
+        bars = await engine._load_bars(test_code)
+        if len(bars) >= 2:
+            try:
+                from ..services.strategy_engine import _Condition
+                for cond_dict in body.conditions:
+                    cond = _Condition(**cond_dict)
+                    await engine._check_condition(bars, test_code, cond)
+            except Exception as e:
+                raise HTTPException(status_code=422, detail=f"条件校验失败: {e}")
+
+    task_id = await submit_backtest(
+        conditions=body.conditions,
+        forward_days=body.forward_days,
+    )
+    return BacktestSubmitResponse(task_id=task_id, status="pending")
+
+
+@router.get("/backtest/{task_id}")
+async def poll_backtest(task_id: int):
+    """轮询回测任务状态"""
+    status = await get_backtest_status(task_id)
+    if status is None:
+        raise HTTPException(status_code=404, detail=f"回测任务 {task_id} 不存在")
+    return status

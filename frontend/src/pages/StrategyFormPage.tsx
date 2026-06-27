@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import type { Strategy, StrategyCondition } from "../components/StrategyCard";
+import BacktestResult from "../components/BacktestResult";
 
 const FIELD_OPTIONS = [
   { value: "open", label: "开盘价" },
@@ -14,6 +15,7 @@ const FIELD_OPTIONS = [
   { value: "ma120", label: "MA120" },
   { value: "volume_ratio_20", label: "量比(20日)" },
   { value: "high_20", label: "20日最高" },
+  { value: "price_range_20", label: "20日均振幅" },
   { value: "pattern", label: "形态" },
 ];
 
@@ -49,6 +51,17 @@ export default function StrategyFormPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [loaded, setLoaded] = useState(!isEdit);
+
+  // NL 输入
+  const [nlText, setNlText] = useState("");
+  const [parsing, setParsing] = useState(false);
+  const [parseExplanation, setParseExplanation] = useState("");
+
+  // 回测
+  const [backtestTaskId, setBacktestTaskId] = useState<number | null>(null);
+  const [backtestResult, setBacktestResult] = useState<any>(null);
+  const [backtesting, setBacktesting] = useState(false);
+  const [backtestError, setBacktestError] = useState("");
 
   useEffect(() => {
     if (!id) return;
@@ -131,6 +144,68 @@ export default function StrategyFormPage() {
   const showValue = (cond: StrategyCondition) =>
     ["gt", "lt", "eq"].includes(cond.operator) && !cond.field2;
   const showPattern = (cond: StrategyCondition) => cond.field === "pattern" || cond.operator === "pattern";
+
+  // ── NL 解析 ──
+  const handleParse = async () => {
+    if (!nlText.trim()) return;
+    setParsing(true);
+    setError("");
+    try {
+      const r = await fetch("/api/strategies/parse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: nlText }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.detail || data.error?.detail || "解析失败");
+      if (data.conditions && data.conditions.length > 0) {
+        setConditions(data.conditions.map((c: any) => ({ ...emptyCondition(), ...c })));
+      }
+      setParseExplanation(data.explanation || "");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "解析失败");
+    } finally {
+      setParsing(false);
+    }
+  };
+
+  // ── 回测 ──
+  const handleBacktest = async () => {
+    setBacktesting(true);
+    setBacktestError("");
+    setBacktestResult(null);
+    try {
+      const r = await fetch("/api/strategies/backtest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conditions, forward_days: 20 }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.detail || "提交回测失败");
+      setBacktestTaskId(data.task_id);
+      // 轮询
+      const poll = setInterval(async () => {
+        try {
+          const pr = await fetch(`/api/strategies/backtest/${data.task_id}`);
+          const pd = await pr.json();
+          if (pd.status === "done") {
+            clearInterval(poll);
+            setBacktestResult(pd.result);
+            setBacktesting(false);
+          } else if (pd.status === "error") {
+            clearInterval(poll);
+            setBacktestError(pd.error_message || "回测失败");
+            setBacktesting(false);
+          }
+        } catch {
+          // 继续轮询
+        }
+      }, 2000);
+    } catch (err) {
+      setBacktestError(err instanceof Error ? err.message : "回测失败");
+      setBacktesting(false);
+    }
+  };
 
   return (
     <div style={{ maxWidth: 640, margin: "0 auto" }}>
@@ -290,6 +365,70 @@ export default function StrategyFormPage() {
             + 添加条件
           </button>
         )}
+      </section>
+
+      {/* ── 自然语言输入 ── */}
+      <section style={{ marginBottom: "var(--space-6)", padding: "var(--space-4)", background: "color-mix(in srgb, var(--color-primary) 5%, transparent)", borderRadius: "var(--radius-md)" }}>
+        <h2 style={{ fontSize: 15, fontWeight: 600, margin: "0 0 var(--space-2) 0" }}>
+          快捷输入（AI 解析）
+        </h2>
+        <div style={{ display: "flex", gap: "var(--space-2)" }}>
+          <input
+            value={nlText}
+            onChange={(e) => setNlText(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleParse()}
+            placeholder="描述你的策略，如：MA5上穿MA20且放量"
+            maxLength={500}
+            style={{
+              flex: 1, padding: "6px 10px", fontSize: 14,
+              border: "1px solid var(--color-border)", borderRadius: "var(--radius-sm)",
+              background: "var(--color-surface)", color: "var(--color-text)",
+              boxSizing: "border-box",
+            }}
+          />
+          <button
+            onClick={handleParse}
+            disabled={parsing || !nlText.trim()}
+            style={{
+              padding: "6px 16px", fontSize: 13, fontWeight: 500,
+              color: "#fff", background: "var(--color-primary)",
+              border: "none", borderRadius: "var(--radius-sm)",
+              cursor: parsing ? "wait" : "pointer",
+              opacity: parsing || !nlText.trim() ? 0.5 : 1,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {parsing ? "解析中..." : "解析"}
+          </button>
+        </div>
+        {parseExplanation && (
+          <div style={{ marginTop: "var(--space-2)", fontSize: 13, color: "var(--color-text-secondary)" }}>
+            解析结果：{parseExplanation}
+          </div>
+        )}
+      </section>
+
+      {/* ── 回测 + 结果 ── */}
+      <section style={{ marginBottom: "var(--space-6)" }}>
+        <div style={{ display: "flex", gap: "var(--space-3)", alignItems: "center" }}>
+          <button
+            onClick={handleBacktest}
+            disabled={backtesting || conditions.length === 0}
+            style={{
+              padding: "6px 16px", fontSize: 13, fontWeight: 500,
+              color: "#fff", background: backtesting ? "var(--color-text-secondary)" : "#059669",
+              border: "none", borderRadius: "var(--radius-sm)",
+              cursor: backtesting ? "wait" : "pointer",
+              opacity: backtesting || conditions.length === 0 ? 0.6 : 1,
+            }}
+          >
+            {backtesting ? "回测中..." : "运行回测"}
+          </button>
+          {backtestError && (
+            <span style={{ fontSize: 13, color: "var(--color-bearish)" }}>{backtestError}</span>
+          )}
+        </div>
+        {backtestResult && <BacktestResult result={backtestResult} />}
       </section>
 
       <div style={{ display: "flex", gap: "var(--space-3)", justifyContent: "flex-end" }}>
