@@ -14,6 +14,15 @@ from ..stock_names import _STOCK_NAMES
 _WINDOW = 120  # 加载最近 120 根日 K 线
 
 
+def _is_st_stock(code: str) -> bool:
+    """判断是否为 ST 股票"""
+    info = _STOCK_NAMES.get(code)
+    if not info:
+        return False
+    name = info[0]
+    return name.startswith("*ST") or name.startswith("ST")
+
+
 @dataclass
 class _Condition:
     field: str
@@ -240,6 +249,10 @@ class StrategyEngine:
         runs: list[StrategyRun] = []
 
         for code in codes:
+            # 跳过 ST 股票
+            if _is_st_stock(code):
+                continue
+
             matched, details = await self._evaluate_cached(
                 strategy, code, pattern_cache, latest_date
             )

@@ -13,7 +13,7 @@ from ..logging import get_logger
 from ..models.daily_bar import DailyBar
 from ..models.pattern_signal import PatternSignal
 from ..models.strategy import StrategyBacktest
-from ..services.strategy_engine import StrategyEngine
+from ..services.strategy_engine import StrategyEngine, _is_st_stock
 
 logger = get_logger(__name__)
 
@@ -154,6 +154,8 @@ async def _execute_backtest(conditions: list[dict], forward_days: int) -> dict:
         all_entries = []
 
         for idx, code in enumerate(codes):
+            if _is_st_stock(code):
+                continue
             try:
                 bars_result = await db.execute(
                     select(DailyBar)
