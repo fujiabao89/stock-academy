@@ -67,22 +67,20 @@ export default function StrategiesPage() {
             组合 K 线形态与指标条件，一键扫描全市场
           </p>
         </div>
-        {user && (
-          <Link
-            to="/strategies/new"
-            style={{
-              padding: "6px 16px",
-              fontSize: 14,
-              fontWeight: 500,
-              color: "#fff",
-              background: "var(--color-primary)",
-              borderRadius: "var(--radius-sm)",
-              textDecoration: "none",
-            }}
-          >
-            新建策略
-          </Link>
-        )}
+        <Link
+          to={user ? "/strategies/new" : "/login"}
+          style={{
+            padding: "6px 16px",
+            fontSize: 14,
+            fontWeight: 500,
+            color: "#fff",
+            background: "var(--color-primary)",
+            borderRadius: "var(--radius-sm)",
+            textDecoration: "none",
+          }}
+        >
+          新建策略
+        </Link>
       </div>
 
       {error && (
